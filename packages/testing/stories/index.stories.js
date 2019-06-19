@@ -3,7 +3,7 @@ import { ApolloProvider, withApollo } from 'react-apollo';
 import { storiesOf } from '@storybook/react';
 import crypto from 'crypto';
 
-import ProsemirrorPad from 'prosemirror-pad';
+import ProsemirrorPad from '@wirelineio/prosemirror-pad';
 
 import { createClient } from '../config/apollo';
 
