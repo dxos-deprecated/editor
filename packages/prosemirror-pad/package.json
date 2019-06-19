@@ -1,0 +1,59 @@
+{
+  "name": "@wirelineio/prosemirror-pad",
+  "version": "0.1.0",
+  "description": "Prosemirror editor pad",
+  "keywords": [],
+  "homepage": "https://github.com/wirelineio/editor",
+  "bugs": {
+    "url": "https://github.com/wirelineio/editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wirelineio/editor.git"
+  },
+  "license": "GPL-3.0",
+  "main": "src/index.js",
+  "module": "dist/es/index.js",
+  "scripts": {
+    "build": "npm run clean && npm run copy:css && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "clean": "rm -rf dist && mkdir -p ./dist/es",
+    "copy:css": "cp ./src/styles ./dist/es -r",
+    "lint": "eslint ./src"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "dependencies": {
+    "@material-ui/core": "^3.9.3",
+    "@material-ui/icons": "^3.0.1",
+    "@wirelineio/appkit": "^0.1.16",
+    "memoize-one": "^5.0.4",
+    "mutexify": "^1.2.0",
+    "prosemirror-example-setup": "^1.0.1",
+    "prosemirror-model": "^1.7.0",
+    "prosemirror-schema-basic": "^1.0.1",
+    "prosemirror-state": "^1.2.2",
+    "prosemirror-view": "^1.8.9",
+    "react": "^16.8.6",
+    "react-apollo": "^2.5.5",
+    "react-dom": "^16.8.6",
+    "y-prosemirror": "^0.0.4",
+    "y-websocket": "1.0.0-5",
+    "yjs": "13.0.0-90"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.3.0",
+    "@babel/plugin-proposal-export-default-from": "^7.2.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "apollo-client": "^2.5.1",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.16.0",
+    "eslint-plugin-react": "^7.13.0"
+  }
+}

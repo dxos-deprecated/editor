@@ -1,0 +1,41 @@
+{
+  "name": "@wirelineio/editor-kit",
+  "version": "0.0.5",
+  "description": "Wireline Editor Kit.",
+  "license": "UNLICENSED",
+  "repository": "https://github.com/wirelineio/editor-kit",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/@wirelineio/automerge-worker"
+    ]
+  },
+  "lint-staged": {
+    "*.js": "eslint --ignore-path .eslintignore"
+  },
+  "pre-commit": [
+    "lint:staged"
+  ],
+  "scripts": {
+    "clean": "lerna run clean",
+    "build": "lerna run build",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "lint:fix": "lerna run lint -- --fix",
+    "lint:staged": "lint-staged"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.11.0",
+    "eslint-config-jest-enzyme": "^7.0.1",
+    "eslint-loader": "^2.1.2",
+    "eslint-plugin-jsx-a11y": "^6.1.1",
+    "eslint-plugin-react": "^7.11.0",
+    "lerna": "^3.11.1",
+    "lint-staged": "^8.1.0",
+    "pre-commit": "^1.2.2"
+  }
+}
