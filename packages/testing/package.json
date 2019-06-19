@@ -1,7 +1,7 @@
 {
   "name": "@wirelineio/editor-testing",
   "description": "Editor Testing",
-  "version": "0.0.17",
+  "version": "0.0.1",
   "license": "UNLICENSED",
   "private": true,
   "repository": "https://github.com/wirelineio/editor",
@@ -11,6 +11,7 @@
     "@wirelineio/automerge-worker": "^0.1.12",
     "@wirelineio/dsuite-core": "^0.1.16",
     "@wirelineio/discovery-swarm-memory": "^0.1.18",
+    "@wirelineio/prosemirror-pad": "0.0.1",
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.5.1",
     "apollo-link": "^1.2.9",
