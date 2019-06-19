@@ -11,7 +11,6 @@
     "@wirelineio/automerge-worker": "^0.1.12",
     "@wirelineio/dsuite-core": "^0.1.16",
     "@wirelineio/discovery-swarm-memory": "^0.1.18",
-    "@wirelineio/prosemirror-pad": "0.0.1",
     "apollo-cache-inmemory": "^1.5.1",
     "apollo-client": "^2.5.1",
     "apollo-link": "^1.2.9",

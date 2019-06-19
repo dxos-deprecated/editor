@@ -8,7 +8,11 @@ import {
   prosemirrorPluginKey
 } from "y-prosemirror";
 
+import ColorHash from 'color-hash';
+
 import * as math from 'lib0/dist/math.js';
+
+const colorHash = new ColorHash();
 
 const cursorPluginKey = new prosemirrorState.PluginKey('cursor');
 
@@ -18,7 +22,7 @@ const cursorPluginKey = new prosemirrorState.PluginKey('cursor');
  * @param {Awareness} awareness
  * @return {Plugin}
  */
-const cursorPlugin = (awareness) => new prosemirrorState.Plugin({
+const cursorPlugin = (awareness, getUsername) => new prosemirrorState.Plugin({
   key: cursorPluginKey,
   props: {
     decorations: state => {
@@ -29,17 +33,17 @@ const cursorPlugin = (awareness) => new prosemirrorState.Plugin({
         // do not render cursors while snapshot is active
         return;
       }
-      awareness.getStates().forEach((aw, clientId) => {
-        if (clientId === y.clientID) {
+      awareness.getStates().forEach((aw, clientID) => {
+        if (clientID === y.clientID) {
           return;
         }
         if (aw.cursor != null) {
           let user = aw.user || {};
           if (user.color == null) {
-            user.color = '#ffa500';
+            user.color = colorHash.hex(getUsername(clientID));
           }
           if (user.name == null) {
-            user.name = `User: ${clientId}`;
+            user.name = `${getUsername(clientID)}`;
           }
           let anchor = relativePositionToAbsolutePosition(y, ystate.type, Y.createRelativePositionFromJSON(aw.cursor.anchor), ystate.binding.mapping);
           let head = relativePositionToAbsolutePosition(y, ystate.type, Y.createRelativePositionFromJSON(aw.cursor.head), ystate.binding.mapping);
@@ -56,7 +60,7 @@ const cursorPlugin = (awareness) => new prosemirrorState.Plugin({
               userDiv.insertBefore(document.createTextNode(user.name), null);
               cursor.insertBefore(userDiv, null);
               return cursor;
-            }, { key: clientId + '' }));
+            }, { key: clientID + '' }));
             const from = math.min(anchor, head);
             const to = math.max(anchor, head);
             decorations.push(prosemirrorView.Decoration.inline(from, to, { style: `background-color: ${user.color}70` }));
@@ -101,7 +105,7 @@ const cursorPlugin = (awareness) => new prosemirrorState.Plugin({
     view.dom.addEventListener('focusout', updateCursorInfo);
 
     return {
-      update: (view, prevState) => {
+      update: () => {
         // Called whenever the view's state is updated.
         updateCursorInfo();
       },

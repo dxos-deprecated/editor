@@ -16,7 +16,12 @@ const FullViewport = story => <div style={{ display: 'flex', height: '100vh', wi
 
 const ProsemirrorPadEditor = withApollo(ProsemirrorPad.main);
 
-console.log({ ProsemirrorPad });
+const editorStyle = {
+  margin: '0.1rem',
+  background: '#fafafa',
+  border: '1px solid #fdf',
+  padding: '0.2rem'
+};
 
 class Prosemirror extends Component {
   state = {
@@ -28,8 +33,6 @@ class Prosemirror extends Component {
     const partyKey = await randomKey();
 
     const { client, dsuite } = await createClient({ partyKey });
-
-    window.dsuite = dsuite;
 
     dsuite.registerView({ name: ProsemirrorPad.name, view: 'LogsView' });
 
@@ -45,9 +48,9 @@ class Prosemirror extends Component {
 
     return (
       <ApolloProvider client={client}>
-        <div style={{ display: 'flex', flex: 1 }}>
-          <ProsemirrorPadEditor match={{ params: { itemId: view.itemId } }} username={'Alice'} />
-          <ProsemirrorPadEditor match={{ params: { itemId: view.itemId } }} username={'Bob'} />
+        <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
+          <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} username={'Alice'} />
+          <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} username={'Bob'} />
         </div>
       </ApolloProvider>
     );
