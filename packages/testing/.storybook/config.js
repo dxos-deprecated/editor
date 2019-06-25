@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import { configure } from '@storybook/react';
 
 // automatically import all files ending in *.stories.js

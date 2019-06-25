@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import Icon from '@material-ui/icons/Edit';
 
 import { view, type } from './defs';

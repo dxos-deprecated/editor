@@ -1,6 +1,7 @@
 //
 // Copyright 2019 Wireline, Inc.
 //
+
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 

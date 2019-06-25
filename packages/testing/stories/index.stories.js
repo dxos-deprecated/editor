@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import React, { Component } from 'react';
 import { ApolloProvider, withApollo } from 'react-apollo';
 import { storiesOf } from '@storybook/react';
@@ -49,8 +53,8 @@ class Prosemirror extends Component {
     return (
       <ApolloProvider client={client}>
         <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
-          <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} username={'Alice'} />
-          <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} username={'Bob'} />
+          <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} />
+          <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} />
         </div>
       </ApolloProvider>
     );
