@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import React, { Component } from 'react';
 
 import { withLogView } from '@wirelineio/appkit';
@@ -10,26 +14,14 @@ import { compose } from 'react-apollo';
 class Pad extends Component {
 
   render() {
-    const { itemId, appendChange, logs, username } = this.props;
+    const { itemId, appendChange, logs } = this.props;
 
     if (!itemId) return null;
 
-    return <ProsemirrorPad itemId={itemId} appendChange={appendChange} logs={logs} username={username} />;
+    return <ProsemirrorPad itemId={itemId} appendChange={appendChange} logs={logs} />;
   }
 }
 
 export default compose(
-  // graphql(PROFILE_QUERY, {
-  //   options() {
-  //     return {
-  //       fetchPolicy: 'network-only'
-  //     };
-  //   },
-  //   props({ data: { profile } }) {
-  //     return {
-  //       profile
-  //     };
-  //   }
-  // }),
   withLogView({ view })
 )(Pad);

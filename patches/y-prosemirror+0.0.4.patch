@@ -1,0 +1,13 @@
+diff --git a/node_modules/y-prosemirror/src/y-prosemirror.js b/node_modules/y-prosemirror/src/y-prosemirror.js
+index 8d422e6..64c0808 100644
+--- a/node_modules/y-prosemirror/src/y-prosemirror.js
++++ b/node_modules/y-prosemirror/src/y-prosemirror.js
+@@ -400,7 +400,7 @@ export class ProsemirrorBinding {
+     }
+     this.mux(() => {
+       const delStruct = (_, struct) => this.mapping.delete(struct)
+-      Y.iterateDeletedStructs(transaction.deleteSet, this.doc.store, struct => struct.constructor === Y.Item && this.mapping.delete(/** @type {Y.Item} */ (struct).content.type))
++      Y.iterateDeletedStructs(transaction, transaction.deleteSet, this.doc.store, struct => struct.constructor === Y.Item && this.mapping.delete(/** @type {Y.Item} */ (struct).content.type))
+       transaction.changed.forEach(delStruct)
+       transaction.changedParentTypes.forEach(delStruct)
+       const fragmentContent = this.type.toArray().map(t => createNodeIfNotExists(/** @type {Y.XmlElement | Y.XmlHook} */ (t), this.prosemirrorView.state.schema, this.mapping)).filter(n => n !== null)

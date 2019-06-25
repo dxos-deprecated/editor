@@ -25,7 +25,8 @@
     "test": "lerna run test",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",
-    "lint:staged": "lint-staged"
+    "lint:staged": "lint-staged",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
@@ -36,6 +37,8 @@
     "eslint-plugin-react": "^7.11.0",
     "lerna": "^3.11.1",
     "lint-staged": "^8.1.0",
+    "patch-package": "^6.1.2",
+    "postinstall-postinstall": "^2.0.0",
     "pre-commit": "^1.2.2"
   }
 }
