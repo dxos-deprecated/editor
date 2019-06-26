@@ -9,13 +9,12 @@ import React, { Component } from 'react';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { exampleSetup } from 'prosemirror-example-setup';
-import { schema } from "prosemirror-schema-basic";
 import { prosemirrorPlugin } from 'y-prosemirror';
 import * as Y from 'yjs';
 
-// import './styles/prosemirror.css';
-
 import { withStyles } from '@material-ui/core';
+
+import schema from './lib/schema';
 
 class ProsemirrorPad extends Component {
   view = null;
@@ -131,7 +130,7 @@ class ProsemirrorPad extends Component {
   render() {
     const { classes } = this.props;
     return (
-      <div ref={this.editorContainer} className={classes.editor} />
+      <code ref={this.editorContainer} className={classes.editor} autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck="false" />
     );
   }
 }
@@ -148,9 +147,17 @@ const styles = theme => ({
     marginBottom: `${theme.spacing.unit * 4}px`,
     height: `calc(100% - ${theme.spacing.unit * 8}px)`,
 
-    '& > .ProseMirror.ProseMirror-example-setup-style': {
+    '& > .ProseMirror': {
       height: '100%',
       outline: 'none'
+    },
+
+    '& > .ProseMirror > p:first-of-type': {
+      marginBlockStart: 0
+    },
+
+    '& > .ProseMirror > p:last-of-type': {
+      marginBlockEnd: 0
     }
   }
 });
