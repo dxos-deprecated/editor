@@ -6,15 +6,11 @@
 
 import React, { Component } from 'react';
 
-import { EditorState } from 'prosemirror-state';
-import { EditorView } from 'prosemirror-view';
-import { exampleSetup } from 'prosemirror-example-setup';
-import { prosemirrorPlugin } from 'y-prosemirror';
 import * as Y from 'yjs';
 
 import { withStyles } from '@material-ui/core';
 
-import schema from './lib/schema';
+import { createProsemirrorView } from './lib/prosemirror-view';
 
 class ProsemirrorPad extends Component {
   view = null;
@@ -103,16 +99,7 @@ class ProsemirrorPad extends Component {
 
     this.ydoc = new Y.Doc();
 
-    const type = this.ydoc.get('prosemirror', Y.XmlFragment);
-
-    const pPlugin = prosemirrorPlugin(type);
-
-    this.view = new EditorView(this.editorContainer.current, {
-      state: EditorState.create({
-        schema,
-        plugins: exampleSetup({ schema, menuBar: false, history: false }).concat([pPlugin])
-      }),
-    });
+    this.view = createProsemirrorView(this.editorContainer.current, this.ydoc);
 
     this.ydoc.on('update', this.handleLocalDocUpdate);
   }

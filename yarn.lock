@@ -10230,7 +10230,7 @@ prosemirror-inputrules@^1.0.0:
     prosemirror-state "^1.0.0"
     prosemirror-transform "^1.0.0"
 
-prosemirror-keymap@^1.0.0:
+prosemirror-keymap@^1.0.0, prosemirror-keymap@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/prosemirror-keymap/-/prosemirror-keymap-1.0.1.tgz#03ef32b828e3a859dfb570eb84928bf2e5330bc2"
   integrity sha512-e79ApE7PXXZMFtPz7WbjycjAFd1NPjgY1MkecVz98tqwlBSggXWXYQnWFk6x7UkmnBYRHHbXHkR/RXmu2wyBJg==
@@ -13215,10 +13215,10 @@ xtend@^4.0.0, xtend@^4.0.1, xtend@~4.0.0, xtend@~4.0.1:
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.1.tgz#a5c6d532be656e23db820efb943a1f04998d63af"
   integrity sha1-pcbVMr5lbiPbgg77lDofBJmNY68=
 
-y-prosemirror@^0.0.4:
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/y-prosemirror/-/y-prosemirror-0.0.4.tgz#698325af10b166275b9218c70feda25ea6a9141e"
-  integrity sha512-NUXNuziKZ3MYgikfU6i3Vnu2qsRPScbxB8iV2GpTiG3CLY+SCk4Hu0kZrExwH+SKmFFiZNcZq07EXBs1AzeYtw==
+y-prosemirror@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/y-prosemirror/-/y-prosemirror-0.0.6.tgz#ef130e02cff3192c6908d045d25b937d427e2779"
+  integrity sha512-TeY436KOzfINYciaBog35Pfl0bz28TWugCsxaZb0hvT7w9hgapAmhOewvjT7be+f+k/KIFDnvYAVvwhJ4tngVQ==
   dependencies:
     lib0 "0.0.5"
 
