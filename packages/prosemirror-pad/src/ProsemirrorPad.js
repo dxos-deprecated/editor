@@ -122,20 +122,18 @@ class ProsemirrorPad extends Component {
   }
 }
 
-const styles = theme => ({
+const styles = () => ({
+
   editor: {
-    margin: '0.1rem',
     backgroundColor: '#fafafa',
     border: '1px solid #a5a5a5',
     padding: '1rem',
-    display: 'inline-table',
-    width: '80%',
-    marginTop: `${theme.spacing.unit * 4}px`,
-    marginBottom: `${theme.spacing.unit * 4}px`,
-    height: `calc(100% - ${theme.spacing.unit * 8}px)`,
+    flex: 1,
+    display: 'flex',
+    overflow: 'auto',
 
     '& > .ProseMirror': {
-      height: '100%',
+      flex: 1,
       outline: 'none'
     },
 

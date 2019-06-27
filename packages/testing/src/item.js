@@ -13,7 +13,7 @@ const randomKey = () => new Promise(resolve => crypto.randomBytes(32, function (
   resolve(token);
 }));
 
-export const createView = async () => {
+export const createItem = async () => {
   const partyKey = await randomKey();
 
   const { client, dsuite } = await createClient({ partyKey });
@@ -22,7 +22,7 @@ export const createView = async () => {
 
   dsuite.registerView({ name: ProsemirrorPad.name, view: 'LogsView' });
 
-  const view = await dsuite.api.prosemirror.create({ type: 'prosemirror', partyKey });
+  const item = await dsuite.api.prosemirror.create({ type: 'prosemirror', partyKey });
 
-  return { view, client };
+  return { item, client };
 };

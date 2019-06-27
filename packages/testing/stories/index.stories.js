@@ -10,37 +10,30 @@ import { withKnobs, boolean, number } from '@storybook/addon-knobs';
 import ProsemirrorPad from '@wirelineio/prosemirror-pad';
 
 import RandomText from '../src/random-text';
-import { createView } from '../src/view';
+import { createItem } from '../src/item';
 
-const FullViewport = story => <div style={{ display: 'flex', height: '100vh', width: '100vw', padding: 12 }}>{story()}</div>;
+const FullViewport = story => <div style={{ width: '100%', height: '500px', display: 'flex' }}>{story()}</div>;
 
 const ProsemirrorPadEditor = withApollo(ProsemirrorPad.main);
 const RandomTextEditor = withApollo(RandomText);
 
-const editorStyle = {
-  margin: '0.1rem',
-  background: '#fafafa',
-  border: '1px solid #fdf',
-  padding: '0.2rem'
-};
-
-const withView = Wrapped => {
+const withItem = Wrapped => {
   return class ApolloDecorator extends Component {
-    async componentDidMount() {
-      const { view, client } = await createView();
-      this.setState({ view, client });
-    }
-
     state = {}
 
-    render() {
-      const { view, client } = this.state;
+    async componentDidMount() {
+      const { item, client } = await createItem();
+      this.setState({ item, client });
+    }
 
-      if (!view || !client) return <div>Loading...</div>;
+    render() {
+      const { item, client } = this.state;
+
+      if (!item || !client) return <div>Loading...</div>;
 
       return (
         <ApolloProvider client={client}>
-          <Wrapped view={view} {...this.props} />
+          <Wrapped item={item} {...this.props} />
         </ApolloProvider>
       );
     }
@@ -49,23 +42,19 @@ const withView = Wrapped => {
 
 
 
-const BasicProsemirror = withView(({ view }) => {
-  return (
-    <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
-      <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} />
-      <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} />
-    </div>
-  );
-});
+const BasicProsemirror = withItem(({ item }) => (
+  <>
+    <ProsemirrorPadEditor match={{ params: item }} />
+    <ProsemirrorPadEditor match={{ params: item }} />
+  </>
+));
 
-const RandomTextProsemirror = withView(({ view, options }) => {
-
-  return (
-    <div style={{ width: '100%' }}>
-      <RandomTextEditor match={{ params: { itemId: view.itemId } }} {...options} />
-      <ProsemirrorPadEditor style={editorStyle} match={{ params: { itemId: view.itemId } }} />
-    </div>);
-});
+const RandomTextProsemirror = withItem(({ item, options }) => (
+  <>
+    <RandomTextEditor match={{ params: item }} {...options} />
+    <ProsemirrorPadEditor match={{ params: item }} />
+  </>
+));
 
 storiesOf('Prosemirror', module)
   .addDecorator(FullViewport)
