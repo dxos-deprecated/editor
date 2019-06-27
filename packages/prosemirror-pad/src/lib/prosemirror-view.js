@@ -25,5 +25,6 @@ export const createProsemirrorView = (element, doc) => {
     }),
   });
 
+
   return view;
 };
