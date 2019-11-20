@@ -6,6 +6,7 @@ import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
+import { baseKeymap } from 'prosemirror-commands';
 
 import {
   yUndoPlugin,
@@ -18,6 +19,8 @@ import {
 import { schema } from './schema';
 import Provider from './provider';
 import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
+import contextMenuPlugin from '../plugins/context-menu-plugin';
+import ContextMenu from '../components/ContextMenu';
 
 const getActiveMarks = state => {
   return Object.values(schema.marks).reduce((marks, mark) => {
@@ -46,6 +49,7 @@ export const createProsemirrorView = ({
   doc,
   changes,
   status,
+  contextMenu,
   onChange = () => null,
   onHistoryChange = () => null,
   options: { initialFontSize = 16 }
@@ -63,10 +67,24 @@ export const createProsemirrorView = ({
     schema,
 
     plugins: [
+      // Content sync plugin
       yjsBinding.plugin,
+
+      // Cursor indicator plugin
       yCursorPlugin(provider.awareness, status),
+
+      // Yjs history plugin
       yUndoPlugin(),
+
+      contextMenuPlugin({
+        MenuComponent: ContextMenu,
+        getOptions: contextMenu.getOptions,
+        onSelect: contextMenu.onSelect,
+        renderItem: contextMenu.renderItem
+      }),
+
       keymap({
+        ...baseKeymap,
         'Mod-z': undo,
         'Mod-y': redo,
         'Mod-Shift-z': redo,

@@ -26,7 +26,6 @@ const TRIGGER_CHAR = '@';
 const contextMenuState = {
   open: false,
   options: [],
-  selection: undefined,
   selectedOptionIndex: 0,
   top: 0,
   right: 0
@@ -40,10 +39,9 @@ const contextMenuPlugin = ({
   onSelect = () => null,
   renderItem = () => null
 }) => {
-
   // NOTE: Must be function since this context is used.
   function dispatchEvent(event, view) {
-    const { from, to } = view.state.selection;
+    const { to } = view.state.selection;
 
     const options = getOptions();
     if (event.key === TRIGGER_CHAR || event.metaKey) {
@@ -63,22 +61,30 @@ const contextMenuPlugin = ({
       ({ right } = coords);
     }
 
-    view.dispatch(view.state.tr
-      .setMeta(this, {
+    view.dispatch(
+      view.state.tr.setMeta(this, {
         open: true,
         options,
         top,
-        right,
-        selection: { from, to }
-      }));
+        right
+      })
+    );
   }
 
-  const doSelect = async (view, option, { selection }) => {
-    const to = await onSelect(option, { selection });
+  const doSelect = async (view, option) => {
+    await onSelect(option, view);
 
-    view.dispatch(view.state.tr
-      .setSelection(TextSelection.fromJSON(view.state.tr.doc, { type: 'text', anchor: to, head: to }))
-      .scrollIntoView());
+    view.dispatch(
+      view.state.tr
+        .setSelection(
+          TextSelection.fromJSON(view.state.tr.doc, {
+            type: 'text',
+            anchor: view.state.selection.to,
+            head: view.state.selection.to
+          })
+        )
+        .scrollIntoView()
+    );
 
     view.focus();
   };
@@ -105,9 +111,12 @@ const contextMenuPlugin = ({
       },
 
       handleKeyDown(view, event) {
-        const { open, selectedOptionIndex, options, selection } = this.getState(view.state);
+        const { open, selectedOptionIndex, options } = this.getState(
+          view.state
+        );
 
-        const setMeta = meta => view.dispatch(view.state.tr.setMeta(this, meta));
+        const setMeta = meta =>
+          view.dispatch(view.state.tr.setMeta(this, meta));
 
         if (open && SPECIAL_KEYS.includes(event.key)) {
           switch (event.key) {
@@ -129,7 +138,7 @@ const contextMenuPlugin = ({
 
             case KEY_ENTER:
             case KEY_TAB:
-              doSelect(view, options[selectedOptionIndex], { selection });
+              doSelect(view, options[selectedOptionIndex]);
               setMeta(contextMenuState);
               break;
 
@@ -148,7 +157,11 @@ const contextMenuPlugin = ({
         // Handle Ctrl+Space and @.
         // NOTE: Type @ twice to close the menu and insert the character'.
         // TODO(burdon): Ignore if previous character is not whitespace?
-        if (!open && ((event.key === TRIGGER_CHAR) || (event.code === KEY_SPACE && event.ctrlKey))) {
+        if (
+          !open &&
+          (event.key === TRIGGER_CHAR ||
+            (event.code === KEY_SPACE && event.ctrlKey))
+        ) {
           dispatchEvent.apply(this, [event, view]);
           return true;
         }
@@ -174,7 +187,7 @@ const contextMenuPlugin = ({
       }
     },
 
-    view: (view) => {
+    view: view => {
       const menuContainer = document.createElement('div');
       view.dom.parentNode.insertBefore(menuContainer, view.dom.nextSibling);
 
@@ -184,18 +197,30 @@ const contextMenuPlugin = ({
           const prevPluginState = contextMenuPluginKey.getState(prevState);
 
           // Do nothing if our state doesn't change
-          if (JSON.stringify(pluginState) === JSON.stringify(prevPluginState)) return;
+          if (JSON.stringify(pluginState) === JSON.stringify(prevPluginState))
+            return;
 
-          const { open, options, selectedOptionIndex, top, right, selection } = pluginState;
+          const {
+            open,
+            options,
+            selectedOptionIndex,
+            top,
+            right
+          } = pluginState;
 
           if (open) {
             ReactDOM.render(
               <MenuComponent
                 options={options}
                 selectedIndex={selectedOptionIndex}
-                onSelect={option => doSelect(view, option, { selection })}
+                onSelect={option => doSelect(view, option)}
                 onClose={() => {
-                  view.dispatch(view.state.tr.setMeta(contextMenuPluginKey, { open: false, selectedOptionIndex: 0 }));
+                  view.dispatch(
+                    view.state.tr.setMeta(contextMenuPluginKey, {
+                      open: false,
+                      selectedOptionIndex: 0
+                    })
+                  );
                 }}
                 top={top}
                 left={right}

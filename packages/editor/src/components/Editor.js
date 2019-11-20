@@ -97,12 +97,12 @@ class Editor extends Component {
       doc,
       changes,
       status,
-      options: {
-        initialFontSize: EDITOR_FONT_SIZE,
-        contextMenu
-      },
+      contextMenu,
       onChange: this.handleContentChange,
-      onHistoryChange: this.handleHistoryChange
+      onHistoryChange: this.handleHistoryChange,
+      options: {
+        initialFontSize: EDITOR_FONT_SIZE
+      }
     });
 
     this._view = view;

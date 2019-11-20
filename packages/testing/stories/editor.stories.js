@@ -6,7 +6,10 @@ import Editor from '@wirelineio/editor';
 import Channel from '@wirelineio/editor/channel';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
-import { MuiThemeProvider } from '@material-ui/core/styles';
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
+import { ListItemText } from '@material-ui/core';
+import { grey } from '@material-ui/core/colors';
+import { withStyles } from '@material-ui/styles';
 
 const FullViewport = story => (
   <div style={{ width: '100%', height: '500px', display: 'flex' }}>
@@ -15,11 +18,25 @@ const FullViewport = story => (
 );
 
 const MuiTheme = story => (
-  <MuiThemeProvider>
+  <MuiThemeProvider theme={createMuiTheme()}>
     <CssBaseline />
     {story()}
   </MuiThemeProvider>
 );
+
+const style = () => ({
+  contextMenuItemText: {
+    fontSize: 12,
+    padding: 0
+  },
+
+  contextMenuItemTextRight: {
+    float: 'right',
+    marginLeft: 5,
+    color: grey[500],
+    textTransform: 'Capitalize'
+  }
+});
 
 class BasicEditor extends Component {
   render() {
@@ -28,7 +45,10 @@ class BasicEditor extends Component {
       doc,
       contentChannel,
       statusChannel,
-      onGetUsername
+      onGetUsername,
+      onContextMenuGetOptions,
+      onContextMenuOptionSelect,
+      onContextMenuRenderItem
     } = this.props;
 
     if (!doc) return 'Loading...';
@@ -45,9 +65,9 @@ class BasicEditor extends Component {
           channel: statusChannel
         }}
         contextMenu={{
-          getOptions: this.handleEditorContextMenuGetOptions,
-          onSelect: this.handleEditorContextMenuOptionSelect,
-          renderItem: this.handleEditorContextMenuRenderItem
+          getOptions: onContextMenuGetOptions,
+          onSelect: onContextMenuOptionSelect,
+          renderItem: onContextMenuRenderItem
         }}
       />
     );
@@ -75,8 +95,8 @@ class BasicSync extends Component {
 
   createEditor = (id, username) => {
     const doc = new Y.Doc();
-    const contentChannel = new Channel({ debug: `CONTENT ${id}` });
-    const statusChannel = new Channel({ debug: `STATUS ${id}` });
+    const contentChannel = new Channel();
+    const statusChannel = new Channel();
 
     contentChannel.on('local', data => {
       const { editors } = this.state;
@@ -115,6 +135,32 @@ class BasicSync extends Component {
     return editors[id].username;
   };
 
+  handleContextMenuGetOptions = () => {
+    return [
+      { id: 1, label: 'Insert some text' },
+      { id: 2, label: 'Insert some text 2' }
+    ];
+  };
+
+  handleContextMenuRenderItem = ({ option }) => {
+    const { classes } = this.props;
+
+    return (
+      <ListItemText
+        primary={<>{option.label}</>}
+        className={classes.contextMenuItemText}
+      />
+    );
+  };
+
+  handleContextMenuOptionSelect = async (option, view) => {
+    const { tr } = view.state;
+
+    view.state.selection.replaceWith(tr, view.state.schema.text('-SOME TEXT-'));
+
+    view.dispatch(tr);
+  };
+
   render() {
     const { editors } = this.state;
 
@@ -125,6 +171,9 @@ class BasicSync extends Component {
         <BasicEditor
           key={editor.id}
           onGetUsername={this.handleGetUsername(editor.id)}
+          onContextMenuGetOptions={this.handleContextMenuGetOptions}
+          onContextMenuOptionSelect={this.handleContextMenuOptionSelect}
+          onContextMenuRenderItem={this.handleContextMenuRenderItem}
           {...editor}
         />
       );
@@ -132,7 +181,9 @@ class BasicSync extends Component {
   }
 }
 
+const BasicSyncWithStyles = withStyles(style)(BasicSync);
+
 storiesOf('Editor', module)
   .addDecorator(MuiTheme)
   .addDecorator(FullViewport)
-  .add('Basic', () => <BasicSync editorsCount={2} />);
+  .add('Basic', () => <BasicSyncWithStyles editorsCount={2} />);
