@@ -3,13 +3,14 @@ import { Decoration, DecorationSet } from 'prosemirror-view'; // eslint-disable-
 import { Plugin, PluginKey } from 'prosemirror-state'; // eslint-disable-line
 import { Awareness } from 'y-protocols/awareness'; // eslint-disable-line
 import * as math from 'lib0/math';
+
 import ColorHash from 'color-hash';
 
-import { ySyncPluginKey } from './sync-plugin';
+import { ySyncPluginKey } from 'y-prosemirror/src/plugins/sync-plugin';
 import {
-  absolutePositionToRelativePosition,
-  relativePositionToAbsolutePosition
-} from '../lib';
+  relativePositionToAbsolutePosition,
+  absolutePositionToRelativePosition
+} from 'y-prosemirror/src/lib';
 
 const colorHash = new ColorHash();
 

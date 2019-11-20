@@ -8,13 +8,8 @@ import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
 import { baseKeymap } from 'prosemirror-commands';
 
-import {
-  yUndoPlugin,
-  undo,
-  redo,
-  yCursorPlugin,
-  yUndoPluginKey
-} from '../plugins/y-prosemirror/y-prosemirror';
+import { yUndoPlugin, undo, redo, yUndoPluginKey } from 'y-prosemirror';
+import { yCursorPlugin } from '../plugins/cursor-plugin';
 
 import { schema } from './schema';
 import Provider from './provider';

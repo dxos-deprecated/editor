@@ -3,7 +3,7 @@
 //
 
 import * as Y from 'yjs';
-import { ySyncPlugin } from './y-prosemirror/y-prosemirror';
+import { ySyncPlugin } from 'y-prosemirror';
 import { getXmlFragmentContent } from '../lib/yjs-helpers';
 
 // eslint-disable-next-line no-unused-vars
