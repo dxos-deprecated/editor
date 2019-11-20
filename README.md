@@ -1,5 +1,5 @@
 # Editor
 
-## Prosemirror Pad
+## Editor
 
 ## Testing

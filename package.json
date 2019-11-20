@@ -8,9 +8,6 @@
   "workspaces": {
     "packages": [
       "packages/*"
-    ],
-    "nohoist": [
-      "**/@wirelineio/automerge-worker"
     ]
   },
   "lint-staged": {
@@ -25,20 +22,17 @@
     "test": "lerna run test",
     "lint": "lerna run lint",
     "lint:fix": "lerna run lint -- --fix",
-    "lint:staged": "lint-staged",
-    "postinstall": "patch-package"
+    "lint:staged": "lint-staged"
   },
   "devDependencies": {
-    "babel-eslint": "^10.0.1",
-    "eslint": "^5.11.0",
-    "eslint-config-jest-enzyme": "^7.0.1",
-    "eslint-loader": "^2.1.2",
-    "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-react": "^7.11.0",
-    "lerna": "^3.11.1",
-    "lint-staged": "^8.1.0",
-    "patch-package": "^6.1.2",
-    "postinstall-postinstall": "^2.0.0",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.6.0",
+    "eslint-config-jest-enzyme": "^7.1.2",
+    "eslint-loader": "^3.0.2",
+    "eslint-plugin-jsx-a11y": "^6.2.3",
+    "eslint-plugin-react": "^7.16.0",
+    "lerna": "^3.18.4",
+    "lint-staged": "^9.4.3",
     "pre-commit": "^1.2.2"
   }
 }

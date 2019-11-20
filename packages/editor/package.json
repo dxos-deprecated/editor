@@ -1,0 +1,52 @@
+{
+  "name": "@wirelineio/editor",
+  "version": "0.0.1",
+  "description": "Wireline editor",
+  "keywords": [],
+  "homepage": "https://github.com/wirelineio/editor",
+  "bugs": {
+    "url": "https://github.com/wirelineio/editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wirelineio/editor.git"
+  },
+  "license": "GPL-3.0",
+  "main": "src/index.js",
+  "module": "dist/es/index.js",
+  "scripts": {
+    "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "clean": "rm -rf dist && mkdir -p ./dist/es",
+    "lint": "eslint ./src"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ],
+  "dependencies": {
+    "@material-ui/core": "^4.5.1",
+    "@material-ui/icons": "^4.5.1",
+    "color-hash": "^1.0.3",
+    "lib0": "^0.1.2",
+    "prosemirror-example-setup": "1.1.2",
+    "prosemirror-commands": "^1.1.2",
+    "prosemirror-keymap": "^1.1.3",
+    "prosemirror-model": "^1.8.2",
+    "prosemirror-schema-basic": "^1.1.2",
+    "prosemirror-state": "^1.3.2",
+    "prosemirror-view": "^1.13.4",
+    "react": "^16.12.0",
+    "y-prosemirror": "^0.1.3",
+    "y-protocols": "^0.1.0",
+    "yjs": "^13.0.0-102"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-proposal-class-properties": "^7.7.0",
+    "@babel/preset-env": "^7.7.1",
+    "@babel/preset-react": "^7.7.0"
+  }
+}
