@@ -195,9 +195,9 @@ export const yCursorPlugin = (awareness, { id, getUsername }) =>
       return {
         update: updateCursorInfo,
         destroy: () => {
+          awareness.off('change', awarenessListener);
           awareness.setLocalStateField('cursor', null);
           awareness.setLocalStateField('user', null);
-          awareness.off('change', awarenessListener);
         }
       };
     }

@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import { withStyles } from '@material-ui/core';
 
 import Button from '@material-ui/core/Button';
-import Divider from '@material-ui/core/Divider';
+import MUIDivider from '@material-ui/core/Divider';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import MUIToolbar from '@material-ui/core/Toolbar';
@@ -19,6 +19,13 @@ import FormatUnderlinedIcon from '@material-ui/icons/FormatUnderlined';
 import CodeIcon from '@material-ui/icons/Code';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
+import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
+import ListBulletedIcon from '@material-ui/icons/FormatListBulleted';
+
+import { getActiveMarks } from '../lib/schema-helper';
+import { schema } from '../lib/schema';
+import { wrapInList } from 'prosemirror-schema-list';
+import { setBlockType, toggleMark } from 'prosemirror-commands';
 
 const styles = theme => ({
   root: {
@@ -42,6 +49,10 @@ const styles = theme => ({
   },
   buttonIconDisabled: {
     // color: theme.palette.primary.dark
+  },
+  divider: {
+    marginRight: theme.spacing(0.5),
+    marginLeft: theme.spacing(0.5)
   }
 });
 
@@ -74,6 +85,21 @@ const MARK_BUTTONS = {
     title: 'Toggle monospace font',
     icon: CodeIcon,
     order: 4
+  }
+};
+
+const WRAPPER_BUTTONS = {
+  ordered_list: {
+    name: 'ordered_list',
+    title: 'Toggle ordered list',
+    icon: ListNumberedIcon,
+    order: 1
+  },
+  bullet_list: {
+    name: 'bullet_list',
+    title: 'Toggle bullet list',
+    icon: ListBulletedIcon,
+    order: 2
   }
 };
 
@@ -125,7 +151,35 @@ const ToolbarButton = withStyles(styles)(
 
 class Toolbar extends Component {
   state = {
-    nodeTypesMenuAnchorElement: undefined
+    nodeTypesMenuAnchorElement: undefined,
+    activeMarks: {}
+  };
+
+  componentDidMount() {
+    const { view } = this.props;
+
+    let originalDispatch = view._props.dispatchTransaction;
+
+    view._props.dispatchTransaction = transaction => {
+      const newState = originalDispatch(transaction);
+      this.handleViewUpdate(newState);
+    };
+  }
+
+  handleViewUpdate = () => {
+    const { view } = this.props;
+
+    const activeMarks = getActiveMarks(view.state);
+
+    this.setState({ activeMarks });
+  };
+
+  dispatchCommand = (fn, { focus = true } = {}) => {
+    const { view } = this.props;
+
+    fn(view.state, view.dispatch);
+
+    focus && view.focus();
   };
 
   handleNodeTypesButtonClick = event => {
@@ -136,24 +190,30 @@ class Toolbar extends Component {
     this.setState({ nodeTypesMenuAnchorElement: undefined });
   };
 
-  handleMarkButtonClick = name => event => {
-    event.preventDefault();
-    const { onMarkButtonClick } = this.props;
-    onMarkButtonClick(name);
-  };
-
-  handleNodeTypeButtonClick = (name, attrs) => event => {
-    event.preventDefault();
-    const { onNodeTypeButtonClick } = this.props;
-    onNodeTypeButtonClick(name, attrs);
-
-    this.handleNodeTypesMenuClose();
-  };
-
   handleHistoryButtonClick = type => event => {
     event.preventDefault();
     const { onHistoryButtonClick } = this.props;
     onHistoryButtonClick(type);
+  };
+
+  handleMarkButtonClick = name => event => {
+    event.preventDefault();
+
+    this.dispatchCommand(toggleMark(schema.marks[name]));
+  };
+
+  handleNodeTypeButtonClick = (name, attrs) => event => {
+    event.preventDefault();
+
+    this.dispatchCommand(setBlockType(schema.nodes[name], attrs));
+
+    this.handleNodeTypesMenuClose();
+  };
+
+  handleWrapperButtonClick = type => event => {
+    event.preventDefault();
+
+    this.dispatchCommand(wrapInList(schema.nodes[type]));
   };
 
   renderHistoryButtons = () => {
@@ -175,7 +235,7 @@ class Toolbar extends Component {
   };
 
   renderMarkButtons = () => {
-    const { activeMarks } = this.props;
+    const { activeMarks } = this.state;
 
     return Object.values(MARK_BUTTONS).map(spec => (
       <ToolbarButton
@@ -227,7 +287,7 @@ class Toolbar extends Component {
           <MenuItem onClick={this.handleNodeTypeButtonClick('paragraph')}>
             Paragraph
           </MenuItem>
-          <Divider />
+          <MUIDivider />
           {[...Array(6).keys()].map(key => (
             <MenuItem
               key={key}
@@ -240,7 +300,7 @@ class Toolbar extends Component {
               </Typography>
             </MenuItem>
           ))}
-          <Divider />
+          <MUIDivider />
           <MenuItem
             style={{ fontFamily: 'monospace' }}
             onClick={this.handleNodeTypeButtonClick('code_block')}
@@ -252,19 +312,36 @@ class Toolbar extends Component {
     );
   };
 
+  renderWrapperButtons = () => {
+    return Object.values(WRAPPER_BUTTONS).map(spec => (
+      <ToolbarButton
+        {...spec}
+        key={spec.name}
+        onClick={this.handleWrapperButtonClick(spec.name)}
+        // active={Boolean(activeWrappers[spec.name])}
+      />
+    ));
+  };
+
   render() {
     const { classes } = this.props;
 
     return (
       <MUIToolbar disableGutters className={classes.root}>
         {this.renderHistoryButtons()}
-        <Divider orientation="vertical" />
-        {this.renderMarkButtons()}
-        <Divider orientation="vertical" />
+        <ToolbarDivider />
         {this.renderNodeTypesMenu()}
+        <ToolbarDivider />
+        {this.renderMarkButtons()}
+        <ToolbarDivider />
+        {this.renderWrapperButtons()}
       </MUIToolbar>
     );
   }
 }
+
+const ToolbarDivider = withStyles(styles)(({ classes }) => {
+  return <MUIDivider orientation="vertical" className={classes.divider} />;
+});
 
 export default withStyles(styles)(Toolbar);

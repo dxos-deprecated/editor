@@ -4,12 +4,9 @@
 
 import React, { Component } from 'react';
 
-import { toggleMark, setBlockType } from 'prosemirror-commands';
-
 import { withStyles } from '@material-ui/core';
 
 import { createProsemirrorView } from '../lib/prosemirror-view';
-import { schema } from '../lib/schema';
 
 import Toolbar from './Toolbar';
 
@@ -79,74 +76,56 @@ const styles = theme => ({
  * Editor component.
  */
 class Editor extends Component {
-  _view = null;
-
   _editor = React.createRef();
 
   state = {
-    activeMarks: {},
+    prosemirrorView: undefined,
+    history: undefined,
     canUndo: false,
     canRedo: false
   };
 
   componentDidMount() {
-    const { doc, changes, status, contextMenu = {} } = this.props;
+    const { doc, contentSync, statusSync, contextMenu = {} } = this.props;
 
     const { view, history } = createProsemirrorView({
       element: this._editor.current,
       doc,
-      changes,
-      status,
+      contentSync,
+      statusSync,
       contextMenu,
-      onChange: this.handleContentChange,
       onHistoryChange: this.handleHistoryChange,
       options: {
         initialFontSize: EDITOR_FONT_SIZE
       }
     });
 
-    this._view = view;
-    this._history = history;
+    this.setState({ prosemirrorView: view, history });
   }
 
   componentWillUnmount() {
     this.destroyEditor();
   }
 
-  handleContentChange = ({ activeMarks }) => {
-    this.setState({ activeMarks });
-  };
-
   handleHistoryChange = ({ canUndo, canRedo }) => {
     this.setState({ canUndo, canRedo });
   };
 
-  handleMarkButtonClick = name => {
-    const markType = schema.marks[name];
-    toggleMark(markType)(this._view.state, this._view.dispatch);
-    this._view.focus();
-  };
-
-  handleNodeTypeButtonClick = (name, attrs) => {
-    setBlockType(schema.nodes[name], attrs)(
-      this._view.state,
-      this._view.dispatch
-    );
-    this._view.focus();
-  };
-
   handleHistoryButtonClick = type => {
-    this._history[type](this._view.state);
-    this._view.focus();
+    const { prosemirrorView, history } = this.state;
+
+    history[type](prosemirrorView.state);
+    prosemirrorView.focus();
   };
 
   destroyEditor() {
-    if (!this._view) {
+    const { prosemirrorView } = this.state;
+    if (!prosemirrorView) {
       return;
     }
 
     try {
-      this._view.destroy();
+      prosemirrorView.destroy();
     } catch (err) {
       console.warn(err);
     }
@@ -154,18 +133,22 @@ class Editor extends Component {
 
   render() {
     const { classes } = this.props;
-    const { activeMarks, canUndo, canRedo } = this.state;
+    const { prosemirrorView, canUndo, canRedo } = this.state;
 
     return (
       <div className={classes.root}>
-        <Toolbar
-          activeMarks={activeMarks}
-          onMarkButtonClick={this.handleMarkButtonClick}
-          onNodeTypeButtonClick={this.handleNodeTypeButtonClick}
-          onHistoryButtonClick={this.handleHistoryButtonClick}
-          canUndo={canUndo}
-          canRedo={canRedo}
-        />
+        {prosemirrorView && (
+          <Toolbar
+            view={prosemirrorView}
+            // activeMarks={activeMarks}
+            // onMarkButtonClick={this.handleMarkButtonClick}
+            // onNodeTypeButtonClick={this.handleNodeTypeButtonClick}
+            onHistoryButtonClick={this.handleHistoryButtonClick}
+            // onWrapperButtonClick={this.handleWrapperButtonClick}
+            canUndo={canUndo}
+            canRedo={canRedo}
+          />
+        )}
         <div className={classes.editorContainer}>
           <div
             ref={this._editor}

@@ -4,9 +4,7 @@
 
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
-import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
-import { baseKeymap } from 'prosemirror-commands';
 
 import { yUndoPlugin, undo, redo, yUndoPluginKey } from 'y-prosemirror';
 import { yCursorPlugin } from '../plugins/cursor-plugin';
@@ -17,45 +15,22 @@ import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 import ContextMenu from '../components/ContextMenu';
 
-const getActiveMarks = state => {
-  return Object.values(schema.marks).reduce((marks, mark) => {
-    const ref = state.selection;
-    const { from } = ref;
-    const { $from } = ref;
-    const { to } = ref;
-    const { empty } = ref;
-
-    let active = false;
-
-    if (empty) {
-      active = mark.isInSet(state.storedMarks || $from.marks());
-    } else {
-      active = state.doc.rangeHasMark(from, to, mark);
-    }
-
-    marks[mark.name] = active;
-
-    return marks;
-  }, {});
-};
-
 export const createProsemirrorView = ({
   element,
   doc,
-  changes,
-  status,
+  contentSync,
+  statusSync,
   contextMenu,
-  onChange = () => null,
   onHistoryChange = () => null,
   options: { initialFontSize = 16 }
 }) => {
-  const yjsBinding = new YjsProsemirrorBinding(changes.channel, doc);
+  const yjsBinding = new YjsProsemirrorBinding(contentSync.channel, doc);
 
-  const provider = new Provider(yjsBinding.doc, status.channel);
+  const provider = new Provider(yjsBinding.doc, statusSync.channel);
 
   provider.awareness.setLocalStateField('user', {
-    id: status.id,
-    username: status.getUsername()
+    id: statusSync.id,
+    username: statusSync.getUsername()
   });
 
   const state = EditorState.create({
@@ -66,7 +41,7 @@ export const createProsemirrorView = ({
       yjsBinding.plugin,
 
       // Cursor indicator plugin
-      yCursorPlugin(provider.awareness, status),
+      yCursorPlugin(provider.awareness, statusSync),
 
       // Yjs history plugin
       yUndoPlugin(),
@@ -76,50 +51,54 @@ export const createProsemirrorView = ({
         getOptions: contextMenu.getOptions,
         onSelect: contextMenu.onSelect,
         renderItem: contextMenu.renderItem
-      }),
+      })
+    ].concat(
+      exampleSetup({
+        menuBar: false,
+        history: false,
+        schema,
+        mapKeys: {
+          'Mod-z': undo,
+          'Mod-y': redo,
+          'Mod-Shift-z': redo,
 
-      keymap({
-        ...baseKeymap,
-        'Mod-z': undo,
-        'Mod-y': redo,
-        'Mod-Shift-z': redo,
+          'Mod-=': (state, dispatch, view) => {
+            const current = parseInt(
+              parseFloat(view.dom.style.fontSize || initialFontSize),
+              10
+            );
 
-        'Mod-=': (state, dispatch, view) => {
-          const current = parseInt(
-            parseFloat(view.dom.style.fontSize || initialFontSize),
-            10
-          );
+            view.dom.style.fontSize = `${current + 1}px`;
+            return true;
+          },
+          'Mod--': (state, dispatch, view) => {
+            const current = parseInt(
+              parseFloat(view.dom.style.fontSize || initialFontSize),
+              10
+            );
 
-          view.dom.style.fontSize = `${current + 1}px`;
-          return true;
-        },
-        'Mod--': (state, dispatch, view) => {
-          const current = parseInt(
-            parseFloat(view.dom.style.fontSize || initialFontSize),
-            10
-          );
+            view.dom.style.fontSize = `${current - 1}px`;
+            return true;
+          },
 
-          view.dom.style.fontSize = `${current - 1}px`;
-          return true;
-        },
+          Tab: (state, dispatch) => {
+            const {
+              $from: { pos: from },
+              $to: { pos: to }
+            } = state.selection;
 
-        Tab: (state, dispatch) => {
-          const {
-            $from: { pos: from },
-            $to: { pos: to }
-          } = state.selection;
+            dispatch(
+              state.tr
+                .delete(from, to)
+                .insert(from, schema.text('  '))
+                .scrollIntoView()
+            );
 
-          dispatch(
-            state.tr
-              .delete(from, to)
-              .insert(from, schema.text('  '))
-              .scrollIntoView()
-          );
-
-          return true;
+            return true;
+          }
         }
       })
-    ].concat(exampleSetup({ menuBar: false, history: false, schema }))
+    )
   });
 
   const view = new EditorView(
@@ -128,12 +107,13 @@ export const createProsemirrorView = ({
       state,
       dispatchTransaction(transaction) {
         const newState = view.state.apply(transaction);
-
         view.updateState(newState);
 
-        const activeMarks = getActiveMarks(newState);
+        return newState;
 
-        onChange({ transaction, view, activeMarks });
+        // const activeMarks = getActiveMarks(newState);
+
+        // onChange({ transaction, view, activeMarks });
       }
     }
   );

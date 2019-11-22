@@ -33,10 +33,14 @@ class YjsProsemirrorBinding {
     // Clone doc content: remote -> local
     Y.applyUpdate(this._doc, Y.encodeStateAsUpdate(remoteDoc));
 
+    window._doc = this._doc;
+
     this._doc.on('update', this._localDocUpdateHandler);
 
     // Remote updates listener
-    this._channel.on('remote', this._remoteDocUpdateHandler);
+    this._channel.on('remote', data => {
+      this._remoteDocUpdateHandler(data);
+    });
 
     // Y.XmlFragment as a rich text content
     const contentFragment = getXmlFragmentContent(this._doc);

@@ -4,8 +4,6 @@
 
 import { Schema } from 'prosemirror-model';
 
-const brDOM = ['br'];
-
 const calcYchangeDomAttrs = (attrs, domAttrs = {}) => {
   domAttrs = Object.assign({}, domAttrs);
   if (attrs.ychange !== null) {
@@ -53,7 +51,7 @@ export const nodes = {
     group: 'block',
     parseDOM: [{ tag: 'hr' }],
     toDOM(node) {
-      return ['hr', calcYchangeDomAttrs(node.attrs)];
+      return ['div', ['hr', calcYchangeDomAttrs(node.attrs)]];
     }
   },
 
@@ -144,7 +142,57 @@ export const nodes = {
     selectable: false,
     parseDOM: [{ tag: 'br' }],
     toDOM() {
-      return brDOM;
+      return ['br'];
+    }
+  },
+
+  ordered_list: {
+    content: 'list_item+',
+    group: 'block',
+    attrs: {
+      ychange: { default: null },
+      order: { default: 1 }
+    },
+    parseDOM: [
+      {
+        tag: 'ol',
+        getAttrs(dom) {
+          return {
+            order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1
+          };
+        }
+      }
+    ],
+    toDOM(node) {
+      const domAttrs = {
+        start: node.attrs.order == 1 ? null : node.attrs.order
+      };
+
+      return ['ol', calcYchangeDomAttrs(node.attrs, domAttrs), 0];
+    }
+  },
+
+  bullet_list: {
+    content: 'list_item+',
+    group: 'block',
+    attrs: {
+      ychange: { default: null }
+    },
+    parseDOM: [{ tag: 'ul' }],
+    toDOM(node) {
+      return ['ul', calcYchangeDomAttrs(node.attrs), 0];
+    }
+  },
+
+  list_item: {
+    content: 'paragraph block*',
+    defining: true,
+    attrs: {
+      ychange: { default: null }
+    },
+    parseDOM: [{ tag: 'li' }],
+    toDOM(node) {
+      return ['li', calcYchangeDomAttrs(node.attrs), 0];
     }
   }
 };
@@ -249,12 +297,4 @@ export const marks = {
   }
 };
 
-// :: Schema
-// This schema rougly corresponds to the document schema used by
-// [CommonMark](http://commonmark.org/), minus the list elements,
-// which are defined in the [`prosemirror-schema-list`](#schema-list)
-// module.
-//
-// To reuse elements from this schema, extend or read from its
-// `spec.nodes` and `spec.marks` [properties](#model.Schema.spec).
 export const schema = new Schema({ nodes, marks });

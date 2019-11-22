@@ -6,6 +6,7 @@
   "private": true,
   "repository": "https://github.com/wirelineio/editor",
   "dependencies": {
+    "@wirelineio/editor": "^0.0.1",
     "faker": "^4.1.0",
     "lodash.merge": "^4.6.1",
     "react": "^16.12.0",

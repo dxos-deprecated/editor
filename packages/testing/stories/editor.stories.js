@@ -56,10 +56,10 @@ class BasicEditor extends Component {
     return (
       <Editor
         doc={doc}
-        changes={{
+        contentSync={{
           channel: contentChannel
         }}
-        status={{
+        statusSync={{
           id,
           getUsername: onGetUsername,
           channel: statusChannel
