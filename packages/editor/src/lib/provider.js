@@ -1,7 +1,7 @@
 import * as awarenessProtocol from 'y-protocols/awareness';
 
 import * as mutex from 'lib0/mutex';
-import { Observable as Obs } from 'lib0/observable';
+import { Observable } from 'lib0/observable';
 import * as Y from 'yjs'; // eslint-disable-line
 import * as time from 'lib0/time';
 import * as encoding from 'lib0/encoding';
@@ -73,7 +73,7 @@ const broadcastMessage = (provider, buf) => {
   provider.channel.send(buf);
 };
 
-class Provider extends Obs {
+class Provider extends Observable {
   lastMessageReceived = 0;
 
   constructor(doc, channel) {

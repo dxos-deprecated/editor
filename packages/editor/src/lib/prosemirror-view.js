@@ -6,7 +6,7 @@ import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import { exampleSetup } from 'prosemirror-example-setup';
 
-import { yUndoPlugin, undo, redo, yUndoPluginKey } from 'y-prosemirror';
+import { yUndoPlugin, undo, redo } from 'y-prosemirror';
 import { yCursorPlugin } from '../plugins/cursor-plugin';
 
 import { schema } from './schema';
@@ -21,7 +21,6 @@ export const createProsemirrorView = ({
   contentSync,
   statusSync,
   contextMenu,
-  onHistoryChange = () => null,
   options: { initialFontSize = 16 }
 }) => {
   const yjsBinding = new YjsProsemirrorBinding(contentSync.channel, doc);
@@ -110,29 +109,9 @@ export const createProsemirrorView = ({
         view.updateState(newState);
 
         return newState;
-
-        // const activeMarks = getActiveMarks(newState);
-
-        // onChange({ transaction, view, activeMarks });
       }
     }
   );
 
-  const { undoManager } = yUndoPluginKey.getState(view.state);
-
-  undoManager.on('stack-item-added', ({ type }, undoManager) => {
-    const canUndo = undoManager.undoStack.length > 0;
-    const canRedo = undoManager.redoStack.length > 0;
-    onHistoryChange({ type, canUndo, canRedo });
-  });
-
-  window.view = view;
-
-  return {
-    view,
-    history: {
-      undo: () => undo(view.state),
-      redo: () => redo(view.state)
-    }
-  };
+  return view;
 };

@@ -80,43 +80,28 @@ class Editor extends Component {
 
   state = {
     prosemirrorView: undefined,
-    history: undefined,
-    canUndo: false,
-    canRedo: false
   };
 
   componentDidMount() {
     const { doc, contentSync, statusSync, contextMenu = {} } = this.props;
 
-    const { view, history } = createProsemirrorView({
+    const view = createProsemirrorView({
       element: this._editor.current,
       doc,
       contentSync,
       statusSync,
       contextMenu,
-      onHistoryChange: this.handleHistoryChange,
       options: {
         initialFontSize: EDITOR_FONT_SIZE
       }
     });
 
-    this.setState({ prosemirrorView: view, history });
+    this.setState({ prosemirrorView: view });
   }
 
   componentWillUnmount() {
     this.destroyEditor();
   }
-
-  handleHistoryChange = ({ canUndo, canRedo }) => {
-    this.setState({ canUndo, canRedo });
-  };
-
-  handleHistoryButtonClick = type => {
-    const { prosemirrorView, history } = this.state;
-
-    history[type](prosemirrorView.state);
-    prosemirrorView.focus();
-  };
 
   destroyEditor() {
     const { prosemirrorView } = this.state;
@@ -133,20 +118,20 @@ class Editor extends Component {
 
   render() {
     const { classes } = this.props;
-    const { prosemirrorView, canUndo, canRedo } = this.state;
+    const { prosemirrorView } = this.state;
 
     return (
       <div className={classes.root}>
         {prosemirrorView && (
           <Toolbar
             view={prosemirrorView}
-            // activeMarks={activeMarks}
-            // onMarkButtonClick={this.handleMarkButtonClick}
-            // onNodeTypeButtonClick={this.handleNodeTypeButtonClick}
-            onHistoryButtonClick={this.handleHistoryButtonClick}
-            // onWrapperButtonClick={this.handleWrapperButtonClick}
-            canUndo={canUndo}
-            canRedo={canRedo}
+          // activeMarks={activeMarks}
+          // onMarkButtonClick={this.handleMarkButtonClick}
+          // onNodeTypeButtonClick={this.handleNodeTypeButtonClick}
+          // onHistoryButtonClick={this.handleHistoryButtonClick}
+          // onWrapperButtonClick={this.handleWrapperButtonClick}
+          // canUndo={canUndo}
+          // canRedo={canRedo}
           />
         )}
         <div className={classes.editorContainer}>

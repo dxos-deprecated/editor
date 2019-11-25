@@ -1,6 +1,11 @@
 import React, { Component } from 'react';
 import classnames from 'classnames';
 
+import { hasParentNodeOfType } from 'prosemirror-utils';
+import { wrapInList } from 'prosemirror-schema-list';
+import { setBlockType, toggleMark, lift } from 'prosemirror-commands';
+import { yUndoPluginKey, undo, redo } from 'y-prosemirror';
+
 import { withStyles } from '@material-ui/core';
 
 import Button from '@material-ui/core/Button';
@@ -13,19 +18,18 @@ import Typography from '@material-ui/core/Typography';
 
 import { grey, lightBlue } from '@material-ui/core/colors';
 
+import CodeIcon from '@material-ui/icons/Code';
 import FormatBoldIcon from '@material-ui/icons/FormatBold';
+import FormatIndentDecreaseIcon from '@material-ui/icons/FormatIndentDecrease';
 import FormatItalicIcon from '@material-ui/icons/FormatItalic';
 import FormatUnderlinedIcon from '@material-ui/icons/FormatUnderlined';
-import CodeIcon from '@material-ui/icons/Code';
-import UndoIcon from '@material-ui/icons/Undo';
-import RedoIcon from '@material-ui/icons/Redo';
-import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
 import ListBulletedIcon from '@material-ui/icons/FormatListBulleted';
+import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
+import RedoIcon from '@material-ui/icons/Redo';
+import UndoIcon from '@material-ui/icons/Undo';
 
 import { getActiveMarks } from '../lib/schema-helper';
 import { schema } from '../lib/schema';
-import { wrapInList } from 'prosemirror-schema-list';
-import { setBlockType, toggleMark } from 'prosemirror-commands';
 
 const styles = theme => ({
   root: {
@@ -42,13 +46,13 @@ const styles = theme => ({
   },
   buttonIcon: {
     margin: 0,
-    color: grey[400]
+    color: grey[800]
   },
   buttonIconActive: {
     color: lightBlue[800]
   },
   buttonIconDisabled: {
-    // color: theme.palette.primary.dark
+    color: grey[400]
   },
   divider: {
     marginRight: theme.spacing(0.5),
@@ -57,31 +61,35 @@ const styles = theme => ({
 });
 
 const HISTORY_BUTTONS = {
-  undo: { name: 'undo', title: 'Undo last change', icon: UndoIcon, order: 1 },
-  redo: { name: 'redo', title: 'Redo last change', icon: RedoIcon, order: 2 }
+  undo: { name: 'undo', title: 'Undo last change', icon: UndoIcon, fn: undo, order: 1 },
+  redo: { name: 'redo', title: 'Redo last change', icon: RedoIcon, fn: redo, order: 2 }
 };
 
 const MARK_BUTTONS = {
   strong: {
     name: 'strong',
+    nodeType: schema.nodes.strong,
     title: 'Toggle strong',
     icon: FormatBoldIcon,
     order: 1
   },
   em: {
     name: 'em',
+    nodeType: schema.nodes.em,
     title: 'Toggle emphasis',
     icon: FormatItalicIcon,
     order: 2
   },
   underline: {
     name: 'underline',
+    nodeType: schema.nodes.underline,
     title: 'Toggle underlined',
     icon: FormatUnderlinedIcon,
     order: 3
   },
   code: {
     name: 'code',
+    nodeType: schema.nodes.code,
     title: 'Toggle monospace font',
     icon: CodeIcon,
     order: 4
@@ -91,14 +99,25 @@ const MARK_BUTTONS = {
 const WRAPPER_BUTTONS = {
   ordered_list: {
     name: 'ordered_list',
+    nodeType: schema.nodes.ordered_list,
     title: 'Toggle ordered list',
     icon: ListNumberedIcon,
+    fn: () => wrapInList(schema.nodes.ordered_list),
     order: 1
   },
   bullet_list: {
     name: 'bullet_list',
+    nodeType: schema.nodes.bullet_list,
     title: 'Toggle bullet list',
     icon: ListBulletedIcon,
+    fn: () => wrapInList(schema.nodes.bullet_list),
+    order: 2
+  },
+  lift: {
+    name: 'decrease_indentation',
+    title: 'Decrease indent',
+    icon: FormatIndentDecreaseIcon,
+    fn: lift,
     order: 2
   }
 };
@@ -149,10 +168,15 @@ const ToolbarButton = withStyles(styles)(
   )
 );
 
+window.bullet_list_type = schema.nodes.bullet_list;
+window.wrapInList = wrapInList;
+
 class Toolbar extends Component {
   state = {
     nodeTypesMenuAnchorElement: undefined,
-    activeMarks: {}
+    activeMarks: {},
+    canUndo: false,
+    canRedo: false
   };
 
   componentDidMount() {
@@ -164,6 +188,14 @@ class Toolbar extends Component {
       const newState = originalDispatch(transaction);
       this.handleViewUpdate(newState);
     };
+
+    const { undoManager } = yUndoPluginKey.getState(view.state);
+
+    undoManager.on('stack-item-added', (_, undoManager) => {
+      const canUndo = undoManager.undoStack.length > 0;
+      const canRedo = undoManager.redoStack.length > 0;
+      this.setState({ canUndo, canRedo });
+    });
   }
 
   handleViewUpdate = () => {
@@ -174,10 +206,12 @@ class Toolbar extends Component {
     this.setState({ activeMarks });
   };
 
-  dispatchCommand = (fn, { focus = true } = {}) => {
+  dispatchCommand = (fn, { dryRun = false, focus = true } = {}) => {
     const { view } = this.props;
 
-    fn(view.state, view.dispatch);
+    const dispatchResult = fn(view.state, !dryRun && view.dispatch);
+
+    if (dryRun) return dispatchResult;
 
     focus && view.focus();
   };
@@ -190,10 +224,13 @@ class Toolbar extends Component {
     this.setState({ nodeTypesMenuAnchorElement: undefined });
   };
 
-  handleHistoryButtonClick = type => event => {
+  handleHistoryButtonClick = fn => event => {
+    const { view } = this.props;
+
     event.preventDefault();
-    const { onHistoryButtonClick } = this.props;
-    onHistoryButtonClick(type);
+
+    fn(view.state);
+    view.focus();
   };
 
   handleMarkButtonClick = name => event => {
@@ -210,25 +247,26 @@ class Toolbar extends Component {
     this.handleNodeTypesMenuClose();
   };
 
-  handleWrapperButtonClick = type => event => {
+  handleWrapperButtonClick = command => event => {
     event.preventDefault();
 
-    this.dispatchCommand(wrapInList(schema.nodes[type]));
+    this.dispatchCommand(command);
   };
 
   renderHistoryButtons = () => {
-    const { canUndo, canRedo } = this.props;
+    const { canUndo, canRedo } = this.state;
 
     return Object.values(HISTORY_BUTTONS)
       .sort((a, b) => a.order - b.order)
       .map(spec => (
         <ToolbarButton
-          {...spec}
+          name={spec.name}
+          icon={spec.icon}
           key={spec.name}
-          onClick={this.handleHistoryButtonClick(spec.name)}
-          active={
-            (spec.name === 'undo' && canUndo) ||
-            (spec.name === 'redo' && canRedo)
+          onClick={this.handleHistoryButtonClick(spec.fn)}
+          disabled={
+            (spec.name === 'undo' && !canUndo) ||
+            (spec.name === 'redo' && !canRedo)
           }
         />
       ));
@@ -313,14 +351,39 @@ class Toolbar extends Component {
   };
 
   renderWrapperButtons = () => {
-    return Object.values(WRAPPER_BUTTONS).map(spec => (
-      <ToolbarButton
-        {...spec}
-        key={spec.name}
-        onClick={this.handleWrapperButtonClick(spec.name)}
+    const { view } = this.props;
+
+    return Object.values(WRAPPER_BUTTONS).map(spec => {
+      let disabled = false;
+      let command = spec.fn;
+
+      if (spec.nodeType) {
+        disabled = !this.dispatchCommand(spec.fn(), { dryRun: true });
+        command = spec.fn();
+        //   const isNodeType = hasParentNodeOfType(spec.nodeType)(view.state.selection);
+        //   const command = isNodeType ? lift : spec.fn(spec.nodeType);
+      } else {
+        disabled = !hasParentNodeOfType(schema.nodes.ordered_list)(view.state.selection) && !hasParentNodeOfType(schema.nodes.bullet_list)(view.state.selection);
+      }
+
+
+      // console.log(spec.name, {
+      //   enabled,
+      //   isNodeType,
+      //   command
+      // });
+
+      return (
+        <ToolbarButton
+          icon={spec.icon}
+          name={spec.name}
+          key={spec.name}
+          onClick={this.handleWrapperButtonClick(command)}
+          disabled={disabled}
         // active={Boolean(activeWrappers[spec.name])}
-      />
-    ));
+        />
+      );
+    });
   };
 
   render() {
