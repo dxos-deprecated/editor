@@ -1,15 +1,7 @@
 {
   "presets": [
-    [
-      "@babel/preset-env",
-      {
-        "targets": {
-          "node": "10.10.0"
-        },
-        "modules": "commonjs"
-      }
-    ],
-    "@babel/preset-react"
+    "@babel/preset-react",
+    "@babel/preset-env"
   ],
   "plugins": [
     "@babel/plugin-proposal-class-properties",
