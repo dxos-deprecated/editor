@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import * as awarenessProtocol from 'y-protocols/awareness';
 
 import * as mutex from 'lib0/mutex';
@@ -7,17 +11,11 @@ import * as time from 'lib0/time';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
 import * as syncProtocol from 'y-protocols/sync';
-// import * as authProtocol from 'y-protocols/auth';
-// import * as math from 'lib0/math';
 
 const messageSync = 0;
 const messageQueryAwareness = 3;
 const messageAwareness = 1;
 const messageAuth = 2;
-
-// const reconnectTimeoutBase = 1200;
-// const maxReconnectTimeout = 2500;
-// const messageReconnectTimeout = 30000;
 
 const readMessage = (provider, buf, emitSynced) => {
   const decoder = decoding.createDecoder(buf);
@@ -124,14 +122,6 @@ class Provider extends Observable {
     });
 
     this.awareness.on('change', this._awarenessUpdateHandler);
-
-    this._checkInterval = setInterval(() => {
-      // if (messageReconnectTimeout < time.getUnixTime() - this.lastMessageReceived) {
-      //   // no message received in a long time - not even your own awareness
-      //   // updates (which are updated every 15 seconds)
-      //   /** @type {WebSocket} */ (this.ws).close();
-      // }
-    });
 
     this.channel.on('remote', remoteData => {
       // decode UInt8Array

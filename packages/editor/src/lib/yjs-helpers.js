@@ -18,6 +18,7 @@ export const getXmlFragmentContent = doc => doc.getXmlFragment(CONTENT_KEY);
 /**
  *
  * @param {Y.Doc} doc
+ * @returns {String} markdown content
  */
 export const getContentAsMarkdown = doc => {
   return xmlFragmentToMarkdown(getXmlFragmentContent(doc));
@@ -40,6 +41,3 @@ export const registerContentObserver = (doc, callback) => {
 export const unregisterContentObserver = (doc, callback) => {
   getXmlFragmentContent(doc).unobserveDeep(callback);
 };
-
-window.getContentAsMarkdown = getContentAsMarkdown;
-window.getXmlFragmentContent = getXmlFragmentContent;

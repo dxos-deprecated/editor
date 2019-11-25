@@ -33,8 +33,6 @@ class YjsProsemirrorBinding {
     // Clone doc content: remote -> local
     Y.applyUpdate(this._doc, Y.encodeStateAsUpdate(remoteDoc));
 
-    window._doc = this._doc;
-
     this._doc.on('update', this._localDocUpdateHandler);
 
     // Remote updates listener

@@ -122,12 +122,6 @@ const WRAPPER_BUTTONS = {
   }
 };
 
-// const NODE_TYPE_BUTTONS = {
-//   paragraph: { name: 'paragraph', title: 'Set type paragraph', order: 1 },
-//   heading: { name: 'heading', title: 'Set type heading', order: 2 },
-//   code_block: { name: 'code_block', title: 'Set type code block', order: 3 }
-// };
-
 const ToolbarButton = withStyles(styles)(
   ({
     children,
@@ -167,9 +161,6 @@ const ToolbarButton = withStyles(styles)(
     </Tooltip>
   )
 );
-
-window.bullet_list_type = schema.nodes.bullet_list;
-window.wrapInList = wrapInList;
 
 class Toolbar extends Component {
   state = {
@@ -283,19 +274,6 @@ class Toolbar extends Component {
         active={Boolean(activeMarks[spec.name])}
       />
     ));
-
-    // return Object.values(activeMarks)
-    //   .filter(mark => Boolean(MARK_BUTTONS[mark.name]))
-    //   .map(mark => ({ mark, spec: MARK_BUTTONS[mark.name] }))
-    //   .sort((a, b) => a.spec.order - b.spec.order)
-    //   .map(({ spec, mark }) => (
-    //     <ToolbarButton
-    //       {...spec}
-    //       key={spec.name}
-    //       onClick={this.handleMarkButtonClick(spec.name)}
-    //       active={mark.active}
-    //     />
-    //   ));
   };
 
   renderNodeTypesMenu = () => {
@@ -360,18 +338,9 @@ class Toolbar extends Component {
       if (spec.nodeType) {
         disabled = !this.dispatchCommand(spec.fn(), { dryRun: true });
         command = spec.fn();
-        //   const isNodeType = hasParentNodeOfType(spec.nodeType)(view.state.selection);
-        //   const command = isNodeType ? lift : spec.fn(spec.nodeType);
       } else {
         disabled = !hasParentNodeOfType(schema.nodes.ordered_list)(view.state.selection) && !hasParentNodeOfType(schema.nodes.bullet_list)(view.state.selection);
       }
-
-
-      // console.log(spec.name, {
-      //   enabled,
-      //   isNodeType,
-      //   command
-      // });
 
       return (
         <ToolbarButton
