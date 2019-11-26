@@ -3,7 +3,7 @@ import { storiesOf } from '@storybook/react';
 import * as Y from 'yjs';
 
 import Editor from '../../Editor';
-import Channel from '../../channel';
+import Channel from '../../Channel';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme, withStyles } from '@material-ui/core/styles';
