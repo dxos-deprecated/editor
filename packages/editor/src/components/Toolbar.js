@@ -1,35 +1,28 @@
-import React, { Component } from 'react';
-import classnames from 'classnames';
+//
+// Copyright 2019 Wireline, Inc.
+//
 
-import { hasParentNodeOfType } from 'prosemirror-utils';
-import { wrapInList } from 'prosemirror-schema-list';
-import { setBlockType, toggleMark, lift } from 'prosemirror-commands';
+import React, { PureComponent } from 'react';
+
+import { setBlockType, toggleMark } from 'prosemirror-commands';
 import { yUndoPluginKey, undo, redo } from 'y-prosemirror';
 
 import { withStyles } from '@material-ui/core';
 
-import Button from '@material-ui/core/Button';
 import MUIDivider from '@material-ui/core/Divider';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
 import MUIToolbar from '@material-ui/core/Toolbar';
-import Tooltip from '@material-ui/core/Tooltip';
-import Typography from '@material-ui/core/Typography';
 
-import { grey, lightBlue } from '@material-ui/core/colors';
-
-import CodeIcon from '@material-ui/icons/Code';
-import FormatBoldIcon from '@material-ui/icons/FormatBold';
-import FormatIndentDecreaseIcon from '@material-ui/icons/FormatIndentDecrease';
-import FormatItalicIcon from '@material-ui/icons/FormatItalic';
-import FormatUnderlinedIcon from '@material-ui/icons/FormatUnderlined';
-import ListBulletedIcon from '@material-ui/icons/FormatListBulleted';
-import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
-import RedoIcon from '@material-ui/icons/Redo';
-import UndoIcon from '@material-ui/icons/Undo';
+import { grey } from '@material-ui/core/colors';
 
 import { getActiveMarks } from '../lib/schema-helper';
 import { schema } from '../lib/schema';
+import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
+
+import ToolbarLinkButton from './ToolbarLinkButton';
+import ToolbarNodeTypesButton from './ToolbarNodeTypesButton';
+import ToolbarHistoryButtons from './ToolbarHistoryButtons';
+import ToolbarMarkButtons from './ToolbarMarkButtons';
+import ToolbarWrapperButtons from './ToolbarWrapperButtons';
 
 const styles = theme => ({
   root: {
@@ -39,163 +32,67 @@ const styles = theme => ({
     borderBottom: `1px solid ${grey[500]}`,
     minHeight: 'fit-content'
   },
-  button: {
-    minWidth: 0,
-    marginRight: theme.spacing(0.5),
-    marginLeft: theme.spacing(0.5)
-  },
-  buttonIcon: {
-    margin: 0,
-    color: grey[800]
-  },
-  buttonIconActive: {
-    color: lightBlue[800]
-  },
-  buttonIconDisabled: {
-    color: grey[400]
-  },
   divider: {
     marginRight: theme.spacing(0.5),
     marginLeft: theme.spacing(0.5)
   }
 });
 
-const HISTORY_BUTTONS = {
-  undo: { name: 'undo', title: 'Undo last change', icon: UndoIcon, fn: undo, order: 1 },
-  redo: { name: 'redo', title: 'Redo last change', icon: RedoIcon, fn: redo, order: 2 }
-};
-
-const MARK_BUTTONS = {
-  strong: {
-    name: 'strong',
-    nodeType: schema.nodes.strong,
-    title: 'Toggle strong',
-    icon: FormatBoldIcon,
-    order: 1
-  },
-  em: {
-    name: 'em',
-    nodeType: schema.nodes.em,
-    title: 'Toggle emphasis',
-    icon: FormatItalicIcon,
-    order: 2
-  },
-  underline: {
-    name: 'underline',
-    nodeType: schema.nodes.underline,
-    title: 'Toggle underlined',
-    icon: FormatUnderlinedIcon,
-    order: 3
-  },
-  code: {
-    name: 'code',
-    nodeType: schema.nodes.code,
-    title: 'Toggle monospace font',
-    icon: CodeIcon,
-    order: 4
-  }
-};
-
-const WRAPPER_BUTTONS = {
-  ordered_list: {
-    name: 'ordered_list',
-    nodeType: schema.nodes.ordered_list,
-    title: 'Toggle ordered list',
-    icon: ListNumberedIcon,
-    fn: () => wrapInList(schema.nodes.ordered_list),
-    order: 1
-  },
-  bullet_list: {
-    name: 'bullet_list',
-    nodeType: schema.nodes.bullet_list,
-    title: 'Toggle bullet list',
-    icon: ListBulletedIcon,
-    fn: () => wrapInList(schema.nodes.bullet_list),
-    order: 2
-  },
-  lift: {
-    name: 'decrease_indentation',
-    title: 'Decrease indent',
-    icon: FormatIndentDecreaseIcon,
-    fn: lift,
-    order: 2
-  }
-};
-
-const ToolbarButton = withStyles(styles)(
-  ({
-    children,
-    icon: IconComponent,
-    name,
-    title = name,
-    active = false,
-    disabled = false,
-    onClick,
-    classes
-  }) => (
-    <Tooltip title={title}>
-      <Button
-        classes={{
-          root: classes.button,
-          label: classes.buttonLabel,
-          startIcon: classes.buttonIcon
-        }}
-        color="default"
-        disabled={disabled}
-        onClick={onClick}
-        {...(IconComponent
-          ? {
-            startIcon: (
-              <IconComponent
-                className={classnames(
-                  active && classes.buttonIconActive,
-                  disabled && classes.buttonIconDisabled
-                )}
-              />
-            )
-          }
-          : {})}
-      >
-        {children || ' '}
-      </Button>
-    </Tooltip>
-  )
-);
-
-class Toolbar extends Component {
+class Toolbar extends PureComponent {
   state = {
-    nodeTypesMenuAnchorElement: undefined,
     activeMarks: {},
     canUndo: false,
-    canRedo: false
+    canRedo: false,
+    canSetLink: false,
+    selectedLinkNodes: []
   };
 
   componentDidMount() {
     const { view } = this.props;
 
+    window.view = view;
+
     let originalDispatch = view._props.dispatchTransaction;
 
+    // Register to view changes
     view._props.dispatchTransaction = transaction => {
-      const newState = originalDispatch(transaction);
-      this.handleViewUpdate(newState);
+
+      const { oldState, newState } = originalDispatch(transaction);
+
+      const sameSelection = newState.selection.eq(oldState.selection);
+
+      if (transaction.meta.pointer || transaction.docChanged || !sameSelection) {
+        this.handleViewUpdate(newState);
+      }
     };
 
+    // Register to history changes
     const { undoManager } = yUndoPluginKey.getState(view.state);
-
-    undoManager.on('stack-item-added', (_, undoManager) => {
-      const canUndo = undoManager.undoStack.length > 0;
-      const canRedo = undoManager.redoStack.length > 0;
-      this.setState({ canUndo, canRedo });
-    });
+    undoManager.on('stack-item-popped', this.handleHistoryUpdate);
+    undoManager.on('stack-item-added', this.handleHistoryUpdate);
   }
 
-  handleViewUpdate = () => {
+  handleViewUpdate = (newState) => {
     const { view } = this.props;
 
-    const activeMarks = getActiveMarks(view.state);
+    const activeMarks = getActiveMarks(newState);
+    const canSetLink = !newState.selection.empty && this.dispatchCommand(toggleMark(schema.marks.link), { dryRun: true });
 
-    this.setState({ activeMarks });
+    const selectedTextNodes = getSelectedTextNodes(view);
+    const selectedLinkNodes = selectedTextNodes.filter(isLink);
+
+    this.setState({ activeMarks, canSetLink, selectedLinkNodes });
   };
+
+  handleHistoryUpdate = () => {
+    const { view } = this.props;
+    const { undoManager } = yUndoPluginKey.getState(view.state);
+
+    const canUndo = undoManager.undoStack.length > 0;
+    const canRedo = undoManager.redoStack.length > 0;
+
+    this.setState({ canUndo, canRedo });
+  }
 
   dispatchCommand = (fn, { dryRun = false, focus = true } = {}) => {
     const { view } = this.props;
@@ -207,35 +104,23 @@ class Toolbar extends Component {
     focus && view.focus();
   };
 
-  handleNodeTypesButtonClick = event => {
-    this.setState({ nodeTypesMenuAnchorElement: event.currentTarget });
-  };
-
-  handleNodeTypesMenuClose = () => {
-    this.setState({ nodeTypesMenuAnchorElement: undefined });
-  };
-
-  handleHistoryButtonClick = fn => event => {
+  handleHistoryButtonClick = name => event => {
     const { view } = this.props;
 
     event.preventDefault();
 
-    fn(view.state);
+    (name === 'undo' ? undo : redo)(view.state);
     view.focus();
   };
 
-  handleMarkButtonClick = name => event => {
+  handleMarkButtonClick = mark => event => {
     event.preventDefault();
 
-    this.dispatchCommand(toggleMark(schema.marks[name]));
+    this.dispatchCommand(toggleMark(mark));
   };
 
-  handleNodeTypeButtonClick = (name, attrs) => event => {
-    event.preventDefault();
-
+  handleNodeTypeButtonClick = (name, attrs) => {
     this.dispatchCommand(setBlockType(schema.nodes[name], attrs));
-
-    this.handleNodeTypesMenuClose();
   };
 
   handleWrapperButtonClick = command => event => {
@@ -244,129 +129,43 @@ class Toolbar extends Component {
     this.dispatchCommand(command);
   };
 
-  renderHistoryButtons = () => {
-    const { canUndo, canRedo } = this.state;
+  handleSetLink = (title, linkUrl) => {
+    const { view: { state: { doc, selection } } } = this.props;
 
-    return Object.values(HISTORY_BUTTONS)
-      .sort((a, b) => a.order - b.order)
-      .map(spec => (
-        <ToolbarButton
-          name={spec.name}
-          icon={spec.icon}
-          key={spec.name}
-          onClick={this.handleHistoryButtonClick(spec.fn)}
-          disabled={
-            (spec.name === 'undo' && !canUndo) ||
-            (spec.name === 'redo' && !canRedo)
-          }
-        />
-      ));
-  };
+    if (selection.empty) return false;
 
-  renderMarkButtons = () => {
-    const { activeMarks } = this.state;
+    const attrs = { title, href: linkUrl };
 
-    return Object.values(MARK_BUTTONS).map(spec => (
-      <ToolbarButton
-        {...spec}
-        key={spec.name}
-        onClick={this.handleMarkButtonClick(spec.name)}
-        active={Boolean(activeMarks[spec.name])}
-      />
-    ));
-  };
+    if (doc.rangeHasMark(selection.from, selection.to, schema.marks.link)) {
+      this.dispatchCommand(toggleMark(schema.marks.link, attrs));
+    }
 
-  renderNodeTypesMenu = () => {
-    const { classes } = this.props;
-    const { nodeTypesMenuAnchorElement } = this.state;
+    return this.dispatchCommand(toggleMark(schema.marks.link, attrs));
+  }
 
-    return (
-      <div>
-        <Button
-          aria-controls="node-types-menu"
-          aria-haspopup="true"
-          classes={{
-            root: classes.button
-          }}
-          color="default"
-          onClick={this.handleNodeTypesButtonClick}
-        >
-          Type
-        </Button>
-        <Menu
-          id="node-types-menu"
-          anchorEl={nodeTypesMenuAnchorElement}
-          keepMounted
-          open={Boolean(nodeTypesMenuAnchorElement)}
-          onClose={this.handleNodeTypesMenuClose}
-        >
-          <MenuItem onClick={this.handleNodeTypeButtonClick('paragraph')}>
-            Paragraph
-          </MenuItem>
-          <MUIDivider />
-          {[...Array(6).keys()].map(key => (
-            <MenuItem
-              key={key}
-              onClick={this.handleNodeTypeButtonClick('heading', {
-                level: key + 1
-              })}
-            >
-              <Typography style={{ fontSize: `1.${6 - key}rem` }}>
-                Heading {key + 1}
-              </Typography>
-            </MenuItem>
-          ))}
-          <MUIDivider />
-          <MenuItem
-            style={{ fontFamily: 'monospace' }}
-            onClick={this.handleNodeTypeButtonClick('code_block')}
-          >
-            Code
-          </MenuItem>
-        </Menu>
-      </div>
-    );
-  };
+  handleRemoveLink = () => {
+    const { view: { state: { selection } } } = this.props;
 
-  renderWrapperButtons = () => {
-    const { view } = this.props;
+    if (selection.empty) return false;
 
-    return Object.values(WRAPPER_BUTTONS).map(spec => {
-      let disabled = false;
-      let command = spec.fn;
-
-      if (spec.nodeType) {
-        disabled = !this.dispatchCommand(spec.fn(), { dryRun: true });
-        command = spec.fn();
-      } else {
-        disabled = !hasParentNodeOfType(schema.nodes.ordered_list)(view.state.selection) && !hasParentNodeOfType(schema.nodes.bullet_list)(view.state.selection);
-      }
-
-      return (
-        <ToolbarButton
-          icon={spec.icon}
-          name={spec.name}
-          key={spec.name}
-          onClick={this.handleWrapperButtonClick(command)}
-          disabled={disabled}
-        // active={Boolean(activeWrappers[spec.name])}
-        />
-      );
-    });
-  };
+    this.dispatchCommand(toggleMark(schema.marks.link));
+  }
 
   render() {
-    const { classes } = this.props;
+    const { classes, view } = this.props;
+    const { canUndo, canRedo, canSetLink, selectedLinkNodes, activeMarks } = this.state;
 
     return (
       <MUIToolbar disableGutters className={classes.root}>
-        {this.renderHistoryButtons()}
+        <ToolbarHistoryButtons canUndo={canUndo} canRedo={canRedo} onClick={this.handleHistoryButtonClick} />
         <ToolbarDivider />
-        {this.renderNodeTypesMenu()}
+        <ToolbarNodeTypesButton onMenuItemSelected={this.handleNodeTypeButtonClick} />
         <ToolbarDivider />
-        {this.renderMarkButtons()}
+        <ToolbarMarkButtons activeMarks={activeMarks} onClick={this.handleMarkButtonClick} />
         <ToolbarDivider />
-        {this.renderWrapperButtons()}
+        <ToolbarWrapperButtons selection={view.state.selection} onClick={this.handleWrapperButtonClick} dispatchCommand={this.dispatchCommand} />
+        <ToolbarDivider />
+        <ToolbarLinkButton onSetLink={this.handleSetLink} onRemoveLink={this.handleRemoveLink} disabled={!canSetLink} selectedLinkNodes={selectedLinkNodes} />
       </MUIToolbar>
     );
   }
