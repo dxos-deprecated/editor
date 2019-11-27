@@ -96,6 +96,7 @@ class BasicSync extends Component {
 
   createEditor = (id, username) => {
     const doc = new Y.Doc();
+    window.doc = doc;
     const contentChannel = new Channel();
     const statusChannel = new Channel();
 
@@ -187,4 +188,4 @@ const BasicSyncWithStyles = withStyles(style)(BasicSync);
 storiesOf('Editor', module)
   .addDecorator(MuiTheme)
   .addDecorator(FullViewport)
-  .add('Basic', () => <BasicSyncWithStyles editorsCount={2} />);
+  .add('Basic', () => <BasicSyncWithStyles editorsCount={1} />);

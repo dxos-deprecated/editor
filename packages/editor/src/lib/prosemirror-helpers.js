@@ -8,6 +8,32 @@ import { schema } from './schema';
 
 /**
  *
+ * @param {EditorState} state
+ */
+export const getActiveMarks = state => {
+  return Object.values(schema.marks).reduce((marks, mark) => {
+    const ref = state.selection;
+    const { from } = ref;
+    const { $from } = ref;
+    const { to } = ref;
+    const { empty } = ref;
+
+    let active = false;
+
+    if (empty) {
+      active = mark.isInSet(state.storedMarks || $from.marks());
+    } else {
+      active = state.doc.rangeHasMark(from, to, mark);
+    }
+
+    marks[mark.name] = active;
+
+    return marks;
+  }, {});
+};
+
+/**
+ *
  * @param {EditorView} view
  */
 export const getSelectedTextNodes = view => {
@@ -37,7 +63,3 @@ export const isLink = node => {
 export const linkMark = node => {
   return node.marks.find(mark => mark.type === schema.marks.link);
 };
-
-window.getSelectedNodes = getSelectedTextNodes;
-window.isLink = isLink;
-window.linkMark = linkMark;

@@ -4,9 +4,10 @@
 
 // eslint-disable-next-line no-unused-vars
 import * as Y from 'yjs';
-import xmlFragmentToMarkdown from './unified-yjs-md';
+import { xmlFragmentToMarkdown, injectMarkdownIntoXmlFragment } from './unified-yjs';
 
-export const CONTENT_KEY = 'xmlfragment_content_v1';
+const OLD_TEXT_CONTENT_KEY = 'content';
+const CONTENT_KEY = 'xmlfragment_content_v1';
 
 /**
  *
@@ -14,6 +15,13 @@ export const CONTENT_KEY = 'xmlfragment_content_v1';
  * @returns {Y.XmlFragment} XmlFragment content
  */
 export const getXmlFragmentContent = doc => doc.getXmlFragment(CONTENT_KEY);
+
+/**
+ *
+ * @param {Y.Doc} doc
+ * @returns {Y.Text} Text content
+ */
+export const getTextContent = doc => doc.getText(OLD_TEXT_CONTENT_KEY);
 
 /**
  *
@@ -40,4 +48,24 @@ export const registerContentObserver = (doc, callback) => {
  */
 export const unregisterContentObserver = (doc, callback) => {
   getXmlFragmentContent(doc).unobserveDeep(callback);
+};
+
+/**
+ *
+ * @param {Y.Doc} doc
+ */
+export const upgradeDocContent = doc => {
+  const oldTextContent = getTextContent(doc);
+
+  // Not an older doc version
+  if (oldTextContent.length === 0) return doc;
+
+  const xmlFragment = getXmlFragmentContent(doc);
+
+  injectMarkdownIntoXmlFragment(oldTextContent.toString(), xmlFragment);
+
+  // Remove old content
+  oldTextContent.delete(0, oldTextContent.length);
+
+  return doc;
 };
