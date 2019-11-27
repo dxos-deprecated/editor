@@ -14,9 +14,8 @@ import MUIToolbar from '@material-ui/core/Toolbar';
 
 import { grey } from '@material-ui/core/colors';
 
-import { getActiveMarks } from '../lib/schema-helper';
 import { schema } from '../lib/schema';
-import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
+import { getSelectedTextNodes, isLink, getActiveMarks } from '../lib/prosemirror-helpers';
 
 import ToolbarLinkButton from './ToolbarLinkButton';
 import ToolbarNodeTypesButton from './ToolbarNodeTypesButton';
