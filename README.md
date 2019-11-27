@@ -1,5 +1,2 @@
 # Editor
-
-## Prosemirror Pad
-
-## Testing
+Editor components and libs
