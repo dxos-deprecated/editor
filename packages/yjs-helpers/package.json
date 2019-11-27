@@ -1,0 +1,41 @@
+{
+  "name": "@wirelineio/yjs-helpers",
+  "version": "0.0.7",
+  "description": "Helpers for YJS",
+  "keywords": [],
+  "homepage": "https://github.com/wirelineio/editor",
+  "bugs": {
+    "url": "https://github.com/wirelineio/editor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wirelineio/editor.git"
+  },
+  "license": "GPL-3.0",
+  "main": "src/index.js",
+  "module": "dist/es/index.js",
+  "scripts": {
+    "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "clean": "rm -rf dist && mkdir -p ./dist/es",
+    "lint": "eslint ./src"
+  },
+  "dependencies": {
+    "rehype-parse": "^6.0.2",
+    "rehype-remark": "^7.0.0",
+    "remark-parse": "^7.0.2",
+    "remark-stringify": "^7.0.4",
+    "unified": "^8.4.2",
+    "yjs": "^13.0.0-102"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.7.0",
+    "@babel/core": "^7.7.2",
+    "@babel/plugin-proposal-class-properties": "^7.7.0",
+    "@babel/plugin-proposal-export-default-from": "^7.7.4",
+    "@babel/preset-env": "^7.7.1",
+    "babel-loader": "^8.0.6"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
