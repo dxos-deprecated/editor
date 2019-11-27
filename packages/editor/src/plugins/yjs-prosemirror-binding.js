@@ -7,7 +7,7 @@ import { ySyncPlugin } from 'y-prosemirror';
 import { getXmlFragmentContent } from '../lib/yjs-helpers';
 
 // eslint-disable-next-line no-unused-vars
-import Channel from '../lib/channel';
+import Channel from '../lib/Channel';
 
 /**
  * Prosemirror binding to sync document (Y.Doc) changes through generic channel
