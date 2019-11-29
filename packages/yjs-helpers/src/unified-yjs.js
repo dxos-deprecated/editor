@@ -10,46 +10,39 @@ import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
 import unified from 'unified';
 
-const tagReplacements = {
-  paragraph: () => ({ tag: 'p' }),
-  heading: element => ({
-    tag: `h${element.properties.level}`,
+const xmlFragmentElementsNames = {
+  paragraph: { tag: () => 'p' },
+  heading: {
+    tag: element => `h${element.properties.level}`,
     attrsToRemove: ['level']
-  }),
-  underline: () => ({ tag: 'u' }),
-  horizontal_rule: () => ({ tag: 'hr' }),
-  code_block: () => ({ tag: 'pre' }),
-  hard_break: () => ({ tag: 'br' }),
-  list_item: () => ({ tag: 'li' }),
-  ordered_list: () => ({ tag: 'ol' }),
-  bullet_list: () => ({ tag: 'ul' })
+  },
+  underline: { tag: () => 'u' },
+  horizontal_rule: { tag: () => 'hr' },
+  code_block: { tag: () => 'pre' },
+  hard_break: { tag: () => 'br' },
+  list_item: { tag: () => 'li' },
+  ordered_list: { tag: () => 'ol' },
+  bullet_list: { tag: () => 'ul' }
 };
 
 function xmlFragmentToMarkdownTreeTransformer() {
   return transformer;
-
-  function replaceTag(element, tagReplacement) {
-    element.tagName = tagReplacement.tag;
-  }
-
-  function removeAttrs(element, tagReplacement) {
-    if (tagReplacement.attrsToRemove) {
-      tagReplacement.attrsToRemove.forEach(
-        attr => delete element.properties[attr]
-      );
-    }
-  }
 
   function transformTagName(element) {
     if (element.type === 'text') return element;
 
     element.children = element.children.map(transformTagName);
 
-    if (Object.keys(tagReplacements).includes(element.tagName)) {
-      const tagReplacement = tagReplacements[element.tagName](element);
+    if (Object.keys(xmlFragmentElementsNames).includes(element.tagName)) {
+      const tagReplacement = xmlFragmentElementsNames[element.tagName];
 
-      replaceTag(element, tagReplacement);
-      removeAttrs(element, tagReplacement);
+      element.tagName = tagReplacement.tag(element);
+
+      if (tagReplacement.attrsToRemove) {
+        tagReplacement.attrsToRemove.forEach(
+          attr => delete element.properties[attr]
+        );
+      }
     }
 
     return element;
@@ -72,16 +65,58 @@ const xmlFragmentToMarkdownProcessor = unified()
 const markdownToXmlFragmentProcessor = unified()
   .use(remarkParse);
 
-const treeNodeToYjsElement = (node) => {
+const treeNodeTypes = {
+  blockquote: {},
+  break: {},
+  code: {
+    tag: () => 'code_block'
+  },
+  emphasis: {
+    tag: () => 'emphasis'
+  },
+  footnote: {},
+  footnoteDefinition: {},
+  footnoteReference: {},
+  heading: {
+    setAttributes: node => [['level', node.depth]]
+  },
+  html: {},
+  image: {},
+  imageReference: {},
+  inlineCode: {},
+  link: {},
+  linkReference: {},
+  list: {
+    tag: node => node.ordered ? 'ordered_list' : 'bullet_list'
+  },
+  listItem: {
+    tag: () => 'list_item'
+  },
+  paragraph: {},
+  root: {},
+  strong: {},
+  table: {},
+  text: {},
+  thematicBreak: {},
+  toml: {},
+  yaml: {},
+};
 
+const treeNodeToYjsElement = (node) => {
   if (node.type === 'text') {
     return new Y.Text(node.value);
   }
 
-  const xmlElement = new Y.XmlElement(node.type);
+  const treeNodeType = treeNodeTypes[node.type];
 
-  if (node.type === 'heading') {
-    xmlElement.setAttribute('level', node.depth);
+  const tagName = treeNodeType.tag ? treeNodeType.tag(node) : node.type;
+
+  const xmlElement = new Y.XmlElement(tagName);
+
+  if (treeNodeType.setAttributes) {
+    treeNodeType.setAttributes(node).forEach(([key, value]) => {
+      xmlElement.setAttribute(key, value);
+    });
   }
 
   if (node.children) {

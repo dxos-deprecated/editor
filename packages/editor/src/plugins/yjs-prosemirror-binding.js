@@ -4,7 +4,7 @@
 
 import * as Y from 'yjs';
 import { ySyncPlugin } from 'y-prosemirror';
-import { getXmlFragmentContent, upgradeDocContent } from '@wirelineio/yjs-helpers';
+import { getXmlFragmentContent } from '@wirelineio/yjs-helpers';
 
 // eslint-disable-next-line no-unused-vars
 import Channel from '../lib/Channel';
@@ -40,10 +40,6 @@ class YjsProsemirrorBinding {
       this._remoteDocUpdateHandler(data);
     });
 
-    // Upgrade from older versions
-    this._doc.transact(() => {
-      upgradeDocContent(this._doc);
-    });
 
     // Y.XmlFragment as a rich text content
     const contentFragment = getXmlFragmentContent(this._doc);

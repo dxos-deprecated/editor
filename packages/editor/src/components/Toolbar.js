@@ -49,8 +49,6 @@ class Toolbar extends PureComponent {
   componentDidMount() {
     const { view } = this.props;
 
-    window.view = view;
-
     let originalDispatch = view._props.dispatchTransaction;
 
     // Register to view changes

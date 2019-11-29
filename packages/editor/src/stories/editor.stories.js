@@ -96,7 +96,7 @@ class BasicSync extends Component {
 
   createEditor = (id, username) => {
     const doc = new Y.Doc();
-    window.doc = doc;
+
     const contentChannel = new Channel();
     const statusChannel = new Channel();
 
