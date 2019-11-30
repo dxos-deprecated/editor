@@ -20,11 +20,10 @@
     "lint": "eslint ./src"
   },
   "dependencies": {
-    "rehype-parse": "^6.0.2",
-    "rehype-remark": "^7.0.0",
     "remark-parse": "^7.0.2",
-    "remark-stringify": "^7.0.4",
+    "prosemirror-markdown": "1.4.2",
     "unified": "^8.4.2",
+    "y-prosemirror": "0.1.5",
     "yjs": "^13.0.0-102"
   },
   "devDependencies": {

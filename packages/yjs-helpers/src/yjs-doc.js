@@ -4,7 +4,10 @@
 
 // eslint-disable-next-line no-unused-vars
 import * as Y from 'yjs';
-import { xmlFragmentToMarkdown, injectMarkdownIntoXmlFragment } from './unified-yjs';
+import { createNodeFromYElement } from 'y-prosemirror';
+import { defaultMarkdownSerializer, schema } from 'prosemirror-markdown';
+
+import { injectMarkdownIntoXmlFragment } from './unified-yjs';
 
 const OLD_TEXT_CONTENT_KEY = 'content';
 const CONTENT_KEY = 'xmlfragment_content_v1';
@@ -29,7 +32,15 @@ export const getTextContent = doc => doc.getText(OLD_TEXT_CONTENT_KEY);
  * @returns {String} markdown content
  */
 export const getContentAsMarkdown = doc => {
-  return xmlFragmentToMarkdown(getXmlFragmentContent(doc));
+
+  const nodes = getXmlFragmentContent(doc).toArray().map(node => createNodeFromYElement(node, schema, new Map()));
+
+  if (nodes.length === 0) return '';
+
+  // Using prosemirror-markdown schema
+  const pmDoc = schema.node('doc', null, nodes);
+
+  return defaultMarkdownSerializer.serialize(pmDoc);
 };
 
 /**

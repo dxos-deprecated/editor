@@ -40,7 +40,6 @@ class YjsProsemirrorBinding {
       this._remoteDocUpdateHandler(data);
     });
 
-
     // Y.XmlFragment as a rich text content
     const contentFragment = getXmlFragmentContent(this._doc);
 
