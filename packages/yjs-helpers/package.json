@@ -1,6 +1,6 @@
 {
   "name": "@wirelineio/yjs-helpers",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Helpers for YJS",
   "keywords": [],
   "homepage": "https://github.com/wirelineio/editor",
@@ -20,8 +20,8 @@
     "lint": "eslint ./src"
   },
   "dependencies": {
-    "remark-parse": "^7.0.2",
     "prosemirror-markdown": "1.4.2",
+    "remark-parse": "^7.0.2",
     "unified": "^8.4.2",
     "y-prosemirror": "0.1.5",
     "yjs": "^13.0.0-102"
