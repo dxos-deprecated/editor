@@ -5,7 +5,9 @@
 // eslint-disable-next-line no-unused-vars
 import * as Y from 'yjs';
 import { createNodeFromYElement } from 'y-prosemirror';
-import { defaultMarkdownSerializer, schema } from 'prosemirror-markdown';
+import { defaultMarkdownSerializer } from 'prosemirror-markdown';
+
+import { schema } from '@wirelineio/editor/schema';
 
 import { injectMarkdownIntoXmlFragment } from './unified-yjs';
 
@@ -39,6 +41,8 @@ export const getContentAsMarkdown = doc => {
 
   // Using prosemirror-markdown schema
   const pmDoc = schema.node('doc', null, nodes);
+
+  defaultMarkdownSerializer.marks.underline = { open: "<u>", close: "</u>", mixable: true, expelEnclosingWhitespace: true };
 
   return defaultMarkdownSerializer.serialize(pmDoc);
 };

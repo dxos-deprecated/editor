@@ -151,21 +151,24 @@ export const nodes = {
     group: 'block',
     attrs: {
       ychange: { default: null },
-      order: { default: 1 }
+      order: { default: 1 },
+      tight: { default: false }
     },
     parseDOM: [
       {
         tag: 'ol',
         getAttrs(dom) {
           return {
-            order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1
+            order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1,
+            tight: dom.hasAttribute("data-tight")
           };
         }
       }
     ],
     toDOM(node) {
       const domAttrs = {
-        start: node.attrs.order == 1 ? null : node.attrs.order
+        start: node.attrs.order == 1 ? null : node.attrs.order,
+        "data-tight": node.attrs.tight ? "true" : null
       };
 
       return ['ol', calcYchangeDomAttrs(node.attrs, domAttrs), 0];
@@ -176,11 +179,16 @@ export const nodes = {
     content: 'list_item+',
     group: 'block',
     attrs: {
-      ychange: { default: null }
+      ychange: { default: null },
+      tight: { default: false }
     },
-    parseDOM: [{ tag: 'ul' }],
+    parseDOM: [{ tag: 'ul', getAttrs: dom => ({ tight: dom.hasAttribute("data-tight") }) }],
     toDOM(node) {
-      return ['ul', calcYchangeDomAttrs(node.attrs), 0];
+      const domAttrs = {
+        "data-tight": node.attrs.tight ? "true" : null
+      };
+
+      return ['ul', calcYchangeDomAttrs(node.attrs, domAttrs), 0];
     }
   },
 
@@ -197,67 +205,40 @@ export const nodes = {
   }
 };
 
-const emDOM = ['em', 0];
-const strongDOM = ['strong', 0];
-const codeDOM = ['code', 0];
-const underlineDOM = ['u', 0];
-
 // :: Object [Specs](#model.MarkSpec) for the marks in the schema.
 export const marks = {
   // :: MarkSpec A link. Has `href` and `title` attributes. `title`
   // defaults to the empty string. Rendered and parsed as an `<a>`
   // element.
+  em: {
+    parseDOM: [{ tag: "i" }, { tag: "em" },
+      { style: "font-style", getAttrs: value => value == "italic" && null }],
+    toDOM() { return ["em"]; }
+  },
+
+  strong: {
+    parseDOM: [{ tag: "b" }, { tag: "strong" },
+      { style: "font-weight", getAttrs: value => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null }],
+    toDOM() { return ["strong"]; }
+  },
+
   link: {
     attrs: {
       href: {},
       title: { default: null }
     },
     inclusive: false,
-    parseDOM: [
-      {
-        tag: 'a[href]',
-        getAttrs(dom) {
-          return {
-            href: dom.getAttribute('href'),
-            title: dom.getAttribute('title')
-          };
-        }
+    parseDOM: [{
+      tag: "a[href]", getAttrs(dom) {
+        return { href: dom.getAttribute("href"), title: dom.getAttribute("title") };
       }
-    ],
-    toDOM(node) {
-      return ['a', node.attrs, 0];
-    }
+    }],
+    toDOM(node) { return ["a", node.attrs]; }
   },
 
-  // :: MarkSpec An emphasis mark. Rendered as an `<em>` element.
-  // Has parse rules that also match `<i>` and `font-style: italic`.
-  em: {
-    parseDOM: [{ tag: 'i' }, { tag: 'em' }, { style: 'font-style=italic' }],
-    toDOM() {
-      return emDOM;
-    }
-  },
-
-  // :: MarkSpec A strong mark. Rendered as `<strong>`, parse rules
-  // also match `<b>` and `font-weight: bold`.
-  strong: {
-    parseDOM: [
-      { tag: 'strong' },
-      // This works around a Google Docs misbehavior where
-      // pasted content will be inexplicably wrapped in `<b>`
-      // tags with a font-weight normal.
-      {
-        tag: 'b',
-        getAttrs: node => node.style.fontWeight !== 'normal' && null
-      },
-      {
-        style: 'font-weight',
-        getAttrs: value => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null
-      }
-    ],
-    toDOM() {
-      return strongDOM;
-    }
+  code: {
+    parseDOM: [{ tag: "code" }],
+    toDOM() { return ["code"]; }
   },
 
   underline: {
@@ -269,17 +250,10 @@ export const marks = {
       }
     ],
     toDOM() {
-      return underlineDOM;
+      return ['u', 0];
     }
   },
 
-  // :: MarkSpec Code font mark. Represented as a `<code>` element.
-  code: {
-    parseDOM: [{ tag: 'code' }],
-    toDOM() {
-      return codeDOM;
-    }
-  },
   ychange: {
     attrs: {
       user: { default: null },

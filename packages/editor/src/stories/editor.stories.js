@@ -11,6 +11,8 @@ import { MuiThemeProvider, createMuiTheme, withStyles } from '@material-ui/core/
 import { grey } from '@material-ui/core/colors';
 
 import ListItemText from '@material-ui/core/ListItemText';
+import { Button, Grid } from '@material-ui/core';
+import { getContentAsMarkdown } from '@wirelineio/yjs-helpers';
 
 const FullViewport = story => (
   <div style={{ width: '100%', height: '500px', display: 'flex' }}>
@@ -40,6 +42,13 @@ const style = () => ({
 });
 
 class BasicEditor extends Component {
+
+  handleShowMarkdown = () => {
+    const { doc } = this.props;
+
+    console.log(getContentAsMarkdown(doc));
+  }
+
   render() {
     const {
       id,
@@ -55,22 +64,25 @@ class BasicEditor extends Component {
     if (!doc) return 'Loading...';
 
     return (
-      <Editor
-        doc={doc}
-        contentSync={{
-          channel: contentChannel
-        }}
-        statusSync={{
-          id,
-          getUsername: onGetUsername,
-          channel: statusChannel
-        }}
-        contextMenu={{
-          getOptions: onContextMenuGetOptions,
-          onSelect: onContextMenuOptionSelect,
-          renderItem: onContextMenuRenderItem
-        }}
-      />
+      <Grid>
+        <Editor
+          doc={doc}
+          contentSync={{
+            channel: contentChannel
+          }}
+          statusSync={{
+            id,
+            getUsername: onGetUsername,
+            channel: statusChannel
+          }}
+          contextMenu={{
+            getOptions: onContextMenuGetOptions,
+            onSelect: onContextMenuOptionSelect,
+            renderItem: onContextMenuRenderItem
+          }}
+        />
+        <Button onClick={this.handleShowMarkdown} >Log markdown</Button>
+      </Grid>
     );
   }
 }
@@ -95,6 +107,7 @@ class BasicSync extends Component {
   }
 
   createEditor = (id, username) => {
+    // View's doc mock
     const doc = new Y.Doc();
 
     const contentChannel = new Channel();
@@ -102,6 +115,9 @@ class BasicSync extends Component {
 
     contentChannel.on('local', data => {
       const { editors } = this.state;
+
+      // Update view's doc
+      Y.applyUpdate(doc, data.update, data.origin);
 
       Object.values(editors)
         .filter(editor => editor.id !== id)
