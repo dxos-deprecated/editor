@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 import { storiesOf } from '@storybook/react';
 import * as Y from 'yjs';
 
-import Editor from '../../Editor';
-import Channel from '../../Channel';
+import Editor from '../components/Editor';
+import Channel from '../lib/Channel';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme, withStyles } from '@material-ui/core/styles';
@@ -11,14 +11,7 @@ import { MuiThemeProvider, createMuiTheme, withStyles } from '@material-ui/core/
 import { grey } from '@material-ui/core/colors';
 
 import ListItemText from '@material-ui/core/ListItemText';
-import { Button, Grid } from '@material-ui/core';
 import { getContentAsMarkdown } from '@wirelineio/yjs-helpers';
-
-const FullViewport = story => (
-  <div style={{ width: '100%', height: '500px', display: 'flex' }}>
-    {story()}
-  </div>
-);
 
 const MuiTheme = story => (
   <MuiThemeProvider theme={createMuiTheme()}>
@@ -27,7 +20,7 @@ const MuiTheme = story => (
   </MuiThemeProvider>
 );
 
-const style = () => ({
+const style = theme => ({
   contextMenuItemText: {
     fontSize: 12,
     padding: 0
@@ -38,17 +31,24 @@ const style = () => ({
     marginLeft: 5,
     color: grey[500],
     textTransform: 'Capitalize'
+  },
+  editorGrid: {
+    display: 'flex',
+
+    '& > *': {
+      flex: 1
+    }
+  },
+  markdownView: {
+    fontSize: '1rem',
+    padding: theme.spacing(1),
+    backgroundColor: '#fff',
+    margin: 0,
+    border: '1px solid #ccc'
   }
 });
 
 class BasicEditor extends Component {
-
-  handleShowMarkdown = () => {
-    const { doc } = this.props;
-
-    console.log(getContentAsMarkdown(doc));
-  }
-
   render() {
     const {
       id,
@@ -64,32 +64,32 @@ class BasicEditor extends Component {
     if (!doc) return 'Loading...';
 
     return (
-      <Grid>
-        <Editor
-          doc={doc}
-          contentSync={{
-            channel: contentChannel
-          }}
-          statusSync={{
-            id,
-            getUsername: onGetUsername,
-            channel: statusChannel
-          }}
-          contextMenu={{
-            getOptions: onContextMenuGetOptions,
-            onSelect: onContextMenuOptionSelect,
-            renderItem: onContextMenuRenderItem
-          }}
-        />
-        <Button onClick={this.handleShowMarkdown} >Log markdown</Button>
-      </Grid>
+
+      <Editor
+        doc={doc}
+        contentSync={{
+          channel: contentChannel
+        }}
+        statusSync={{
+          id,
+          getUsername: onGetUsername,
+          channel: statusChannel
+        }}
+        contextMenu={{
+          getOptions: onContextMenuGetOptions,
+          onSelect: onContextMenuOptionSelect,
+          renderItem: onContextMenuRenderItem
+        }}
+      />
+
     );
   }
 }
 
 class BasicSync extends Component {
   state = {
-    editors: undefined
+    editors: undefined,
+    showMarkdown: undefined
   };
 
   componentDidMount() {
@@ -106,9 +106,28 @@ class BasicSync extends Component {
     this.setState({ editors });
   }
 
+  componentWillUnmount() {
+    const { editors } = this.state;
+    Object.values(editors).forEach(editor => {
+      editor.doc.off('update', this.handleDocUpdated(editor.id));
+    });
+  }
+
+  handleDocUpdated = editorId => () => {
+    const { editors } = this.state;
+
+    const newEditors = { ...editors };
+
+    newEditors[editorId].markdown = getContentAsMarkdown(newEditors[editorId].doc);
+
+    this.setState({ editors: newEditors });
+  }
+
   createEditor = (id, username) => {
     // View's doc mock
     const doc = new Y.Doc();
+
+    doc.on('update', this.handleDocUpdated(id));
 
     const contentChannel = new Channel();
     const statusChannel = new Channel();
@@ -125,6 +144,12 @@ class BasicSync extends Component {
           editor.contentChannel.receive({ ...data, author: editor.id });
         });
     });
+
+    contentChannel.on('remote', data => {
+      // Update view's doc
+      Y.applyUpdate(doc, data.update, data.origin);
+    });
+
 
     statusChannel.on('local', data => {
       const { editors } = this.state;
@@ -180,20 +205,23 @@ class BasicSync extends Component {
   };
 
   render() {
+    const { exportMarkdown, classes } = this.props;
     const { editors } = this.state;
 
     if (!editors) return 'Loading...';
 
     return Object.values(editors).map(editor => {
       return (
-        <BasicEditor
-          key={editor.id}
-          onGetUsername={this.handleGetUsername(editor.id)}
-          onContextMenuGetOptions={this.handleContextMenuGetOptions}
-          onContextMenuOptionSelect={this.handleContextMenuOptionSelect}
-          onContextMenuRenderItem={this.handleContextMenuRenderItem}
-          {...editor}
-        />
+        <div key={editor.id} className={classes.editorGrid}>
+          <BasicEditor
+            onGetUsername={this.handleGetUsername(editor.id)}
+            onContextMenuGetOptions={this.handleContextMenuGetOptions}
+            onContextMenuOptionSelect={this.handleContextMenuOptionSelect}
+            onContextMenuRenderItem={this.handleContextMenuRenderItem}
+            {...editor}
+          />
+          {exportMarkdown && <pre className={classes.markdownView}>{editor.markdown}</pre>}
+        </div>
       );
     });
   }
@@ -203,5 +231,5 @@ const BasicSyncWithStyles = withStyles(style)(BasicSync);
 
 storiesOf('Editor', module)
   .addDecorator(MuiTheme)
-  .addDecorator(FullViewport)
-  .add('Basic', () => <BasicSyncWithStyles editorsCount={1} />);
+  .add('Basic', () => <BasicSyncWithStyles editorsCount={1} />)
+  .add('Markdown export', () => <BasicSyncWithStyles editorsCount={2} exportMarkdown />);

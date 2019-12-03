@@ -125,13 +125,6 @@ class Editor extends Component {
         {prosemirrorView && (
           <Toolbar
             view={prosemirrorView}
-          // activeMarks={activeMarks}
-          // onMarkButtonClick={this.handleMarkButtonClick}
-          // onNodeTypeButtonClick={this.handleNodeTypeButtonClick}
-          // onHistoryButtonClick={this.handleHistoryButtonClick}
-          // onWrapperButtonClick={this.handleWrapperButtonClick}
-          // canUndo={canUndo}
-          // canRedo={canRedo}
           />
         )}
         <div className={classes.editorContainer}>

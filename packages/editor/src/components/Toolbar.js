@@ -3,6 +3,7 @@
 //
 
 import React, { PureComponent } from 'react';
+import debounce from 'lodash.debounce';
 
 import { setBlockType, toggleMark } from 'prosemirror-commands';
 import { yUndoPluginKey, undo, redo } from 'y-prosemirror';
@@ -54,13 +55,9 @@ class Toolbar extends PureComponent {
     // Register to view changes
     view._props.dispatchTransaction = transaction => {
 
-      const { oldState, newState } = originalDispatch(transaction);
+      const { newState } = originalDispatch(transaction);
 
-      const sameSelection = newState.selection.eq(oldState.selection);
-
-      if (transaction.meta.pointer || transaction.docChanged || !sameSelection) {
-        this.handleViewUpdate(newState);
-      }
+      this.handleViewUpdate(newState);
     };
 
     // Register to history changes
@@ -69,7 +66,7 @@ class Toolbar extends PureComponent {
     undoManager.on('stack-item-added', this.handleHistoryUpdate);
   }
 
-  handleViewUpdate = (newState) => {
+  handleViewUpdate = debounce((newState) => {
     const { view } = this.props;
 
     const activeMarks = getActiveMarks(newState);
@@ -79,7 +76,7 @@ class Toolbar extends PureComponent {
     const selectedLinkNodes = selectedTextNodes.filter(isLink);
 
     this.setState({ activeMarks, canSetLink, selectedLinkNodes });
-  };
+  }, 150);
 
   handleHistoryUpdate = () => {
     const { view } = this.props;
@@ -149,7 +146,7 @@ class Toolbar extends PureComponent {
   }
 
   render() {
-    const { classes, view } = this.props;
+    const { classes } = this.props;
     const { canUndo, canRedo, canSetLink, selectedLinkNodes, activeMarks } = this.state;
 
     return (
@@ -160,7 +157,7 @@ class Toolbar extends PureComponent {
         <ToolbarDivider />
         <ToolbarMarkButtons activeMarks={activeMarks} onClick={this.handleMarkButtonClick} />
         <ToolbarDivider />
-        <ToolbarWrapperButtons selection={view.state.selection} onClick={this.handleWrapperButtonClick} dispatchCommand={this.dispatchCommand} />
+        <ToolbarWrapperButtons onClick={this.handleWrapperButtonClick} dispatchCommand={this.dispatchCommand} />
         <ToolbarDivider />
         <ToolbarLinkButton onSetLink={this.handleSetLink} onRemoveLink={this.handleRemoveLink} disabled={!canSetLink} selectedLinkNodes={selectedLinkNodes} />
       </MUIToolbar>

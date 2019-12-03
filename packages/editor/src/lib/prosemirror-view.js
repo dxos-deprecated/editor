@@ -4,15 +4,19 @@
 
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
+import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
 
 import { yUndoPlugin, undo, redo } from 'y-prosemirror';
-import { yCursorPlugin } from '../plugins/cursor-plugin';
+
 
 import { schema } from './schema';
 import Provider from './provider';
+
+import { yCursorPlugin } from '../plugins/cursor-plugin';
 import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
+
 import ContextMenu from '../components/ContextMenu';
 
 export const createProsemirrorView = ({
@@ -50,52 +54,53 @@ export const createProsemirrorView = ({
         getOptions: contextMenu.getOptions,
         onSelect: contextMenu.onSelect,
         renderItem: contextMenu.renderItem
+      }),
+
+      keymap({
+        'Mod-z': undo,
+        'Mod-y': redo,
+        'Mod-Shift-z': redo,
+
+        'Mod-=': (state, dispatch, view) => {
+          const current = parseInt(
+            parseFloat(view.dom.style.fontSize || initialFontSize),
+            10
+          );
+
+          view.dom.style.fontSize = `${current + 1}px`;
+          return true;
+        },
+        'Mod--': (state, dispatch, view) => {
+          const current = parseInt(
+            parseFloat(view.dom.style.fontSize || initialFontSize),
+            10
+          );
+
+          view.dom.style.fontSize = `${current - 1}px`;
+          return true;
+        },
+
+        Tab: (state, dispatch) => {
+          const {
+            $from: { pos: from },
+            $to: { pos: to }
+          } = state.selection;
+
+          dispatch(
+            state.tr
+              .delete(from, to)
+              .insert(from, schema.text('  '))
+              .scrollIntoView()
+          );
+
+          return true;
+        }
       })
     ].concat(
       exampleSetup({
         menuBar: false,
         history: false,
-        schema,
-        mapKeys: {
-          'Mod-z': undo,
-          'Mod-y': redo,
-          'Mod-Shift-z': redo,
-
-          'Mod-=': (state, dispatch, view) => {
-            const current = parseInt(
-              parseFloat(view.dom.style.fontSize || initialFontSize),
-              10
-            );
-
-            view.dom.style.fontSize = `${current + 1}px`;
-            return true;
-          },
-          'Mod--': (state, dispatch, view) => {
-            const current = parseInt(
-              parseFloat(view.dom.style.fontSize || initialFontSize),
-              10
-            );
-
-            view.dom.style.fontSize = `${current - 1}px`;
-            return true;
-          },
-
-          Tab: (state, dispatch) => {
-            const {
-              $from: { pos: from },
-              $to: { pos: to }
-            } = state.selection;
-
-            dispatch(
-              state.tr
-                .delete(from, to)
-                .insert(from, schema.text('  '))
-                .scrollIntoView()
-            );
-
-            return true;
-          }
-        }
+        schema
       })
     )
   });
