@@ -6,9 +6,12 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core';
 
-import { createProsemirrorView } from '../lib/prosemirror-view';
+import { getXmlFragmentContent } from '@wirelineio/yjs-helpers';
 
 import Toolbar from './Toolbar';
+
+import { createProsemirrorView } from '../lib/prosemirror-view';
+import { setInitialContent } from '../lib/prosemirror-helpers';
 
 const EDITOR_FONT_SIZE = 22;
 
@@ -95,6 +98,9 @@ class Editor extends Component {
         initialFontSize: EDITOR_FONT_SIZE
       }
     });
+
+    setInitialContent(view, getXmlFragmentContent(doc));
+    view.focus();
 
     this.setState({ prosemirrorView: view });
   }
