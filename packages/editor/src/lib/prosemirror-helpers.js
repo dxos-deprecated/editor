@@ -8,28 +8,31 @@ import { schema } from './schema';
 
 /**
  *
- * @param {EditorState} state
+ * @param {Node} type
+ * @param {Object} attrs
  */
-export const getActiveMarks = state => {
-  return Object.values(schema.marks).reduce((marks, mark) => {
-    const ref = state.selection;
-    const { from } = ref;
-    const { $from } = ref;
-    const { to } = ref;
-    const { empty } = ref;
+export const blockActive = (type, attrs = {}) => state => {
+  const { $from, to, node } = state.selection;
 
-    let active = false;
+  if (node) {
+    return node.hasMarkup(type, attrs);
+  }
 
-    if (empty) {
-      active = mark.isInSet(state.storedMarks || $from.marks());
-    } else {
-      active = state.doc.rangeHasMark(from, to, mark);
-    }
+  return to <= $from.end() &&
+    $from.parent.hasMarkup(type) &&
+    Object.keys(attrs).every(name => $from.parent.attrs[name] === attrs[name]);
+};
 
-    marks[mark.name] = active;
+/**
+ *
+ * @param {Node} type
+ */
+export const markActive = type => state => {
+  const { from, $from, to, empty } = state.selection;
 
-    return marks;
-  }, {});
+  return empty
+    ? type.isInSet(state.storedMarks || $from.marks())
+    : state.doc.rangeHasMark(from, to, type);
 };
 
 /**

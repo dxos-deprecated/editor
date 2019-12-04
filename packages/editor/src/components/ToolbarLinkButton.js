@@ -16,18 +16,22 @@ import LinkOffIcon from '@material-ui/icons/LinkOff';
 import ToolbarButton from './ToolbarButton';
 import { linkMark } from '../lib/prosemirror-helpers';
 
+// eslint-disable-next-line no-useless-escape
+const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/igm;
+
 class ToolbarLinkButton extends Component {
 
   state = {
     dialogOpen: false,
     href: '',
-    title: ''
+    title: '',
+    error: undefined
   }
 
   handleClickOpen = () => {
     const { selectedLinkNodes } = this.props;
 
-    let attrs = { href: '', title: '' };
+    let attrs = { href: '', title: '', error: undefined };
 
     if (selectedLinkNodes.length === 1) {
       const node = selectedLinkNodes[0];
@@ -38,11 +42,11 @@ class ToolbarLinkButton extends Component {
   };
 
   handleClose = () => {
-    this.setState({ dialogOpen: false, href: '', title: '' });
+    this.setState({ dialogOpen: false, href: '', title: '', error: undefined });
   };
 
   handlelinkUrlChange = event => {
-    this.setState({ href: event.target.value });
+    this.setState({ href: event.target.value, error: undefined });
   }
 
   handleLinkTextChange = event => {
@@ -53,13 +57,17 @@ class ToolbarLinkButton extends Component {
     const { onSetLink } = this.props;
     const { title, href } = this.state;
 
+    if (!validURLRegex.test(href)) {
+      return this.setState({ error: 'Invalid URL' });
+    }
+
     onSetLink(title, href);
     this.handleClose();
   }
 
   render() {
     const { disabled = false, onRemoveLink, selectedLinkNodes } = this.props;
-    const { href, title, dialogOpen } = this.state;
+    const { href, title, error, dialogOpen } = this.state;
 
     return (
       <div>
@@ -97,6 +105,8 @@ class ToolbarLinkButton extends Component {
               type="url"
               fullWidth
               variant="outlined"
+              error={Boolean(error)}
+              helperText={error}
             />
           </DialogContent>
           <DialogActions>

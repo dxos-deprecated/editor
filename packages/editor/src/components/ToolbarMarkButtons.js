@@ -10,52 +10,57 @@ import FormatItalicIcon from '@material-ui/icons/FormatItalic';
 import FormatUnderlinedIcon from '@material-ui/icons/FormatUnderlined';
 
 import { schema } from '../lib/schema';
+import { markActive } from '../lib/prosemirror-helpers';
 
 import ToolbarButton from './ToolbarButton';
+import { toggleMark } from 'prosemirror-commands';
 
 const MARK_BUTTONS = {
   strong: {
-    name: 'strong',
-    mark: schema.marks.strong,
     title: 'Toggle strong',
     icon: FormatBoldIcon,
-    order: 1
+    isActive: markActive(schema.marks.strong),
+    fn: toggleMark(schema.marks.strong)
   },
   em: {
-    name: 'em',
-    mark: schema.marks.em,
     title: 'Toggle emphasis',
     icon: FormatItalicIcon,
-    order: 2
+    isActive: markActive(schema.marks.em),
+    fn: toggleMark(schema.marks.em)
   },
   underline: {
-    name: 'underline',
-    mark: schema.marks.underline,
     title: 'Toggle underlined',
     icon: FormatUnderlinedIcon,
-    order: 3
+    isActive: markActive(schema.marks.underline),
+    fn: toggleMark(schema.marks.underline)
   },
   code: {
-    name: 'code',
-    mark: schema.marks.code,
     title: 'Toggle monospace font',
     icon: CodeIcon,
-    order: 4
+    isActive: markActive(schema.marks.code),
+    fn: toggleMark(schema.marks.code)
   }
 };
 
 
-const ToolbarMarkButtons = ({ activeMarks, onClick }) => {
-  return Object.values(MARK_BUTTONS).map(({ name, title, icon, mark }) => (
-    <ToolbarButton
-      icon={icon}
-      name={name}
-      title={title}
-      key={name}
-      onClick={onClick(mark)}
-      active={Boolean(activeMarks[name])}
-    />
-  ));
+const ToolbarMarkButtons = ({ view }) => {
+  const { state, dispatch } = view;
+
+  return Object.values(MARK_BUTTONS).map(({ title, icon, isActive, fn }) => {
+    return (
+      <ToolbarButton
+        key={title}
+        icon={icon}
+        title={title}
+        onClick={event => {
+          event.preventDefault();
+          fn(state, dispatch);
+          view.focus();
+        }}
+        active={isActive(state)}
+      />
+    );
+  });
 };
 
 export default ToolbarMarkButtons;

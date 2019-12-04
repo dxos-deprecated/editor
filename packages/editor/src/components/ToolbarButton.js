@@ -34,8 +34,7 @@ export const ToolbarButton = withStyles(styles)(
   ({
     children,
     icon: IconComponent,
-    name,
-    title = name,
+    title,
     active = false,
     disabled = false,
     onClick,

@@ -16,7 +16,7 @@ import MUIToolbar from '@material-ui/core/Toolbar';
 import { grey } from '@material-ui/core/colors';
 
 import { schema } from '../lib/schema';
-import { getSelectedTextNodes, isLink, getActiveMarks } from '../lib/prosemirror-helpers';
+import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
 
 import ToolbarLinkButton from './ToolbarLinkButton';
 import ToolbarNodeTypesButton from './ToolbarNodeTypesButton';
@@ -40,7 +40,6 @@ const styles = theme => ({
 
 class Toolbar extends PureComponent {
   state = {
-    activeMarks: {},
     canUndo: false,
     canRedo: false,
     canSetLink: false,
@@ -69,14 +68,13 @@ class Toolbar extends PureComponent {
   handleViewUpdate = debounce((newState) => {
     const { view } = this.props;
 
-    const activeMarks = getActiveMarks(newState);
     const canSetLink = !newState.selection.empty && this.dispatchCommand(toggleMark(schema.marks.link), { dryRun: true });
 
     const selectedTextNodes = getSelectedTextNodes(view);
     const selectedLinkNodes = selectedTextNodes.filter(isLink);
 
-    this.setState({ activeMarks, canSetLink, selectedLinkNodes });
-  }, 150);
+    this.setState({ canSetLink, selectedLinkNodes });
+  }, 100);
 
   handleHistoryUpdate = () => {
     const { view } = this.props;
@@ -146,18 +144,18 @@ class Toolbar extends PureComponent {
   }
 
   render() {
-    const { classes } = this.props;
-    const { canUndo, canRedo, canSetLink, selectedLinkNodes, activeMarks } = this.state;
+    const { classes, view } = this.props;
+    const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
 
     return (
       <MUIToolbar disableGutters className={classes.root}>
         <ToolbarHistoryButtons canUndo={canUndo} canRedo={canRedo} onClick={this.handleHistoryButtonClick} />
         <ToolbarDivider />
-        <ToolbarNodeTypesButton onMenuItemSelected={this.handleNodeTypeButtonClick} />
+        <ToolbarNodeTypesButton view={view} />
         <ToolbarDivider />
-        <ToolbarMarkButtons activeMarks={activeMarks} onClick={this.handleMarkButtonClick} />
+        <ToolbarMarkButtons view={view} />
         <ToolbarDivider />
-        <ToolbarWrapperButtons onClick={this.handleWrapperButtonClick} dispatchCommand={this.dispatchCommand} />
+        <ToolbarWrapperButtons view={view} />
         <ToolbarDivider />
         <ToolbarLinkButton onSetLink={this.handleSetLink} onRemoveLink={this.handleRemoveLink} disabled={!canSetLink} selectedLinkNodes={selectedLinkNodes} />
       </MUIToolbar>

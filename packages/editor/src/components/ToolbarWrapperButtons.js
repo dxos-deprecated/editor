@@ -12,47 +12,51 @@ import ListBulletedIcon from '@material-ui/icons/FormatListBulleted';
 import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
 
 import { schema } from '../lib/schema';
+import { blockActive } from '../lib/prosemirror-helpers';
 
 import ToolbarButton from './ToolbarButton';
 
 const WRAPPER_BUTTONS = {
   ordered_list: {
-    name: 'ordered_list',
     title: 'Toggle ordered list',
     icon: ListNumberedIcon,
     fn: wrapInList(schema.nodes.ordered_list),
-    order: 1
+    isEnabled: wrapInList(schema.nodes.ordered_list),
+    isActive: blockActive(schema.nodes.ordered_list),
   },
   bullet_list: {
-    name: 'bullet_list',
     title: 'Toggle bullet list',
     icon: ListBulletedIcon,
     fn: wrapInList(schema.nodes.bullet_list),
-    order: 2
+    isEnabled: wrapInList(schema.nodes.bullet_list),
+    isActive: blockActive(schema.nodes.bullet_list),
   },
   lift: {
-    name: 'decrease_indentation',
-    title: 'Decrease indentation',
+    title: 'Lift out of enclosing block',
     icon: FormatIndentDecreaseIcon,
     fn: lift,
-    order: 2
+    isEnabled: lift
   }
 };
 
-const ToolbarWrapperButtons = ({ onClick, dispatchCommand }) => {
+const ToolbarWrapperButtons = ({ view }) => {
+  const { state, dispatch } = view;
 
-  return Object.values(WRAPPER_BUTTONS).map(({ name, title, icon, fn }) => {
-    let disabled = false;
-
-    disabled = !dispatchCommand(fn, { dryRun: true });
+  return Object.values(WRAPPER_BUTTONS).map(({ title, icon, fn, isEnabled, isActive }) => {
+    const disabled = isEnabled && !isEnabled(state);
+    const active = isActive && isActive(state);
 
     return (
       <ToolbarButton
+        key={title}
         icon={icon}
-        name={name}
         title={title}
-        key={name}
-        onClick={onClick(fn)}
+        onClick={event => {
+          event.preventDefault();
+          fn(state, dispatch);
+          view.focus();
+        }}
+        active={active}
         disabled={disabled}
       />
     );
