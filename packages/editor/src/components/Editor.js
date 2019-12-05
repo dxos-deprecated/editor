@@ -6,12 +6,9 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core';
 
-import { getXmlFragmentContent } from '@wirelineio/yjs-helpers';
-
 import prosemirrorStyles from '../styles/prosemirror';
 
 import { createProsemirrorView } from '../lib/prosemirror-view';
-import { setInitialContent } from '../lib/prosemirror-helpers';
 
 import Toolbar from './Toolbar';
 
@@ -61,9 +58,6 @@ class Editor extends Component {
       }
     });
 
-    setInitialContent(view, getXmlFragmentContent(doc));
-    view.focus();
-
     this.setState({ view: view });
   }
 
@@ -74,14 +68,13 @@ class Editor extends Component {
   }
 
   componentWillUnmount() {
-    this.destroyEditor();
-  }
-
-  destroyEditor() {
     const { view } = this.state;
+
     if (!view) {
       return;
     }
+
+    this.setState({ view: undefined });
 
     try {
       view.destroy();
@@ -96,14 +89,14 @@ class Editor extends Component {
 
     return (
       <div className={classes.root}>
-        {view && (
-          <div className={classes.toolbarContainer}>
-            <Toolbar
-              view={view}
-              className={classes.toolbar}
-            />
-          </div>
-        )}
+
+        <div className={classes.toolbarContainer}>
+          <Toolbar
+            view={view}
+            className={classes.toolbar}
+          />
+        </div>
+
         <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
           <div
             ref={this._editor}

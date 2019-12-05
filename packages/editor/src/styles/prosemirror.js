@@ -56,6 +56,12 @@ const styles = (theme) => ({
       marginBottom: '1em'
     },
 
+    // Fix for empty doc content => bad status position
+    '& > span.status': {
+      top: 22,
+      marginBottom: '-2em'
+    },
+
     '& .status': {
       display: 'inline-block',
       position: 'relative',

@@ -50,7 +50,31 @@ class Toolbar extends PureComponent {
   componentDidMount() {
     const { view } = this.props;
 
+    if (!view) return;
+  }
+
+  componentWillUnmount() {
+    const { view } = this.props;
+
+    const { undoManager } = yUndoPluginKey.getState(view.state);
+    undoManager.off('stack-item-popped', this.handleHistoryUpdate);
+    undoManager.off('stack-item-added', this.handleHistoryUpdate);
+
+    view._props.dispatchTransaction = view._props.originalDispatch;
+  }
+
+  componentDidUpdate(prevProps) {
+    const { view } = this.props;
+
+    if (!prevProps.view && view) {
+      this.init(view);
+    }
+  }
+
+  init = view => {
     let originalDispatch = view._props.dispatchTransaction;
+
+    view._props.originalDispatch = originalDispatch;
 
     // Register to view changes
     view._props.dispatchTransaction = transaction => {
@@ -75,7 +99,7 @@ class Toolbar extends PureComponent {
     const selectedLinkNodes = selectedTextNodes.filter(isLink);
 
     this.setState({ canSetLink, selectedLinkNodes });
-  }, 100);
+  }, 250);
 
   handleHistoryUpdate = () => {
     const { view } = this.props;
@@ -147,6 +171,8 @@ class Toolbar extends PureComponent {
   render() {
     const { classes, view } = this.props;
     const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
+
+    if (!view) return null;
 
     return (
       <MUIToolbar disableGutters className={classes.root}>
