@@ -23,6 +23,7 @@ import ToolbarNodeTypesButton from './ToolbarNodeTypesButton';
 import ToolbarHistoryButtons from './ToolbarHistoryButtons';
 import ToolbarMarkButtons from './ToolbarMarkButtons';
 import ToolbarWrapperButtons from './ToolbarWrapperButtons';
+import ToolbarImageButton from './ToolbarImageButton';
 
 const styles = theme => ({
   root: {
@@ -158,6 +159,7 @@ class Toolbar extends PureComponent {
         <ToolbarWrapperButtons view={view} />
         <ToolbarDivider />
         <ToolbarLinkButton onSetLink={this.handleSetLink} onRemoveLink={this.handleRemoveLink} disabled={!canSetLink} selectedLinkNodes={selectedLinkNodes} />
+        <ToolbarImageButton view={view} />
       </MUIToolbar>
     );
   }

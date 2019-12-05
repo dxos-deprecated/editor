@@ -8,12 +8,13 @@ import { withStyles } from '@material-ui/core';
 
 import { getXmlFragmentContent } from '@wirelineio/yjs-helpers';
 
-import Toolbar from './Toolbar';
+import prosemirrorStyles from '../styles/prosemirror';
 
 import { createProsemirrorView } from '../lib/prosemirror-view';
 import { setInitialContent } from '../lib/prosemirror-helpers';
 
-const EDITOR_FONT_SIZE = 22;
+import Toolbar from './Toolbar';
+
 
 const styles = theme => ({
   root: {
@@ -31,47 +32,8 @@ const styles = theme => ({
     backgroundColor: '#fff'
   },
 
-  editor: {
-    margin: 0,
-    outline: 'none',
-    fontSize: EDITOR_FONT_SIZE,
-    whiteSpace: 'pre-wrap',
-    flex: 1,
-    minHeight: '100%',
-    width: '100%',
-
-    '& p': {
-      marginTop: '1em',
-      marginBottom: '1em'
-    },
-
-    '& .status': {
-      display: 'inline-block',
-      position: 'relative',
-      userSelect: 'none'
-    },
-
-    '& .status > .cursor': {
-      opacity: '0.3',
-      display: 'inline-block',
-      width: theme.spacing(0.5),
-      marginRight: theme.spacing(1) * -0.5,
-      cursor: 'text'
-    },
-
-    '& .status > .username': {
-      color: 'white',
-      top: '0',
-      left: '0',
-      width: 'auto',
-      overflow: 'visible',
-      position: 'absolute',
-      display: 'table',
-      transform: 'translateY(-100%)',
-      fontSize: '0.8rem',
-      padding: `${theme.spacing(0.25)}px ${theme.spacing(1)}px`,
-      whiteSpace: 'nowrap'
-    }
+  toolbarContainer: {
+    flex: '0 1 auto'
   }
 });
 
@@ -82,7 +44,7 @@ class Editor extends Component {
   _editor = React.createRef();
 
   state = {
-    prosemirrorView: undefined,
+    view: undefined,
   };
 
   componentDidMount() {
@@ -95,14 +57,20 @@ class Editor extends Component {
       statusSync,
       contextMenu,
       options: {
-        initialFontSize: EDITOR_FONT_SIZE
+        initialFontSize: 22
       }
     });
 
     setInitialContent(view, getXmlFragmentContent(doc));
     view.focus();
 
-    this.setState({ prosemirrorView: view });
+    this.setState({ view: view });
+  }
+
+  handleEditorContainerClick = () => {
+    const { view } = this.state;
+
+    view.focus();
   }
 
   componentWillUnmount() {
@@ -110,13 +78,13 @@ class Editor extends Component {
   }
 
   destroyEditor() {
-    const { prosemirrorView } = this.state;
-    if (!prosemirrorView) {
+    const { view } = this.state;
+    if (!view) {
       return;
     }
 
     try {
-      prosemirrorView.destroy();
+      view.destroy();
     } catch (err) {
       console.warn(err);
     }
@@ -124,23 +92,22 @@ class Editor extends Component {
 
   render() {
     const { classes } = this.props;
-    const { prosemirrorView } = this.state;
+    const { view } = this.state;
 
     return (
       <div className={classes.root}>
-        {prosemirrorView && (
-          <Toolbar
-            view={prosemirrorView}
-          />
+        {view && (
+          <div className={classes.toolbarContainer}>
+            <Toolbar
+              view={view}
+              className={classes.toolbar}
+            />
+          </div>
         )}
-        <div className={classes.editorContainer}>
+        <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
           <div
             ref={this._editor}
-            className={classes.editor}
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            spellCheck="false"
+            className={classes.prosemirror}
           />
         </div>
       </div>
@@ -148,4 +115,7 @@ class Editor extends Component {
   }
 }
 
-export default withStyles(styles)(Editor);
+export default withStyles((theme) => ({
+  ...styles(theme),
+  ...prosemirrorStyles(theme)
+}))(Editor);
