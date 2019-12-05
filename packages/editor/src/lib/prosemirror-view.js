@@ -108,6 +108,15 @@ export const createProsemirrorView = ({
   const view = new EditorView(
     { mount: element },
     {
+      handleClickOn(view, pos, node, nodePos, event) {
+        // Handle link ctrl+click
+        if (event.target.nodeName === 'A' && event.ctrlKey && event.target.href) {
+          window.open(event.target.href, '_blank');
+          return true;
+        }
+
+        return false;
+      },
       state,
       dispatchTransaction(transaction) {
         const oldState = view.state;
