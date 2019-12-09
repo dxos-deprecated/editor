@@ -17,25 +17,29 @@ import ToolbarButton from './ToolbarButton';
 import { linkMark } from '../lib/prosemirror-helpers';
 
 // eslint-disable-next-line no-useless-escape
-const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/igm;
+const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/gim;
 
 class ToolbarLinkButton extends Component {
-
   state = {
     dialogOpen: false,
     href: '',
     title: '',
     error: undefined
-  }
+  };
 
   handleClickOpen = () => {
-    const { selectedLinkNodes } = this.props;
+    const {
+      selectedLinkNodes,
+      view: {
+        state: { schema }
+      }
+    } = this.props;
 
     let attrs = { href: '', title: '', error: undefined };
 
     if (selectedLinkNodes.length === 1) {
       const node = selectedLinkNodes[0];
-      ({ attrs } = linkMark(node));
+      ({ attrs } = linkMark(schema)(node));
     }
 
     this.setState({ dialogOpen: true, ...attrs });
@@ -47,11 +51,11 @@ class ToolbarLinkButton extends Component {
 
   handlelinkUrlChange = event => {
     this.setState({ href: event.target.value, error: undefined });
-  }
+  };
 
   handleLinkTextChange = event => {
     this.setState({ title: event.target.value });
-  }
+  };
 
   handleSetLink = () => {
     const { onSetLink } = this.props;
@@ -63,7 +67,7 @@ class ToolbarLinkButton extends Component {
 
     onSetLink(title, href);
     this.handleClose();
-  }
+  };
 
   render() {
     const { disabled = false, onRemoveLink, selectedLinkNodes } = this.props;
@@ -77,13 +81,19 @@ class ToolbarLinkButton extends Component {
           onClick={this.handleClickOpen}
           disabled={disabled}
         />
-        {<ToolbarButton
-          icon={LinkOffIcon}
-          title={'Remove link'}
-          onClick={onRemoveLink}
-          disabled={selectedLinkNodes.length === 0}
-        />}
-        <Dialog open={dialogOpen} onClose={this.handleClose} aria-labelledby="link-dialog-title">
+        {
+          <ToolbarButton
+            icon={LinkOffIcon}
+            title={'Remove link'}
+            onClick={onRemoveLink}
+            disabled={selectedLinkNodes.length === 0}
+          />
+        }
+        <Dialog
+          open={dialogOpen}
+          onClose={this.handleClose}
+          aria-labelledby="link-dialog-title"
+        >
           <DialogContent>
             <TextField
               value={title}
@@ -113,7 +123,11 @@ class ToolbarLinkButton extends Component {
             <Button onClick={this.handleClose} color="primary">
               Cancel
             </Button>
-            <Button disabled={href === ''} onClick={this.handleSetLink} color="primary">
+            <Button
+              disabled={href === ''}
+              onClick={this.handleSetLink}
+              color="primary"
+            >
               Set link
             </Button>
           </DialogActions>
@@ -122,6 +136,5 @@ class ToolbarLinkButton extends Component {
     );
   }
 }
-
 
 export default ToolbarLinkButton;

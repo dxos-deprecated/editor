@@ -18,6 +18,10 @@ import Button from '@material-ui/core/Button';
 import ListItemText from '@material-ui/core/ListItemText';
 
 import { getContentAsMarkdown } from '@wirelineio/yjs-helpers';
+import {
+  buildReactElementNodeView,
+  addReactElementSchemaSpec
+} from './react-node-view';
 
 const MuiTheme = story => (
   <MuiThemeProvider theme={createMuiTheme()}>
@@ -66,6 +70,7 @@ class BasicEditor extends Component {
       onContextMenuOptionSelect,
       onContextMenuRenderItem,
       nodeViews = {},
+      schemaEnhancers = [],
       onViewCreated = () => null
     } = this.props;
 
@@ -88,6 +93,7 @@ class BasicEditor extends Component {
           renderItem: onContextMenuRenderItem
         }}
         nodeViews={nodeViews}
+        schemaEnhancers={schemaEnhancers}
         onViewCreated={onViewCreated}
       />
     );
@@ -127,7 +133,8 @@ class BasicSync extends Component {
     const newEditors = { ...editors };
 
     newEditors[editorId].markdown = getContentAsMarkdown(
-      newEditors[editorId].doc
+      newEditors[editorId].doc,
+      newEditors[editorId].view.state.schema
     );
 
     this.setState({ editors: newEditors });
@@ -213,11 +220,24 @@ class BasicSync extends Component {
     view.dispatch(tr);
   };
 
+  handleViewCreated = editorId => view => {
+    const { onViewCreated = () => null } = this.props;
+    const { editors } = this.state;
+
+    const newEditors = { ...editors };
+
+    newEditors[editorId].view = view;
+
+    this.setState({ editors: newEditors });
+
+    onViewCreated(view);
+  };
+
   render() {
     const {
       exportMarkdown,
       nodeViews = {},
-      onViewCreated = () => null,
+      schemaEnhancers = [],
       classes
     } = this.props;
     const { editors } = this.state;
@@ -229,7 +249,8 @@ class BasicSync extends Component {
         <div key={editor.id} className={classes.editorGrid}>
           <BasicEditor
             nodeViews={nodeViews}
-            onViewCreated={onViewCreated}
+            schemaEnhancers={schemaEnhancers}
+            onViewCreated={this.handleViewCreated(editor.id)}
             onGetUsername={this.handleGetUsername(editor.id)}
             onContextMenuGetOptions={this.handleContextMenuGetOptions}
             onContextMenuOptionSelect={this.handleContextMenuOptionSelect}
@@ -248,27 +269,37 @@ class BasicSync extends Component {
 const BasicSyncWithStyles = withStyles(style)(BasicSync);
 
 class WithReactComponent extends Component {
-  handleViewCreated = view => {
-    const reactElement = view.state.schema.node('reactelement');
-
-    reactElement.render = () => (
+  handleRenderReactNodeView = node => {
+    return (
       <Button
         onClick={e => {
           e.preventDefault();
-          alert('From react!');
+          console.log('From react!', JSON.stringify(node, null, 2));
         }}
       >
         I&apos;m a react button
       </Button>
     );
+  };
 
-    reactElement.render.displayName = 'ExampleReactElement';
+  handleViewCreated = view => {
+    const reactElement = view.state.schema.node('reactelement');
 
     view.dispatch(view.state.tr.insert(0, reactElement));
   };
 
   render() {
-    return <BasicSyncWithStyles onViewCreated={this.handleViewCreated} />;
+    return (
+      <BasicSyncWithStyles
+        schemaEnhancers={[addReactElementSchemaSpec]}
+        nodeViews={{
+          reactelement: buildReactElementNodeView(
+            this.handleRenderReactNodeView
+          )
+        }}
+        onViewCreated={this.handleViewCreated}
+      />
+    );
   }
 }
 

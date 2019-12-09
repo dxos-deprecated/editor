@@ -1,4 +1,4 @@
-const styles = (theme) => ({
+const styles = theme => ({
   prosemirror: {
     wordWrap: 'break-word',
     whiteSpace: 'break-spaces',
@@ -18,6 +18,13 @@ const styles = (theme) => ({
 
     '& li': {
       position: 'relative'
+    },
+
+    '& pad': {
+      display: 'block',
+      border: '1px solid #555',
+      padding: theme.spacing(0.5),
+      margin: theme.spacing(0.5)
     },
 
     '& .ProseMirror-hideselection *::selection': {

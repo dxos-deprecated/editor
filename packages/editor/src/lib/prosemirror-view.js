@@ -9,7 +9,7 @@ import { exampleSetup } from 'prosemirror-example-setup';
 
 import { yUndoPlugin, undo, redo } from 'y-prosemirror';
 
-import { schema } from './schema';
+import { createSchema } from './schema';
 import Provider from './provider';
 
 import { yCursorPlugin } from '../plugins/cursor-plugin';
@@ -17,7 +17,6 @@ import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 
 import ContextMenu from '../components/ContextMenu';
-import ReactElementNodeView from '../components/ReactElementNodeView';
 
 export const createProsemirrorView = ({
   element,
@@ -26,6 +25,7 @@ export const createProsemirrorView = ({
   statusSync,
   contextMenu,
   nodeViews = {},
+  schemaEnhancers = [],
   options: { initialFontSize = 16 }
 }) => {
   const yjsBinding = new YjsProsemirrorBinding(contentSync.channel, doc);
@@ -36,6 +36,8 @@ export const createProsemirrorView = ({
     id: statusSync.id,
     username: statusSync.getUsername()
   });
+
+  const schema = createSchema(schemaEnhancers);
 
   const state = EditorState.create({
     schema,
@@ -110,12 +112,7 @@ export const createProsemirrorView = ({
     { mount: element },
     {
       state,
-      nodeViews: {
-        ...nodeViews,
-        reactelement(node, view, getPos) {
-          return new ReactElementNodeView(node, view, getPos);
-        }
-      },
+      nodeViews,
       handleClickOn(view, pos, node, nodePos, event) {
         // Handle link ctrl+click
         if (

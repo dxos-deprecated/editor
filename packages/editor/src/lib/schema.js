@@ -21,19 +21,6 @@ export const nodes = {
     content: 'block+'
   },
 
-  reactelement: {
-    group: 'inline',
-    content: 'inline*',
-    inline: true,
-    // This makes the view treat the node as a leaf, even though it
-    // technically has content
-    atom: true,
-    parseDOM: [{ tag: 'reactelement' }],
-    toDOM: node => {
-      return ['reactelement', calcYchangeDomAttrs(node.attrs), 0];
-    }
-  },
-
   // :: NodeSpec A plain paragraph textblock. Represented in the DOM
   // as a `<p>` element.
   paragraph: {
@@ -312,4 +299,13 @@ export const marks = {
   }
 };
 
-export const schema = new Schema({ nodes, marks });
+export const createSchema = (enhancers = []) => {
+  const schemaConfig = enhancers.reduce(
+    (schemaConfig, enhancer) => (
+      (schemaConfig = enhancer(schemaConfig)), schemaConfig
+    ),
+    { nodes, marks }
+  );
+
+  return new Schema(schemaConfig);
+};

@@ -2,12 +2,10 @@
 // Copyright 2019 Wireline, Inc.
 //
 
-// eslint-disable-next-line no-unused-vars
-import * as Y from 'yjs';
+import * as Y from 'yjs'; // eslint-disable-line no-unused-vars
+import { Schema } from 'prosemirror-model'; // eslint-disable-line no-unused-vars
 import { createNodeFromYElement } from 'y-prosemirror';
-import { defaultMarkdownSerializer } from 'prosemirror-markdown';
-
-import { schema } from '@wirelineio/editor/schema';
+import { defaultMarkdownSerializer as mdSerializer } from 'prosemirror-markdown';
 
 import { injectMarkdownIntoXmlFragment } from './unified-yjs';
 
@@ -31,20 +29,33 @@ export const getTextContent = doc => doc.getText(OLD_TEXT_CONTENT_KEY);
 /**
  *
  * @param {Y.Doc} doc
+ * @param {Schema} schema
  * @returns {String} markdown content
  */
-export const getContentAsMarkdown = doc => {
-
-  const nodes = getXmlFragmentContent(doc).toArray().map(node => createNodeFromYElement(node, schema, new Map()));
+export const getContentAsMarkdown = (doc, schema) => {
+  const nodes = getXmlFragmentContent(doc)
+    .toArray()
+    .map(node => createNodeFromYElement(node, schema, new Map()));
 
   if (nodes.length === 0) return '';
 
   // Using prosemirror-markdown schema
   const pmDoc = schema.node('doc', null, nodes);
 
-  defaultMarkdownSerializer.marks.underline = { open: "<u>", close: "</u>", mixable: true, expelEnclosingWhitespace: true };
+  mdSerializer.marks.underline = {
+    open: '<u>',
+    close: '</u>',
+    mixable: true,
+    expelEnclosingWhitespace: true
+  };
 
-  return defaultMarkdownSerializer.serialize(pmDoc);
+  Object.keys(schema.nodes).map(nodeName => {
+    if (!mdSerializer.nodes[nodeName]) {
+      mdSerializer.nodes[nodeName] = schema.nodes[nodeName].spec.toMarkdown;
+    }
+  });
+
+  return mdSerializer.serialize(pmDoc);
 };
 
 /**

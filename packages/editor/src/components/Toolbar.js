@@ -15,7 +15,6 @@ import MUIToolbar from '@material-ui/core/Toolbar';
 
 import { grey } from '@material-ui/core/colors';
 
-import { schema } from '../lib/schema';
 import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
 
 import ToolbarLinkButton from './ToolbarLinkButton';
@@ -78,7 +77,6 @@ class Toolbar extends PureComponent {
 
     // Register to view changes
     view._props.dispatchTransaction = transaction => {
-
       const { newState } = originalDispatch(transaction);
 
       this.handleViewUpdate(newState);
@@ -88,15 +86,21 @@ class Toolbar extends PureComponent {
     const { undoManager } = yUndoPluginKey.getState(view.state);
     undoManager.on('stack-item-popped', this.handleHistoryUpdate);
     undoManager.on('stack-item-added', this.handleHistoryUpdate);
-  }
+  };
 
-  handleViewUpdate = debounce((newState) => {
+  handleViewUpdate = debounce(newState => {
     const { view } = this.props;
 
-    const canSetLink = !newState.selection.empty && this.dispatchCommand(toggleMark(schema.marks.link), { dryRun: true });
+    const canSetLink =
+      !newState.selection.empty &&
+      this.dispatchCommand(toggleMark(view.state.schema.marks.link), {
+        dryRun: true
+      });
 
     const selectedTextNodes = getSelectedTextNodes(view);
-    const selectedLinkNodes = selectedTextNodes.filter(isLink);
+    const selectedLinkNodes = selectedTextNodes.filter(
+      isLink(view.state.schema)
+    );
 
     this.setState({ canSetLink, selectedLinkNodes });
   }, 250);
@@ -109,7 +113,7 @@ class Toolbar extends PureComponent {
     const canRedo = undoManager.redoStack.length > 0;
 
     this.setState({ canUndo, canRedo });
-  }
+  };
 
   dispatchCommand = (fn, { dryRun = false, focus = true } = {}) => {
     const { view } = this.props;
@@ -137,6 +141,11 @@ class Toolbar extends PureComponent {
   };
 
   handleNodeTypeButtonClick = (name, attrs) => {
+    const {
+      view: {
+        state: { schema }
+      }
+    } = this.props;
     this.dispatchCommand(setBlockType(schema.nodes[name], attrs));
   };
 
@@ -147,7 +156,11 @@ class Toolbar extends PureComponent {
   };
 
   handleSetLink = (title, linkUrl) => {
-    const { view: { state: { doc, selection } } } = this.props;
+    const {
+      view: {
+        state: { doc, selection, schema }
+      }
+    } = this.props;
 
     if (selection.empty) return false;
 
@@ -158,15 +171,19 @@ class Toolbar extends PureComponent {
     }
 
     return this.dispatchCommand(toggleMark(schema.marks.link, attrs));
-  }
+  };
 
   handleRemoveLink = () => {
-    const { view: { state: { selection } } } = this.props;
+    const {
+      view: {
+        state: { schema, selection }
+      }
+    } = this.props;
 
     if (selection.empty) return false;
 
     this.dispatchCommand(toggleMark(schema.marks.link));
-  }
+  };
 
   render() {
     const { classes, view } = this.props;
@@ -176,7 +193,11 @@ class Toolbar extends PureComponent {
 
     return (
       <MUIToolbar disableGutters className={classes.root}>
-        <ToolbarHistoryButtons canUndo={canUndo} canRedo={canRedo} onClick={this.handleHistoryButtonClick} />
+        <ToolbarHistoryButtons
+          canUndo={canUndo}
+          canRedo={canRedo}
+          onClick={this.handleHistoryButtonClick}
+        />
         <ToolbarDivider />
         <ToolbarNodeTypesButton view={view} />
         <ToolbarDivider />
@@ -184,7 +205,13 @@ class Toolbar extends PureComponent {
         <ToolbarDivider />
         <ToolbarWrapperButtons view={view} />
         <ToolbarDivider />
-        <ToolbarLinkButton onSetLink={this.handleSetLink} onRemoveLink={this.handleRemoveLink} disabled={!canSetLink} selectedLinkNodes={selectedLinkNodes} />
+        <ToolbarLinkButton
+          view={view}
+          onSetLink={this.handleSetLink}
+          onRemoveLink={this.handleRemoveLink}
+          disabled={!canSetLink}
+          selectedLinkNodes={selectedLinkNodes}
+        />
         <ToolbarImageButton view={view} />
       </MUIToolbar>
     );

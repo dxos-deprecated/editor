@@ -50,7 +50,8 @@ class Editor extends Component {
       statusSync,
       contextMenu = {},
       nodeViews = {},
-      onViewCreated = () => null
+      onViewCreated = () => null,
+      schemaEnhancers = []
     } = this.props;
 
     const view = createProsemirrorView({
@@ -60,6 +61,7 @@ class Editor extends Component {
       statusSync,
       contextMenu,
       nodeViews,
+      schemaEnhancers,
       options: {
         initialFontSize: 22
       }

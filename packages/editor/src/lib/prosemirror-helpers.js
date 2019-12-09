@@ -6,8 +6,6 @@ import { Node } from 'prosemirror-model'; // eslint-disable-line no-unused-vars
 import { EditorView } from 'prosemirror-view'; // eslint-disable-line no-unused-vars
 import * as Y from 'yjs'; // eslint-disable-line no-unused-vars
 
-import { schema } from './schema';
-
 /**
  *
  * @param {Node} type
@@ -77,7 +75,7 @@ export const getSelectedTextNodes = view => {
  *
  * @param {Node} node
  */
-export const isLink = node => {
+export const isLink = schema => node => {
   return schema.marks.link.isInSet(node.marks);
 };
 
@@ -85,6 +83,6 @@ export const isLink = node => {
  *
  * @param {Node} node
  */
-export const linkMark = node => {
+export const linkMark = schema => node => {
   return node.marks.find(mark => mark.type === schema.marks.link);
 };

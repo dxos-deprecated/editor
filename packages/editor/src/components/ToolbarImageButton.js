@@ -14,32 +14,42 @@ import ImageIcon from '@material-ui/icons/Image';
 
 import ToolbarButton from './ToolbarButton';
 import { canInsert } from '../lib/prosemirror-helpers';
-import { schema } from '../lib/schema';
 
 // eslint-disable-next-line no-useless-escape
-const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/igm;
+const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/gim;
 
 class ToolbarImageButton extends Component {
-
   state = {
     dialogOpen: false,
     src: '',
     title: '',
     alt: '',
     error: undefined
-  }
+  };
 
   handleClickOpen = () => {
-    this.setState({ dialogOpen: true, src: '', title: '', alt: '', error: undefined });
+    this.setState({
+      dialogOpen: true,
+      src: '',
+      title: '',
+      alt: '',
+      error: undefined
+    });
   };
 
   handleClose = () => {
-    this.setState({ dialogOpen: false, src: '', title: '', alt: '', error: undefined });
+    this.setState({
+      dialogOpen: false,
+      src: '',
+      title: '',
+      alt: '',
+      error: undefined
+    });
   };
 
   handleImageFieldChange = field => event => {
     this.setState({ [field]: event.target.value, error: undefined });
-  }
+  };
 
   handleInsertImage = () => {
     const { title, src, alt } = this.state;
@@ -50,15 +60,17 @@ class ToolbarImageButton extends Component {
       return this.setState({ error: 'Invalid image URL address' });
     }
 
-    const img = schema.nodes.image.createAndFill({ src, alt, title });
+    const img = state.schema.nodes.image.createAndFill({ src, alt, title });
     dispatch(state.tr.replaceSelectionWith(img));
     view.focus();
 
     this.handleClose();
-  }
+  };
 
   render() {
-    const { view: { state } } = this.props;
+    const {
+      view: { state }
+    } = this.props;
     const { src, title, alt, error, dialogOpen } = this.state;
 
     return (
@@ -67,9 +79,13 @@ class ToolbarImageButton extends Component {
           icon={ImageIcon}
           title="Insert image"
           onClick={this.handleClickOpen}
-          disabled={!canInsert(schema.nodes.image)(state)}
+          disabled={!canInsert(state.schema.nodes.image)(state)}
         />
-        <Dialog open={dialogOpen} onClose={this.handleClose} aria-labelledby="image-dialog-title">
+        <Dialog
+          open={dialogOpen}
+          onClose={this.handleClose}
+          aria-labelledby="image-dialog-title"
+        >
           <DialogContent>
             <TextField
               value={title}
@@ -109,7 +125,11 @@ class ToolbarImageButton extends Component {
             <Button onClick={this.handleClose} color="primary">
               Cancel
             </Button>
-            <Button disabled={src === ''} onClick={this.handleInsertImage} color="primary">
+            <Button
+              disabled={src === ''}
+              onClick={this.handleInsertImage}
+              color="primary"
+            >
               Insert image
             </Button>
           </DialogActions>
@@ -118,6 +138,5 @@ class ToolbarImageButton extends Component {
     );
   }
 }
-
 
 export default ToolbarImageButton;
