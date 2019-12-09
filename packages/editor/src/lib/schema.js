@@ -21,6 +21,19 @@ export const nodes = {
     content: 'block+'
   },
 
+  reactelement: {
+    group: 'inline',
+    content: 'inline*',
+    inline: true,
+    // This makes the view treat the node as a leaf, even though it
+    // technically has content
+    atom: true,
+    parseDOM: [{ tag: 'reactelement' }],
+    toDOM: node => {
+      return ['reactelement', calcYchangeDomAttrs(node.attrs), 0];
+    }
+  },
+
   // :: NodeSpec A plain paragraph textblock. Represented in the DOM
   // as a `<p>` element.
   paragraph: {
@@ -160,7 +173,7 @@ export const nodes = {
         getAttrs(dom) {
           return {
             order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1,
-            tight: dom.hasAttribute("data-tight")
+            tight: dom.hasAttribute('data-tight')
           };
         }
       }
@@ -168,7 +181,7 @@ export const nodes = {
     toDOM(node) {
       const domAttrs = {
         start: node.attrs.order == 1 ? null : node.attrs.order,
-        "data-tight": node.attrs.tight ? "true" : null
+        'data-tight': node.attrs.tight ? 'true' : null
       };
 
       return ['ol', calcYchangeDomAttrs(node.attrs, domAttrs), 0];
@@ -182,10 +195,15 @@ export const nodes = {
       ychange: { default: null },
       tight: { default: false }
     },
-    parseDOM: [{ tag: 'ul', getAttrs: dom => ({ tight: dom.hasAttribute("data-tight") }) }],
+    parseDOM: [
+      {
+        tag: 'ul',
+        getAttrs: dom => ({ tight: dom.hasAttribute('data-tight') })
+      }
+    ],
     toDOM(node) {
       const domAttrs = {
-        "data-tight": node.attrs.tight ? "true" : null
+        'data-tight': node.attrs.tight ? 'true' : null
       };
 
       return ['ul', calcYchangeDomAttrs(node.attrs, domAttrs), 0];
@@ -211,15 +229,28 @@ export const marks = {
   // defaults to the empty string. Rendered and parsed as an `<a>`
   // element.
   em: {
-    parseDOM: [{ tag: "i" }, { tag: "em" },
-      { style: "font-style", getAttrs: value => value == "italic" && null }],
-    toDOM() { return ["em"]; }
+    parseDOM: [
+      { tag: 'i' },
+      { tag: 'em' },
+      { style: 'font-style', getAttrs: value => value == 'italic' && null }
+    ],
+    toDOM() {
+      return ['em'];
+    }
   },
 
   strong: {
-    parseDOM: [{ tag: "b" }, { tag: "strong" },
-      { style: "font-weight", getAttrs: value => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null }],
-    toDOM() { return ["strong"]; }
+    parseDOM: [
+      { tag: 'b' },
+      { tag: 'strong' },
+      {
+        style: 'font-weight',
+        getAttrs: value => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null
+      }
+    ],
+    toDOM() {
+      return ['strong'];
+    }
   },
 
   link: {
@@ -228,18 +259,27 @@ export const marks = {
       title: { default: null }
     },
     inclusive: false,
-    parseDOM: [{
-      tag: "a[href]",
-      getAttrs(dom) {
-        return { href: dom.getAttribute("href"), title: dom.getAttribute("title") };
+    parseDOM: [
+      {
+        tag: 'a[href]',
+        getAttrs(dom) {
+          return {
+            href: dom.getAttribute('href'),
+            title: dom.getAttribute('title')
+          };
+        }
       }
-    }],
-    toDOM(node) { return ["a", node.attrs]; }
+    ],
+    toDOM(node) {
+      return ['a', node.attrs];
+    }
   },
 
   code: {
-    parseDOM: [{ tag: "code" }],
-    toDOM() { return ["code"]; }
+    parseDOM: [{ tag: 'code' }],
+    toDOM() {
+      return ['code'];
+    }
   },
 
   underline: {

@@ -20,9 +20,11 @@ export const blockActive = (type, attrs = {}) => state => {
     return node.hasMarkup(type, attrs);
   }
 
-  return to <= $from.end() &&
+  return (
+    to <= $from.end() &&
     $from.parent.hasMarkup(type) &&
-    Object.keys(attrs).every(name => $from.parent.attrs[name] === attrs[name]);
+    Object.keys(attrs).every(name => $from.parent.attrs[name] === attrs[name])
+  );
 };
 
 /**

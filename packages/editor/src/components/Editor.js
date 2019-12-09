@@ -12,7 +12,6 @@ import { createProsemirrorView } from '../lib/prosemirror-view';
 
 import Toolbar from './Toolbar';
 
-
 const styles = theme => ({
   root: {
     display: 'flex',
@@ -41,11 +40,18 @@ class Editor extends Component {
   _editor = React.createRef();
 
   state = {
-    view: undefined,
+    view: undefined
   };
 
   componentDidMount() {
-    const { doc, contentSync, statusSync, contextMenu = {} } = this.props;
+    const {
+      doc,
+      contentSync,
+      statusSync,
+      contextMenu = {},
+      nodeViews = {},
+      onViewCreated = () => null
+    } = this.props;
 
     const view = createProsemirrorView({
       element: this._editor.current,
@@ -53,19 +59,22 @@ class Editor extends Component {
       contentSync,
       statusSync,
       contextMenu,
+      nodeViews,
       options: {
         initialFontSize: 22
       }
     });
 
     this.setState({ view: view });
+
+    onViewCreated(view);
   }
 
   handleEditorContainerClick = () => {
     const { view } = this.state;
 
     view.focus();
-  }
+  };
 
   componentWillUnmount() {
     const { view } = this.state;
@@ -89,26 +98,22 @@ class Editor extends Component {
 
     return (
       <div className={classes.root}>
-
         <div className={classes.toolbarContainer}>
-          <Toolbar
-            view={view}
-            className={classes.toolbar}
-          />
+          <Toolbar view={view} className={classes.toolbar} />
         </div>
 
-        <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
-          <div
-            ref={this._editor}
-            className={classes.prosemirror}
-          />
+        <div
+          className={classes.editorContainer}
+          onClick={this.handleEditorContainerClick}
+        >
+          <div ref={this._editor} className={classes.prosemirror} />
         </div>
       </div>
     );
   }
 }
 
-export default withStyles((theme) => ({
+export default withStyles(theme => ({
   ...styles(theme),
   ...prosemirrorStyles(theme)
 }))(Editor);

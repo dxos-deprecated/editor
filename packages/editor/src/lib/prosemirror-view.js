@@ -9,7 +9,6 @@ import { exampleSetup } from 'prosemirror-example-setup';
 
 import { yUndoPlugin, undo, redo } from 'y-prosemirror';
 
-
 import { schema } from './schema';
 import Provider from './provider';
 
@@ -18,6 +17,7 @@ import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 
 import ContextMenu from '../components/ContextMenu';
+import ReactElementNodeView from '../components/ReactElementNodeView';
 
 export const createProsemirrorView = ({
   element,
@@ -25,6 +25,7 @@ export const createProsemirrorView = ({
   contentSync,
   statusSync,
   contextMenu,
+  nodeViews = {},
   options: { initialFontSize = 16 }
 }) => {
   const yjsBinding = new YjsProsemirrorBinding(contentSync.channel, doc);
@@ -108,16 +109,26 @@ export const createProsemirrorView = ({
   const view = new EditorView(
     { mount: element },
     {
+      state,
+      nodeViews: {
+        ...nodeViews,
+        reactelement(node, view, getPos) {
+          return new ReactElementNodeView(node, view, getPos);
+        }
+      },
       handleClickOn(view, pos, node, nodePos, event) {
         // Handle link ctrl+click
-        if (event.target.nodeName === 'A' && event.ctrlKey && event.target.href) {
+        if (
+          event.target.nodeName === 'A' &&
+          event.ctrlKey &&
+          event.target.href
+        ) {
           window.open(event.target.href, '_blank');
           return true;
         }
 
         return false;
       },
-      state,
       dispatchTransaction(transaction) {
         const oldState = view.state;
         const newState = oldState.apply(transaction);
