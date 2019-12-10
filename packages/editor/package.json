@@ -26,6 +26,7 @@
   "dependencies": {
     "color-hash": "^1.0.3",
     "lib0": "^0.1.2",
+    "lodash.debounce": "4.0.8",
     "prosemirror-commands": "^1.1.2",
     "prosemirror-example-setup": "1.1.2",
     "prosemirror-model": "^1.8.2",
