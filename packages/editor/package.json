@@ -24,6 +24,8 @@
     "last 1 chrome versions"
   ],
   "dependencies": {
+    "@wirelineio/yjs-helpers": "^0.0.20",
+    "classnames": "^2.2.6",
     "color-hash": "^1.0.3",
     "lib0": "^0.1.2",
     "lodash.debounce": "4.0.8",
