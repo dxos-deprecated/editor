@@ -12,10 +12,9 @@
     "url": "git+https://github.com/wirelineio/editor.git"
   },
   "license": "GPL-3.0",
-  "main": "src/index.js",
-  "module": "dist/es/index.js",
+  "main": "dist/es/index.js",
   "scripts": {
-    "build": "npm run clean && babel ./src --out-dir ./dist/es --ignore \"**/*.test.js\"",
+    "build": "npm run clean && babel ./src --source-maps --out-dir ./dist/es --ignore \"**/*.test.js\"",
     "clean": "rm -rf dist && mkdir -p ./dist/es",
     "lint": "eslint ./src"
   },
