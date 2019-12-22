@@ -44,6 +44,12 @@ class Editor extends Component {
     view: undefined
   };
 
+  handleEditorContainerClick = () => {
+    const { view } = this.state;
+
+    view.focus();
+  };
+
   componentDidMount() {
     const {
       doc,
@@ -68,16 +74,10 @@ class Editor extends Component {
       }
     });
 
-    this.setState({ view });
-
-    onViewCreated(view);
+    this.setState({ view }, () => {
+      onViewCreated(view);
+    });
   }
-
-  handleEditorContainerClick = () => {
-    const { view } = this.state;
-
-    view.focus();
-  };
 
   componentWillUnmount() {
     const { view } = this.state;

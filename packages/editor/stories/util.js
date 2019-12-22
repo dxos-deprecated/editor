@@ -10,7 +10,7 @@ class ReactElementNodeView {
   constructor(node, render) {
     this.node = node;
 
-    // The node's representation in the editor (empty, for now)
+    // The node's representation in the editor (empty, for now).
     this.dom = document.createElement(nodeTypeName);
 
     ReactDOM.render(render(node), this.dom);
