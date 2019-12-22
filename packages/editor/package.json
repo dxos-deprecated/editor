@@ -1,6 +1,6 @@
 {
   "name": "@wirelineio/editor",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Wireline editor",
   "keywords": [],
   "homepage": "https://github.com/wirelineio/editor",
@@ -53,6 +53,7 @@
     "@material-ui/icons": "^4.5.1",
     "@storybook/react": "^5.2.6",
     "babel-loader": "^8.0.6",
+    "debug": "^4.1.1",
     "react": "^16.12.0",
     "react-dom": "16.12.0"
   },

@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import * as Y from 'yjs';
 import { Decoration, DecorationSet } from 'prosemirror-view'; // eslint-disable-line
 import { Plugin, PluginKey } from 'prosemirror-state'; // eslint-disable-line
@@ -7,10 +11,7 @@ import * as math from 'lib0/math';
 import ColorHash from 'color-hash';
 
 import { ySyncPluginKey } from 'y-prosemirror/src/plugins/sync-plugin';
-import {
-  relativePositionToAbsolutePosition,
-  absolutePositionToRelativePosition
-} from 'y-prosemirror/src/lib';
+import { relativePositionToAbsolutePosition, absolutePositionToRelativePosition } from 'y-prosemirror/src/lib';
 
 const colorHash = new ColorHash();
 
@@ -43,9 +44,10 @@ export const createDecorations = (state, awareness) => {
   const y = ystate.doc;
   const decorations = [];
   if (ystate.snapshot != null || ystate.binding === null) {
-    // do not render cursors while snapshot is active
+    // Do not render cursors while snapshot is active.
     return DecorationSet.create(state.doc, []);
   }
+
   awareness.getStates().forEach((aw, clientId) => {
     if (clientId === y.clientID) {
       return;
@@ -60,12 +62,14 @@ export const createDecorations = (state, awareness) => {
         Y.createRelativePositionFromJSON(aw.cursor.anchor),
         ystate.binding.mapping
       );
+
       let head = relativePositionToAbsolutePosition(
         y,
         ystate.type,
         Y.createRelativePositionFromJSON(aw.cursor.head),
         ystate.binding.mapping
       );
+
       if (anchor !== null && head !== null) {
         const maxsize = math.max(state.doc.content.size - 1, 0);
         anchor = math.min(anchor, maxsize);
@@ -87,6 +91,7 @@ export const createDecorations = (state, awareness) => {
             { key: `${clientId}`, side: 10 }
           )
         );
+
         const from = math.min(anchor, head);
         const to = math.max(anchor, head);
         decorations.push(
@@ -100,6 +105,7 @@ export const createDecorations = (state, awareness) => {
       }
     }
   });
+
   return DecorationSet.create(state.doc, decorations);
 };
 
@@ -111,94 +117,97 @@ export const createDecorations = (state, awareness) => {
  * @param {Awareness} awareness
  * @return {Plugin}
  */
-export const yCursorPlugin = (awareness, { id, getUsername }) =>
-  new Plugin({
-    key: yCursorPluginKey,
-    state: {
-      init(_, state) {
-        return createDecorations(state, awareness);
-      },
-      apply(tr, prevState, oldState, newState) {
-        const ystate = ySyncPluginKey.getState(newState);
-        const yCursorState = tr.getMeta(yCursorPluginKey);
-        if (
-          (ystate && ystate.isChangeOrigin) ||
-          (yCursorState && yCursorState.awarenessUpdated)
-        ) {
-          return createDecorations(newState, awareness);
-        }
-        return prevState.map(tr.mapping, tr.doc);
-      }
+export const yCursorPlugin = (awareness, { id, getUsername }) => new Plugin({
+  key: yCursorPluginKey,
+  state: {
+    init(_, state) {
+      return createDecorations(state, awareness);
     },
-    props: {
-      decorations: state => {
-        return yCursorPluginKey.getState(state);
+    apply(tr, prevState, oldState, newState) {
+      const ystate = ySyncPluginKey.getState(newState);
+      const yCursorState = tr.getMeta(yCursorPluginKey);
+      if (
+        (ystate && ystate.isChangeOrigin) ||
+        (yCursorState && yCursorState.awarenessUpdated)
+      ) {
+        return createDecorations(newState, awareness);
       }
-    },
-    view: view => {
-      const awarenessListener = () => {
-        setTimeout(() => {
-          view.dispatch(
-            view.state.tr.setMeta(yCursorPluginKey, { awarenessUpdated: true })
-          );
-        });
-      };
-      const updateCursorInfo = () => {
-        const ystate = ySyncPluginKey.getState(view.state);
-        // @note We make implicit checks when checking for the cursor property
-        const current = awareness.getLocalState() || {};
-        if (view.hasFocus() && ystate.binding !== null) {
-          /**
-           * @type {Y.RelativePosition}
-           */
-          const anchor = absolutePositionToRelativePosition(
-            view.state.selection.anchor,
-            ystate.type,
-            ystate.binding.mapping
-          );
-          /**
-           * @type {Y.RelativePosition}
-           */
-          const head = absolutePositionToRelativePosition(
-            view.state.selection.head,
-            ystate.type,
-            ystate.binding.mapping
-          );
-          if (
-            current.cursor == null ||
-            !Y.compareRelativePositions(
-              Y.createRelativePositionFromJSON(current.cursor.anchor),
-              anchor
-            ) ||
-            !Y.compareRelativePositions(
-              Y.createRelativePositionFromJSON(current.cursor.head),
-              head
-            )
-          ) {
-            awareness.setLocalStateField('cursor', {
-              anchor,
-              head
-            });
-            awareness.setLocalStateField('user', {
-              username: getUsername(),
-              publicKey: id
-            });
-          }
-        } else if (current.cursor != null) {
-          awareness.setLocalStateField('cursor', null);
-          awareness.setLocalStateField('user', null);
-        }
-      };
-      awareness.on('change', awarenessListener);
-      view.dom.addEventListener('focusin', updateCursorInfo);
-      view.dom.addEventListener('focusout', updateCursorInfo);
-      return {
-        update: updateCursorInfo,
-        destroy: () => {
-          awareness.off('change', awarenessListener);
-          awareness.setLocalStateField('cursor', null);
-          awareness.setLocalStateField('user', null);
-        }
-      };
+
+      return prevState.map(tr.mapping, tr.doc);
     }
-  });
+  },
+  props: {
+    decorations: state => {
+      return yCursorPluginKey.getState(state);
+    }
+  },
+  view: view => {
+    const awarenessListener = () => {
+      setTimeout(() => {
+        view.dispatch(
+          view.state.tr.setMeta(yCursorPluginKey, { awarenessUpdated: true })
+        );
+      });
+    };
+
+    const updateCursorInfo = () => {
+      const ystate = ySyncPluginKey.getState(view.state);
+      // @note We make implicit checks when checking for the cursor property
+      const current = awareness.getLocalState() || {};
+      if (view.hasFocus() && ystate.binding !== null) {
+        /**
+         * @type {Y.RelativePosition}
+         */
+        const anchor = absolutePositionToRelativePosition(
+          view.state.selection.anchor,
+          ystate.type,
+          ystate.binding.mapping
+        );
+        /**
+         * @type {Y.RelativePosition}
+         */
+        const head = absolutePositionToRelativePosition(
+          view.state.selection.head,
+          ystate.type,
+          ystate.binding.mapping
+        );
+        if (
+          current.cursor == null ||
+          !Y.compareRelativePositions(
+            Y.createRelativePositionFromJSON(current.cursor.anchor),
+            anchor
+          ) ||
+          !Y.compareRelativePositions(
+            Y.createRelativePositionFromJSON(current.cursor.head),
+            head
+          )
+        ) {
+          awareness.setLocalStateField('cursor', {
+            anchor,
+            head
+          });
+          awareness.setLocalStateField('user', {
+            username: getUsername(),
+            publicKey: id
+          });
+        }
+      } else if (current.cursor != null) {
+        awareness.setLocalStateField('cursor', null);
+        awareness.setLocalStateField('user', null);
+      }
+    };
+
+    awareness.on('change', awarenessListener);
+    view.dom.addEventListener('focusin', updateCursorInfo);
+    view.dom.addEventListener('focusout', updateCursorInfo);
+
+    return {
+      update: updateCursorInfo,
+      destroy: () => {
+        awareness.off('change', awarenessListener);
+        awareness.setLocalStateField('cursor', null);
+        awareness.setLocalStateField('user', null);
+      }
+    };
+  }
+});

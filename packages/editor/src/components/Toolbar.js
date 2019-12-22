@@ -2,17 +2,15 @@
 // Copyright 2019 Wireline, Inc.
 //
 
-import React, { PureComponent } from 'react';
 import debounce from 'lodash.debounce';
+import React, { PureComponent } from 'react';
 
 import { setBlockType, toggleMark } from 'prosemirror-commands';
 import { yUndoPluginKey, undo, redo } from 'y-prosemirror';
 
 import { withStyles } from '@material-ui/core';
-
 import MUIDivider from '@material-ui/core/Divider';
 import MUIToolbar from '@material-ui/core/Toolbar';
-
 import { grey } from '@material-ui/core/colors';
 
 import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
@@ -26,12 +24,13 @@ import ToolbarImageButton from './ToolbarImageButton';
 
 const styles = theme => ({
   root: {
+    minHeight: 'fit-content',
     paddingTop: theme.spacing(0.5),
     paddingBottom: theme.spacing(0.5),
-    backgroundColor: '#fff',
-    borderBottom: `1px solid ${grey[500]}`,
-    minHeight: 'fit-content'
+    backgroundColor: grey[50],
+    whiteSpace: 'nowrap'
   },
+
   divider: {
     marginRight: theme.spacing(0.5),
     marginLeft: theme.spacing(0.5)
@@ -47,9 +46,7 @@ class Toolbar extends PureComponent {
   };
 
   componentDidMount() {
-    const { view } = this.props;
-
-    if (!view) return;
+    this._mounted = true;
   }
 
   componentWillUnmount() {
@@ -60,47 +57,47 @@ class Toolbar extends PureComponent {
     undoManager.off('stack-item-added', this.handleHistoryUpdate);
 
     view._props.dispatchTransaction = view._props.originalDispatch;
+    this._mounted = false;
   }
 
   componentDidUpdate(prevProps) {
     const { view } = this.props;
 
     if (!prevProps.view && view) {
-      this.init(view);
+      let originalDispatch = view._props.dispatchTransaction;
+
+      view._props.originalDispatch = originalDispatch;
+
+      // Register to view changes.
+      view._props.dispatchTransaction = transaction => {
+        const { newState } = originalDispatch(transaction);
+        this.handleViewUpdate(newState);
+      };
+
+      // Register to history changes.
+      const { undoManager } = yUndoPluginKey.getState(view.state);
+      undoManager.on('stack-item-popped', this.handleHistoryUpdate);
+      undoManager.on('stack-item-added', this.handleHistoryUpdate);
     }
   }
 
-  init = view => {
-    let originalDispatch = view._props.dispatchTransaction;
-
-    view._props.originalDispatch = originalDispatch;
-
-    // Register to view changes
-    view._props.dispatchTransaction = transaction => {
-      const { newState } = originalDispatch(transaction);
-
-      this.handleViewUpdate(newState);
-    };
-
-    // Register to history changes
-    const { undoManager } = yUndoPluginKey.getState(view.state);
-    undoManager.on('stack-item-popped', this.handleHistoryUpdate);
-    undoManager.on('stack-item-added', this.handleHistoryUpdate);
-  };
+  // TODO(burdon): Error.
+  // react-dom.development.js:530 Warning: Can't perform a React state update on an unmounted component.
+  // This is a no-op, but it indicates a memory leak in your application.
+  // To fix, cancel all subscriptions and asynchronous tasks in the componentWillUnmount method.
 
   handleViewUpdate = debounce(newState => {
+    if (!this._mounted) {
+      return;
+    }
+
     const { view } = this.props;
 
-    const canSetLink =
-      !newState.selection.empty &&
-      this.dispatchCommand(toggleMark(view.state.schema.marks.link), {
-        dryRun: true
-      });
+    const canSetLink = !newState.selection.empty &&
+      this.dispatchCommand(toggleMark(view.state.schema.marks.link), { dryRun: true });
 
     const selectedTextNodes = getSelectedTextNodes(view);
-    const selectedLinkNodes = selectedTextNodes.filter(
-      isLink(view.state.schema)
-    );
+    const selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
 
     this.setState({ canSetLink, selectedLinkNodes });
   }, 250);
@@ -119,8 +116,9 @@ class Toolbar extends PureComponent {
     const { view } = this.props;
 
     const dispatchResult = fn(view.state, !dryRun && view.dispatch);
-
-    if (dryRun) return dispatchResult;
+    if (dryRun) {
+      return dispatchResult;
+    }
 
     focus && view.focus();
   };
@@ -134,21 +132,21 @@ class Toolbar extends PureComponent {
     view.focus();
   };
 
+  // TODO(burdon): Not used.
   handleMarkButtonClick = mark => event => {
     event.preventDefault();
 
     this.dispatchCommand(toggleMark(mark));
   };
 
+  // TODO(burdon): Not used.
   handleNodeTypeButtonClick = (name, attrs) => {
-    const {
-      view: {
-        state: { schema }
-      }
-    } = this.props;
+    const { view: { state: { schema } } } = this.props;
+
     this.dispatchCommand(setBlockType(schema.nodes[name], attrs));
   };
 
+  // TODO(burdon): Not used.
   handleWrapperButtonClick = command => event => {
     event.preventDefault();
 
@@ -156,13 +154,10 @@ class Toolbar extends PureComponent {
   };
 
   handleSetLink = (title, linkUrl) => {
-    const {
-      view: {
-        state: { doc, selection, schema }
-      }
-    } = this.props;
-
-    if (selection.empty) return false;
+    const { view: { state: { doc, selection, schema } } } = this.props;
+    if (selection.empty) {
+      return false;
+    }
 
     const attrs = { title, href: linkUrl };
 
@@ -174,13 +169,10 @@ class Toolbar extends PureComponent {
   };
 
   handleRemoveLink = () => {
-    const {
-      view: {
-        state: { schema, selection }
-      }
-    } = this.props;
-
-    if (selection.empty) return false;
+    const { view: { state: { schema, selection } } } = this.props;
+    if (selection.empty) {
+      return false;
+    }
 
     this.dispatchCommand(toggleMark(schema.marks.link));
   };
@@ -188,8 +180,9 @@ class Toolbar extends PureComponent {
   render() {
     const { classes, view } = this.props;
     const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
-
-    if (!view) return null;
+    if (!view) {
+      return null;
+    }
 
     return (
       <MUIToolbar disableGutters className={classes.root}>

@@ -2655,15 +2655,6 @@
     "@webassemblyjs/wast-parser" "1.8.5"
     "@xtuc/long" "4.2.2"
 
-"@wirelineio/yjs-helpers@^0.0.21":
-  version "0.0.20"
-  dependencies:
-    prosemirror-markdown "1.4.2"
-    remark-parse "^7.0.2"
-    unified "^8.4.2"
-    y-prosemirror "^0.1.5"
-    yjs "^13.0.0-102"
-
 "@xtuc/ieee754@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@xtuc/ieee754/-/ieee754-1.2.0.tgz#eef014a3145ae477a1cbc00cd1e552336dceb790"

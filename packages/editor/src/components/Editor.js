@@ -16,21 +16,22 @@ const styles = theme => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    width: '100%',
-    alignItems: 'stretch',
-    padding: theme.spacing(0.5)
+    flex: 1
   },
 
   editorContainer: {
+    display: 'flex',
     flex: 1,
     overflow: 'auto',
-    padding: theme.spacing(2),
-    backgroundColor: '#fff'
+    padding: theme.spacing(1),
+    backgroundColor: '#FFF'
   },
 
   toolbarContainer: {
     flex: '0 1 auto'
-  }
+  },
+
+  ...prosemirrorStyles(theme)
 });
 
 /**
@@ -41,6 +42,12 @@ class Editor extends Component {
 
   state = {
     view: undefined
+  };
+
+  handleEditorContainerClick = () => {
+    const { view } = this.state;
+
+    view.focus();
   };
 
   componentDidMount() {
@@ -67,20 +74,13 @@ class Editor extends Component {
       }
     });
 
-    this.setState({ view: view });
-
-    onViewCreated(view);
+    this.setState({ view }, () => {
+      onViewCreated(view);
+    });
   }
-
-  handleEditorContainerClick = () => {
-    const { view } = this.state;
-
-    view.focus();
-  };
 
   componentWillUnmount() {
     const { view } = this.state;
-
     if (!view) {
       return;
     }
@@ -104,10 +104,7 @@ class Editor extends Component {
           <Toolbar view={view} className={classes.toolbar} />
         </div>
 
-        <div
-          className={classes.editorContainer}
-          onClick={this.handleEditorContainerClick}
-        >
+        <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
           <div ref={this._editor} className={classes.prosemirror} />
         </div>
       </div>
@@ -115,7 +112,4 @@ class Editor extends Component {
   }
 }
 
-export default withStyles(theme => ({
-  ...styles(theme),
-  ...prosemirrorStyles(theme)
-}))(Editor);
+export default withStyles(styles)(Editor);

@@ -1,36 +1,65 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import React, { Component } from 'react';
 import { storiesOf } from '@storybook/react';
 import * as Y from 'yjs';
+import debug from 'debug';
 
-import Editor from '../components/Editor';
-import Channel from '../lib/Channel';
-
-import CssBaseline from '@material-ui/core/CssBaseline';
-import {
-  MuiThemeProvider,
-  createMuiTheme,
-  withStyles
-} from '@material-ui/core/styles';
-
+import { MuiThemeProvider, createMuiTheme, withStyles } from '@material-ui/core/styles';
 import { grey } from '@material-ui/core/colors';
-
 import Button from '@material-ui/core/Button';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import ListItemText from '@material-ui/core/ListItemText';
 
 import { getContentAsMarkdown } from '@wirelineio/yjs-helpers';
-import {
-  buildReactElementNodeView,
-  addReactElementSchemaSpec
-} from './react-node-view';
+
+import { Channel, Editor } from '../src';
+
+import { buildReactElementNodeView, addReactElementSchemaSpec } from './util';
+
+const log = debug('test');
+debug.enable('test');
 
 const MuiTheme = story => (
   <MuiThemeProvider theme={createMuiTheme()}>
     <CssBaseline />
+
     {story()}
   </MuiThemeProvider>
 );
 
-const style = theme => ({
+const styles = (theme) => ({
+  root: {
+    display: 'flex',
+    flexDirection: 'column',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    overflow: 'hidden'
+  },
+
+  container: {
+    display: 'flex',
+    flexDirection: 'row',
+    flex: 1,
+    flexShrink: 0,
+    overflow: 'hidden',
+    borderBottom: '2px solid #333'
+  },
+
+  markdown: {
+    display: 'flex',
+    flex: 1,
+    margin: 0,
+    padding: theme.spacing(1),
+    backgroundColor: '#F5F5F5',
+    fontSize: 'large'
+  },
+
   contextMenuItemText: {
     fontSize: 12,
     padding: 0
@@ -42,20 +71,6 @@ const style = theme => ({
     color: grey[500],
     textTransform: 'Capitalize'
   },
-  editorGrid: {
-    display: 'flex',
-
-    '& > *': {
-      flex: 1
-    }
-  },
-  markdownView: {
-    fontSize: '1rem',
-    padding: theme.spacing(1),
-    backgroundColor: '#fff',
-    margin: 0,
-    border: '1px solid #ccc'
-  }
 });
 
 class BasicEditor extends Component {
@@ -74,7 +89,9 @@ class BasicEditor extends Component {
       onViewCreated = () => null
     } = this.props;
 
-    if (!doc) return 'Loading...';
+    if (!doc) {
+      return 'Loading...';
+    }
 
     return (
       <Editor
@@ -100,51 +117,47 @@ class BasicEditor extends Component {
   }
 }
 
+// TODO(burdon): Restructure as single container (don't multiplex events inside to array).
 class BasicSync extends Component {
+
+  static count = 0;
+
   state = {
     editors: undefined,
     showMarkdown: undefined
   };
 
+  _handlers = new Map();
+
   componentDidMount() {
     const { editorsCount = 1 } = this.props;
 
-    const editors = Array.from({ length: editorsCount }).reduce(
-      (editors, _, idx) => {
-        editors[idx] = this.createEditor(idx, `editor-${idx}`);
-        return editors;
-      },
-      {}
-    );
+    const editors = Array.from({ length: editorsCount }).reduce((editors) => {
+      const id = 'editor-' + ++BasicSync.count;
+      editors[id] = this.createEditor(id, `user-${BasicSync.count}`);
+      log(id, 'componentDidMount');
+      return editors;
+    }, {});
 
     this.setState({ editors });
   }
 
   componentWillUnmount() {
     const { editors } = this.state;
+
     Object.values(editors).forEach(editor => {
-      editor.doc.off('update', this.handleDocUpdated(editor.id));
+      log(editor.id, 'componentWillUnmount');
+      editor.doc.off('update', this._handlers.get(editor.id));
     });
   }
 
-  handleDocUpdated = editorId => () => {
-    const { editors } = this.state;
-
-    const newEditors = { ...editors };
-
-    newEditors[editorId].markdown = getContentAsMarkdown(
-      newEditors[editorId].doc,
-      newEditors[editorId].view.state.schema
-    );
-
-    this.setState({ editors: newEditors });
-  };
-
   createEditor = (id, username) => {
-    // View's doc mock
+    // View's doc mock.
     const doc = new Y.Doc();
 
-    doc.on('update', this.handleDocUpdated(id));
+    const handler = this.handleDocUpdated(id);
+    this._handlers.set(id, handler);
+    doc.on('update', handler);
 
     const contentChannel = new Channel();
     const statusChannel = new Channel();
@@ -152,7 +165,7 @@ class BasicSync extends Component {
     contentChannel.on('local', data => {
       const { editors } = this.state;
 
-      // Update view's doc
+      // Update view's doc.
       Y.applyUpdate(doc, data.update, data.origin);
 
       Object.values(editors)
@@ -163,7 +176,7 @@ class BasicSync extends Component {
     });
 
     contentChannel.on('remote', data => {
-      // Update view's doc
+      // Update view's doc.
       Y.applyUpdate(doc, data.update, data.origin);
     });
 
@@ -186,18 +199,29 @@ class BasicSync extends Component {
     };
   };
 
+  handleDocUpdated = editorId => () => {
+    const { editors } = this.state;
+
+    editors[editorId].markdown = getContentAsMarkdown(editors[editorId].doc, editors[editorId].view.state.schema);
+
+    log(editorId, 'setState');
+    this.forceUpdate();
+  };
+
   handleGetUsername = editorId => id => {
     const { editors } = this.state;
 
-    if (!id) return editors[editorId].username;
+    if (!id) {
+      return editors[editorId].username;
+    }
 
     return editors[id].username;
   };
 
   handleContextMenuGetOptions = () => {
     return [
-      { id: 1, label: 'Insert some text' },
-      { id: 2, label: 'Insert some text 2' }
+      { id: 1, label: 'Item 1' },
+      { id: 2, label: 'Item 2' }
     ];
   };
 
@@ -225,7 +249,6 @@ class BasicSync extends Component {
     const { editors } = this.state;
 
     const newEditors = { ...editors };
-
     newEditors[editorId].view = view;
 
     this.setState({ editors: newEditors });
@@ -234,50 +257,53 @@ class BasicSync extends Component {
   };
 
   render() {
-    const {
-      exportMarkdown,
-      nodeViews = {},
-      schemaEnhancers = [],
-      classes
-    } = this.props;
+    const { exportMarkdown, nodeViews = {}, schemaEnhancers = [], classes } = this.props;
     const { editors } = this.state;
 
-    if (!editors) return 'Loading...';
+    if (!editors) {
+      return 'Loading...';
+    }
 
-    return Object.values(editors).map(editor => {
-      return (
-        <div key={editor.id} className={classes.editorGrid}>
-          <BasicEditor
-            nodeViews={nodeViews}
-            schemaEnhancers={schemaEnhancers}
-            onViewCreated={this.handleViewCreated(editor.id)}
-            onGetUsername={this.handleGetUsername(editor.id)}
-            onContextMenuGetOptions={this.handleContextMenuGetOptions}
-            onContextMenuOptionSelect={this.handleContextMenuOptionSelect}
-            onContextMenuRenderItem={this.handleContextMenuRenderItem}
-            {...editor}
-          />
-          {exportMarkdown && (
-            <pre className={classes.markdownView}>{editor.markdown}</pre>
-          )}
-        </div>
-      );
-    });
+    const components = Object.values(editors).map(editor => (
+      <div key={editor.id} className={classes.container}>
+        <BasicEditor
+          nodeViews={nodeViews}
+          schemaEnhancers={schemaEnhancers}
+          onViewCreated={this.handleViewCreated(editor.id)}
+          onGetUsername={this.handleGetUsername(editor.id)}
+          onContextMenuGetOptions={this.handleContextMenuGetOptions}
+          onContextMenuOptionSelect={this.handleContextMenuOptionSelect}
+          onContextMenuRenderItem={this.handleContextMenuRenderItem}
+          {...editor}
+        />
+
+        {exportMarkdown && (
+          <pre className={classes.markdown}>{editor.markdown}</pre>
+        )}
+      </div>
+    ));
+
+    return (
+      <div className={classes.root}>
+        {components}
+      </div>
+    );
   }
 }
 
-const BasicSyncWithStyles = withStyles(style)(BasicSync);
+const BasicSyncWithStyles = withStyles(styles)(BasicSync);
 
 class WithReactComponent extends Component {
+
   handleRenderReactNodeView = node => {
     return (
       <Button
-        onClick={e => {
-          e.preventDefault();
-          console.log('From react!', JSON.stringify(node, null, 2));
+        onClick={event => {
+          event.preventDefault();
+          log('Button click', JSON.stringify(node, null, 2));
         }}
       >
-        I&apos;m a react button
+        Test
       </Button>
     );
   };
@@ -291,22 +317,21 @@ class WithReactComponent extends Component {
   render() {
     return (
       <BasicSyncWithStyles
+        onViewCreated={this.handleViewCreated}
         schemaEnhancers={[addReactElementSchemaSpec]}
         nodeViews={{
           reactelement: buildReactElementNodeView(
             this.handleRenderReactNodeView
           )
         }}
-        onViewCreated={this.handleViewCreated}
       />
     );
   }
 }
 
+// TODO(burdon): Move to index.js
 storiesOf('Editor', module)
   .addDecorator(MuiTheme)
   .add('Basic', () => <BasicSyncWithStyles editorsCount={1} />)
-  .add('Markdown export', () => (
-    <BasicSyncWithStyles editorsCount={2} exportMarkdown />
-  ))
+  .add('Markdown export', () => <BasicSyncWithStyles editorsCount={2} exportMarkdown />)
   .add('React component', () => <WithReactComponent />);
