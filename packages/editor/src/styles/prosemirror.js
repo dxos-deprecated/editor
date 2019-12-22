@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 const styles = theme => ({
   prosemirror: {
     wordWrap: 'break-word',

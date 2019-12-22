@@ -16,21 +16,22 @@ const styles = theme => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    width: '100%',
-    alignItems: 'stretch',
-    padding: theme.spacing(0.5)
+    flex: 1
   },
 
   editorContainer: {
+    display: 'flex',
     flex: 1,
     overflow: 'auto',
-    padding: theme.spacing(2),
-    backgroundColor: '#fff'
+    padding: theme.spacing(1),
+    backgroundColor: '#FFF'
   },
 
   toolbarContainer: {
     flex: '0 1 auto'
-  }
+  },
+
+  ...prosemirrorStyles(theme)
 });
 
 /**
@@ -80,7 +81,6 @@ class Editor extends Component {
 
   componentWillUnmount() {
     const { view } = this.state;
-
     if (!view) {
       return;
     }
@@ -115,7 +115,4 @@ class Editor extends Component {
   }
 }
 
-export default withStyles(theme => ({
-  ...styles(theme),
-  ...prosemirrorStyles(theme)
-}))(Editor);
+export default withStyles(styles)(Editor);

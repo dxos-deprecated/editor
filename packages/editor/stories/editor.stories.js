@@ -1,9 +1,10 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import React, { Component } from 'react';
 import { storiesOf } from '@storybook/react';
 import * as Y from 'yjs';
-
-import Editor from '../components/Editor';
-import Channel from '../lib/Channel';
 
 import CssBaseline from '@material-ui/core/CssBaseline';
 import {
@@ -18,10 +19,13 @@ import Button from '@material-ui/core/Button';
 import ListItemText from '@material-ui/core/ListItemText';
 
 import { getContentAsMarkdown } from '@wirelineio/yjs-helpers';
+
 import {
   buildReactElementNodeView,
   addReactElementSchemaSpec
 } from './react-node-view';
+
+import { Channel, Editor } from '../src';
 
 const MuiTheme = story => (
   <MuiThemeProvider theme={createMuiTheme()}>
@@ -30,7 +34,7 @@ const MuiTheme = story => (
   </MuiThemeProvider>
 );
 
-const style = theme => ({
+const styles = theme => ({
   contextMenuItemText: {
     fontSize: 12,
     padding: 0
@@ -42,6 +46,7 @@ const style = theme => ({
     color: grey[500],
     textTransform: 'Capitalize'
   },
+
   editorGrid: {
     display: 'flex',
 
@@ -49,6 +54,7 @@ const style = theme => ({
       flex: 1
     }
   },
+
   markdownView: {
     fontSize: '1rem',
     padding: theme.spacing(1),
@@ -266,7 +272,7 @@ class BasicSync extends Component {
   }
 }
 
-const BasicSyncWithStyles = withStyles(style)(BasicSync);
+const BasicSyncWithStyles = withStyles(styles)(BasicSync);
 
 class WithReactComponent extends Component {
   handleRenderReactNodeView = node => {

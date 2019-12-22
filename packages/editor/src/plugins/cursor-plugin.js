@@ -1,3 +1,7 @@
+//
+// Copyright 2019 Wireline, Inc.
+//
+
 import * as Y from 'yjs';
 import { Decoration, DecorationSet } from 'prosemirror-view'; // eslint-disable-line
 import { Plugin, PluginKey } from 'prosemirror-state'; // eslint-disable-line
