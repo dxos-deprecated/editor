@@ -3,4 +3,4 @@
 //
 
 // TODO(burdon): Remove.
-module.exports = require('./dist/es/lib/schema');
+module.exports = require('./dist/es/lib/Channel');
