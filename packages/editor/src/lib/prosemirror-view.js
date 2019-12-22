@@ -130,6 +130,7 @@ export const createProsemirrorView = ({
         const oldState = view.state;
         const newState = oldState.apply(transaction);
 
+        console.log('>>>>>>>>>>>>>>>>>>', newState);
         view.updateState(newState);
 
         return { oldState, newState };

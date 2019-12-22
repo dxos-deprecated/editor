@@ -68,7 +68,7 @@ class Editor extends Component {
       }
     });
 
-    this.setState({ view: view });
+    this.setState({ view });
 
     onViewCreated(view);
   }
@@ -104,10 +104,7 @@ class Editor extends Component {
           <Toolbar view={view} className={classes.toolbar} />
         </div>
 
-        <div
-          className={classes.editorContainer}
-          onClick={this.handleEditorContainerClick}
-        >
+        <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
           <div ref={this._editor} className={classes.prosemirror} />
         </div>
       </div>

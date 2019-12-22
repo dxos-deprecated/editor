@@ -63,14 +63,14 @@ const styles = theme => ({
     },
 
     '& p': {
-      marginTop: '1em',
-      marginBottom: '1em'
+      marginTop: '.5em',
+      marginBottom: '.5em'
     },
 
-    // Fix for empty doc content => bad status position
+    // TODO(burdon): Add placeholder content initially?
+    // Fix for empty doc content => bad status position.
     '& > span.status': {
-      top: 22,
-      marginBottom: '-2em'
+      top: 11,
     },
 
     '& .status': {
@@ -82,8 +82,7 @@ const styles = theme => ({
     '& .status > .cursor': {
       opacity: '0.3',
       display: 'inline-block',
-      width: theme.spacing(0.5),
-      marginRight: theme.spacing(1) * -0.5,
+      width: 4,
       cursor: 'text'
     },
 
@@ -96,8 +95,8 @@ const styles = theme => ({
       position: 'absolute',
       display: 'table',
       transform: 'translateY(-100%)',
-      fontSize: '0.8rem',
-      padding: `${theme.spacing(0.25)}px ${theme.spacing(1)}px`,
+      fontSize: 12,
+      padding: '1px 4px',
       whiteSpace: 'nowrap'
     }
   }

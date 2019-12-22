@@ -9,10 +9,8 @@ import { setBlockType, toggleMark } from 'prosemirror-commands';
 import { yUndoPluginKey, undo, redo } from 'y-prosemirror';
 
 import { withStyles } from '@material-ui/core';
-
 import MUIDivider from '@material-ui/core/Divider';
 import MUIToolbar from '@material-ui/core/Toolbar';
-
 import { grey } from '@material-ui/core/colors';
 
 import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
@@ -26,12 +24,13 @@ import ToolbarImageButton from './ToolbarImageButton';
 
 const styles = theme => ({
   root: {
+    minHeight: 'fit-content',
     paddingTop: theme.spacing(0.5),
     paddingBottom: theme.spacing(0.5),
-    backgroundColor: '#fff',
-    borderBottom: `1px solid ${grey[500]}`,
-    minHeight: 'fit-content'
+    backgroundColor: grey[50],
+    whiteSpace: 'nowrap'
   },
+
   divider: {
     marginRight: theme.spacing(0.5),
     marginLeft: theme.spacing(0.5)
@@ -49,7 +48,10 @@ class Toolbar extends PureComponent {
   componentDidMount() {
     const { view } = this.props;
 
-    if (!view) return;
+    // TODO(burdon): Remove?
+    if (!view) {
+      return;
+    }
   }
 
   componentWillUnmount() {
@@ -75,14 +77,14 @@ class Toolbar extends PureComponent {
 
     view._props.originalDispatch = originalDispatch;
 
-    // Register to view changes
+    // Register to view changes.
     view._props.dispatchTransaction = transaction => {
       const { newState } = originalDispatch(transaction);
 
       this.handleViewUpdate(newState);
     };
 
-    // Register to history changes
+    // Register to history changes.
     const { undoManager } = yUndoPluginKey.getState(view.state);
     undoManager.on('stack-item-popped', this.handleHistoryUpdate);
     undoManager.on('stack-item-added', this.handleHistoryUpdate);
@@ -141,11 +143,8 @@ class Toolbar extends PureComponent {
   };
 
   handleNodeTypeButtonClick = (name, attrs) => {
-    const {
-      view: {
-        state: { schema }
-      }
-    } = this.props;
+    const { view: { state: { schema } } } = this.props;
+
     this.dispatchCommand(setBlockType(schema.nodes[name], attrs));
   };
 
@@ -156,13 +155,10 @@ class Toolbar extends PureComponent {
   };
 
   handleSetLink = (title, linkUrl) => {
-    const {
-      view: {
-        state: { doc, selection, schema }
-      }
-    } = this.props;
-
-    if (selection.empty) return false;
+    const { view: { state: { doc, selection, schema } } } = this.props;
+    if (selection.empty) {
+      return false;
+    }
 
     const attrs = { title, href: linkUrl };
 
@@ -174,13 +170,10 @@ class Toolbar extends PureComponent {
   };
 
   handleRemoveLink = () => {
-    const {
-      view: {
-        state: { schema, selection }
-      }
-    } = this.props;
-
-    if (selection.empty) return false;
+    const { view: { state: { schema, selection } } } = this.props;
+    if (selection.empty) {
+      return false;
+    }
 
     this.dispatchCommand(toggleMark(schema.marks.link));
   };

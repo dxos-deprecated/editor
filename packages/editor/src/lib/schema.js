@@ -13,16 +13,15 @@ const calcYchangeDomAttrs = (attrs, domAttrs = {}) => {
   return domAttrs;
 };
 
-// :: Object
-// [Specs](#model.NodeSpec) for the nodes defined in this schema.
+// :: Object [Specs](#model.NodeSpec) for the nodes defined in this schema.
 export const nodes = {
+
   // :: NodeSpec The top level document node.
   doc: {
     content: 'block+'
   },
 
-  // :: NodeSpec A plain paragraph textblock. Represented in the DOM
-  // as a `<p>` element.
+  // :: NodeSpec A plain paragraph textblock. Represented in the DOM as a `<p>` element.
   paragraph: {
     attrs: { ychange: { default: null } },
     content: 'inline*',
@@ -55,9 +54,8 @@ export const nodes = {
     }
   },
 
-  // :: NodeSpec A heading textblock, with a `level` attribute that
-  // should hold the number 1 to 6. Parsed and serialized as `<h1>` to
-  // `<h6>` elements.
+  // :: NodeSpec A heading textblock, with a `level` attribute that should hold the number 1 to 6.
+  // Parsed and serialized as `<h1>` to `<h6>` elements.
   heading: {
     attrs: {
       level: { default: 1 },
@@ -79,9 +77,8 @@ export const nodes = {
     }
   },
 
-  // :: NodeSpec A code listing. Disallows marks or non-text inline
-  // nodes by default. Represented as a `<pre>` element with a
-  // `<code>` element inside of it.
+  // :: NodeSpec A code listing. Disallows marks or non-text inline nodes by default.
+  // Represented as a `<pre>` element with a `<code>` element inside of it.
   code_block: {
     attrs: { ychange: { default: null } },
     content: 'text*',
@@ -100,9 +97,8 @@ export const nodes = {
     group: 'inline'
   },
 
-  // :: NodeSpec An inline image (`<img>`) node. Supports `src`,
-  // `alt`, and `href` attributes. The latter two default to the empty
-  // string.
+  // :: NodeSpec An inline image (`<img>`) node. Supports `src`, `alt`, and `href` attributes.
+  // The latter two default to the empty string.
   image: {
     inline: true,
     attrs: {
@@ -167,7 +163,7 @@ export const nodes = {
     ],
     toDOM(node) {
       const domAttrs = {
-        start: node.attrs.order == 1 ? null : node.attrs.order,
+        start: node.attrs.order === 1 ? null : node.attrs.order,
         'data-tight': node.attrs.tight ? 'true' : null
       };
 
@@ -212,14 +208,13 @@ export const nodes = {
 
 // :: Object [Specs](#model.MarkSpec) for the marks in the schema.
 export const marks = {
-  // :: MarkSpec A link. Has `href` and `title` attributes. `title`
-  // defaults to the empty string. Rendered and parsed as an `<a>`
-  // element.
+  // :: MarkSpec A link. Has `href` and `title` attributes. `title` defaults to the empty string.
+  // Rendered and parsed as an `<a>` element.
   em: {
     parseDOM: [
       { tag: 'i' },
       { tag: 'em' },
-      { style: 'font-style', getAttrs: value => value == 'italic' && null }
+      { style: 'font-style', getAttrs: value => value === 'italic' && null }
     ],
     toDOM() {
       return ['em'];
@@ -292,7 +287,10 @@ export const marks = {
     toDOM(node) {
       return [
         'ychange',
-        { ychange_user: node.attrs.user, ychange_state: node.attrs.state },
+        {
+          ychange_user: node.attrs.user,
+          ychange_state: node.attrs.state
+        },
         0
       ];
     }
@@ -300,12 +298,7 @@ export const marks = {
 };
 
 export const createSchema = (enhancers = []) => {
-  const schemaConfig = enhancers.reduce(
-    (schemaConfig, enhancer) => (
-      (schemaConfig = enhancer(schemaConfig)), schemaConfig
-    ),
-    { nodes, marks }
-  );
+  const config = enhancers.reduce((config, enhancer) => enhancer(config), { nodes, marks });
 
-  return new Schema(schemaConfig);
+  return new Schema(config);
 };
