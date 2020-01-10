@@ -3,8 +3,8 @@
 //
 
 import { Node } from 'prosemirror-model'; // eslint-disable-line no-unused-vars
-import { EditorView } from 'prosemirror-view'; // eslint-disable-line no-unused-vars
 import * as Y from 'yjs'; // eslint-disable-line no-unused-vars
+import { EditorState } from 'prosemirror-state'; // eslint-disable-line no-unused-vars
 
 /**
  *
@@ -57,13 +57,13 @@ export const canInsert = type => state => {
 
 /**
  *
- * @param {EditorView} view
+ * @param {EditorState} state
  */
-export const getSelectedTextNodes = view => {
-  const { from, to } = view.state.selection;
+export const getSelectedTextNodes = state => {
+  const { from, to } = state.selection;
   const nodes = [];
 
-  view.state.doc.nodesBetween(from, to, node => {
+  state.doc.nodesBetween(from, to, node => {
     if (node.isText) nodes.push(node);
     return true;
   });

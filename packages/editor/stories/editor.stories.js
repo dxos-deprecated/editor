@@ -13,7 +13,7 @@ import Button from '@material-ui/core/Button';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import ListItemText from '@material-ui/core/ListItemText';
 
-import { getContentAsMarkdown } from '@wirelineio/yjs-helpers';
+import { getContentAsMarkdown, getXmlFragmentContent } from '@wirelineio/yjs-helpers';
 
 import { Channel, Editor } from '../src';
 
@@ -127,15 +127,12 @@ class BasicSync extends Component {
     showMarkdown: undefined
   };
 
-  _handlers = new Map();
-
   componentDidMount() {
     const { editorsCount = 1 } = this.props;
 
     const editors = Array.from({ length: editorsCount }).reduce((editors) => {
       const id = 'editor-' + ++BasicSync.count;
       editors[id] = this.createEditor(id, `user-${BasicSync.count}`);
-      log(id, 'componentDidMount');
       return editors;
     }, {});
 
@@ -146,7 +143,6 @@ class BasicSync extends Component {
     const { editors } = this.state;
 
     Object.values(editors).forEach(editor => {
-      log(editor.id, 'componentWillUnmount');
       editor.doc.off('update', this._handlers.get(editor.id));
     });
   }
@@ -156,7 +152,6 @@ class BasicSync extends Component {
     const doc = new Y.Doc();
 
     const handler = this.handleDocUpdated(id);
-    this._handlers.set(id, handler);
     doc.on('update', handler);
 
     const contentChannel = new Channel();
@@ -202,9 +197,10 @@ class BasicSync extends Component {
   handleDocUpdated = editorId => () => {
     const { editors } = this.state;
 
+    log(getXmlFragmentContent(editors[editorId].doc).toString());
+
     editors[editorId].markdown = getContentAsMarkdown(editors[editorId].doc, editors[editorId].view.state.schema);
 
-    log(editorId, 'setState');
     this.forceUpdate();
   };
 
