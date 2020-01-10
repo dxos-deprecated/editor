@@ -73,7 +73,7 @@ const styles = (theme) => ({
   },
 });
 
-class BasicEditor extends Component {
+class BasicSyncEditor extends Component {
   render() {
     const {
       id,
@@ -95,14 +95,16 @@ class BasicEditor extends Component {
 
     return (
       <Editor
-        doc={doc}
-        contentSync={{
-          channel: contentChannel
-        }}
-        statusSync={{
-          id,
-          getUsername: onGetUsername,
-          channel: statusChannel
+        sync={{
+          doc: doc,
+          content: {
+            channel: contentChannel
+          },
+          status: {
+            id,
+            getUsername: onGetUsername,
+            channel: statusChannel
+          }
         }}
         contextMenu={{
           getOptions: onContextMenuGetOptions,
@@ -112,6 +114,34 @@ class BasicEditor extends Component {
         nodeViews={nodeViews}
         schemaEnhancers={schemaEnhancers}
         onViewCreated={onViewCreated}
+        toolbar
+      />
+    );
+  }
+}
+
+class BasicEditor extends Component {
+  render() {
+    const {
+      onContextMenuGetOptions,
+      onContextMenuOptionSelect,
+      onContextMenuRenderItem,
+      nodeViews = {},
+      schemaEnhancers = [],
+      onViewCreated = () => null
+    } = this.props;
+
+    return (
+      <Editor
+        contextMenu={{
+          getOptions: onContextMenuGetOptions,
+          onSelect: onContextMenuOptionSelect,
+          renderItem: onContextMenuRenderItem
+        }}
+        nodeViews={nodeViews}
+        schemaEnhancers={schemaEnhancers}
+        onViewCreated={onViewCreated}
+        basic
       />
     );
   }
@@ -262,7 +292,7 @@ class BasicSync extends Component {
 
     const components = Object.values(editors).map(editor => (
       <div key={editor.id} className={classes.container}>
-        <BasicEditor
+        <BasicSyncEditor
           nodeViews={nodeViews}
           schemaEnhancers={schemaEnhancers}
           onViewCreated={this.handleViewCreated(editor.id)}
@@ -325,9 +355,14 @@ class WithReactComponent extends Component {
   }
 }
 
+const Basic = withStyles(styles)(({ classes }) => {
+  return <div className={classes.root}><BasicEditor /></div>;
+});
+
 // TODO(burdon): Move to index.js
 storiesOf('Editor', module)
   .addDecorator(MuiTheme)
-  .add('Basic', () => <BasicSyncWithStyles editorsCount={1} />)
+  .add('Basic', () => <Basic />)
+  .add('Collab', () => <BasicSyncWithStyles editorsCount={2} />)
   .add('Markdown export', () => <BasicSyncWithStyles editorsCount={2} exportMarkdown />)
   .add('React component', () => <WithReactComponent />);
