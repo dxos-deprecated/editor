@@ -24,7 +24,7 @@
     "last 1 chrome versions"
   ],
   "dependencies": {
-    "@wirelineio/yjs-helpers": "^0.0.22",
+    "@wirelineio/yjs-helpers": "^0.0.23",
     "classnames": "^2.2.6",
     "color-hash": "^1.0.3",
     "lib0": "^0.1.2",
