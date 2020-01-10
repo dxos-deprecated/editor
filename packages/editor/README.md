@@ -89,20 +89,26 @@ class BasicEditor extends Component {
 
     return (
       <Editor
-        doc={doc}
-        contentSync={{
-          channel: contentChannel
-        }}
-        statusSync={{
-          id,
-          getUsername: onGetUsername,
-          channel: statusChannel
+        sync={{
+          doc: doc,
+          content: {
+            channel: contentChannel
+          },
+          status: {
+            id,
+            getUsername: onGetUsername,
+            channel: statusChannel
+          }
         }}
         contextMenu={{
           getOptions: onContextMenuGetOptions,
           onSelect: onContextMenuOptionSelect,
           renderItem: onContextMenuRenderItem
         }}
+        nodeViews={nodeViews}
+        schemaEnhancers={schemaEnhancers}
+        onViewCreated={onViewCreated}
+        toolbar
       />
     );
   }

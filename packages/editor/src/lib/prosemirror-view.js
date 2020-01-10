@@ -7,7 +7,7 @@ import { EditorState } from 'prosemirror-state';
 import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
 
-import { yUndoPlugin, undo, redo } from 'y-prosemirror';
+import { yUndoPlugin, undo as yUndo, redo as yRedo } from 'y-prosemirror';
 
 import { yCursorPlugin } from '../plugins/cursor-plugin';
 import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
@@ -17,92 +17,113 @@ import ContextMenu from '../components/ContextMenu';
 
 import { createSchema } from './schema';
 import Provider from './provider';
+import { baseKeymap } from 'prosemirror-commands';
+import { DOMSerializer } from 'prosemirror-model';
 
-export const createProsemirrorView = ({
-  element,
-  doc,
-  contentSync,
-  statusSync,
-  contextMenu,
+export const createProsemirrorView = (element, {
+  sync = false,
+  contextMenu = false,
   nodeViews = {},
-  schemaEnhancers = [],
-  options: { initialFontSize = 16 }
-}) => {
-  const yjsBinding = new YjsProsemirrorBinding(contentSync.channel, doc);
+  schemaEnhancers = {},
+  basic = true,
+  onContentChange = console.log,
+  options = {}
+} = {}) => {
 
-  const provider = new Provider(yjsBinding.doc, statusSync.channel);
+  const { initialFontSize = 16 } = options;
 
-  provider.awareness.setLocalStateField('user', {
-    id: statusSync.id,
-    username: statusSync.getUsername()
-  });
+  const plugins = [];
 
-  const schema = createSchema(schemaEnhancers);
+  const useBasicSchema = sync ? false : basic;
+  const schema = createSchema(schemaEnhancers, useBasicSchema);
 
-  const state = EditorState.create({
-    schema,
+  const serializer = DOMSerializer.fromSchema(schema);
 
-    plugins: [
+  const keysToMap = {
+    ...baseKeymap,
+    'Mod-=': (state, dispatch, view) => {
+      const current = parseInt(
+        parseFloat(view.dom.style.fontSize || initialFontSize),
+        10
+      );
+
+      view.dom.style.fontSize = `${current + 1}px`;
+      return true;
+    },
+
+    'Mod--': (state, dispatch, view) => {
+      const current = parseInt(
+        parseFloat(view.dom.style.fontSize || initialFontSize),
+        10
+      );
+
+      view.dom.style.fontSize = `${current - 1}px`;
+      return true;
+    },
+
+    Tab: (state, dispatch) => {
+      const {
+        $from: { pos: from },
+        $to: { pos: to }
+      } = state.selection;
+
+      dispatch(
+        state.tr
+          .delete(from, to)
+          .insert(from, schema.text('  '))
+          .scrollIntoView()
+      );
+
+      return true;
+    }
+  };
+
+  if (sync) {
+    const { content, status, doc } = sync;
+
+    const yjsBinding = new YjsProsemirrorBinding(content.channel, doc);
+
+    const provider = new Provider(yjsBinding.doc, status.channel);
+
+    provider.awareness.setLocalStateField('user', {
+      id: status.id,
+      username: status.getUsername()
+    });
+
+    plugins.push(
       // Content sync plugin
       yjsBinding.plugin,
 
       // Cursor indicator plugin
-      yCursorPlugin(provider.awareness, statusSync),
+      yCursorPlugin(provider.awareness, status),
 
       // Yjs history plugin
-      yUndoPlugin(),
+      yUndoPlugin()
+    );
 
+    keysToMap['Mod-z'] = yUndo;
+    keysToMap['Mod-y'] = yRedo;
+    keysToMap['Mod-Shift-z'] = yRedo;
+  }
+
+  if (contextMenu) {
+    plugins.push(
       contextMenuPlugin({
         MenuComponent: ContextMenu,
         getOptions: contextMenu.getOptions,
         onSelect: contextMenu.onSelect,
         renderItem: contextMenu.renderItem
-      }),
-
-      keymap({
-        'Mod-z': undo,
-        'Mod-y': redo,
-        'Mod-Shift-z': redo,
-
-        'Mod-=': (state, dispatch, view) => {
-          const current = parseInt(
-            parseFloat(view.dom.style.fontSize || initialFontSize),
-            10
-          );
-
-          view.dom.style.fontSize = `${current + 1}px`;
-          return true;
-        },
-        'Mod--': (state, dispatch, view) => {
-          const current = parseInt(
-            parseFloat(view.dom.style.fontSize || initialFontSize),
-            10
-          );
-
-          view.dom.style.fontSize = `${current - 1}px`;
-          return true;
-        },
-
-        Tab: (state, dispatch) => {
-          const {
-            $from: { pos: from },
-            $to: { pos: to }
-          } = state.selection;
-
-          dispatch(
-            state.tr
-              .delete(from, to)
-              .insert(from, schema.text('  '))
-              .scrollIntoView()
-          );
-
-          return true;
-        }
       })
-    ].concat(
+    );
+  }
+
+  plugins.push(keymap(keysToMap));
+
+  const state = EditorState.create({
+    schema,
+    plugins: plugins.concat(
       exampleSetup({
         menuBar: false,
-        history: false,
         schema
       })
     )
@@ -126,23 +147,21 @@ export const createProsemirrorView = ({
 
         return false;
       },
+
       dispatchTransaction(transaction) {
         const oldState = view.state;
         const newState = oldState.apply(transaction);
 
-        // TODO(burdon): Error when navigating away from markdown export story.
-        /*
-          index.es.js:4477 Uncaught TypeError: Cannot read property 'matchesNode' of null
-          at EditorView.updateStateInner (index.es.js:4477)
-          at EditorView.updateState (index.es.js:4454)
-          at EditorView.dispatchTransaction (prosemirror-view.js:133)
-          at EditorView.dispatch (index.es.js:4704)
-          at cursor-plugin.js:141
-        */
         try {
           view.updateState(newState);
         } catch (err) {
           console.error(err);
+        }
+
+        if (transaction.docChanged) {
+          const contentContainer = document.createElement('div');
+          serializer.serializeFragment(newState.doc.content, { document }, contentContainer);
+          onContentChange(contentContainer.innerHTML);
         }
 
         return { oldState, newState };

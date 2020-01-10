@@ -96,7 +96,7 @@ class Toolbar extends PureComponent {
     const canSetLink = !newState.selection.empty &&
       this.dispatchCommand(toggleMark(view.state.schema.marks.link), { dryRun: true });
 
-    const selectedTextNodes = getSelectedTextNodes(view);
+    const selectedTextNodes = getSelectedTextNodes(view.state);
     const selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
 
     this.setState({ canSetLink, selectedLinkNodes });

@@ -34,50 +34,12 @@ const styles = theme => ({
   ...prosemirrorStyles(theme)
 });
 
-/**
- * Editor component.
- */
-class Editor extends Component {
+class BaseEditor extends Component {
   _editor = React.createRef();
 
   state = {
     view: undefined
   };
-
-  handleEditorContainerClick = () => {
-    const { view } = this.state;
-
-    view.focus();
-  };
-
-  componentDidMount() {
-    const {
-      doc,
-      contentSync,
-      statusSync,
-      contextMenu = {},
-      nodeViews = {},
-      onViewCreated = () => null,
-      schemaEnhancers = []
-    } = this.props;
-
-    const view = createProsemirrorView({
-      element: this._editor.current,
-      doc,
-      contentSync,
-      statusSync,
-      contextMenu,
-      nodeViews,
-      schemaEnhancers,
-      options: {
-        initialFontSize: 22
-      }
-    });
-
-    this.setState({ view }, () => {
-      onViewCreated(view);
-    });
-  }
 
   componentWillUnmount() {
     const { view } = this.state;
@@ -94,15 +56,30 @@ class Editor extends Component {
     }
   }
 
+  componentDidMount() {
+    const { onViewCreated, ...props } = this.props;
+    const view = createProsemirrorView(this._editor.current, props);
+
+    this.setState({ view }, () => onViewCreated(view));
+  }
+
+  handleEditorContainerClick = () => {
+    const { view } = this.state;
+
+    view.focus();
+  };
+
   render() {
-    const { classes } = this.props;
+    const { classes, toolbar = false } = this.props;
     const { view } = this.state;
 
     return (
       <div className={classes.root}>
-        <div className={classes.toolbarContainer}>
-          <Toolbar view={view} className={classes.toolbar} />
-        </div>
+        {toolbar && (
+          <div className={classes.toolbarContainer}>
+            <Toolbar view={view} className={classes.toolbar} />
+          </div>
+        )}
 
         <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
           <div ref={this._editor} className={classes.prosemirror} />
@@ -112,4 +89,6 @@ class Editor extends Component {
   }
 }
 
-export default withStyles(styles)(Editor);
+const Editor = withStyles(styles)(BaseEditor);
+
+export default Editor;

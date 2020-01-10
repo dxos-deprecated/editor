@@ -17,7 +17,11 @@ const styles = theme => ({
     width: '100%',
 
     '& pre': {
-      whiteSpace: 'pre-wrap'
+      whiteSpace: 'pre-wrap',
+      backgroundColor: theme.palette.grey[50],
+      marginTop: theme.spacing(1),
+      marginBottom: theme.spacing(1),
+      padding: theme.spacing(1)
     },
 
     '& li': {
