@@ -17,7 +17,7 @@ class ReactElementNodeView {
   }
 }
 
-export const addReactElementSchemaSpec = schemaConfig => {
+export const reactElement = schemaConfig => {
   schemaConfig.nodes[nodeTypeName] = {
     group: 'inline',
     content: 'inline*',

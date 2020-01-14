@@ -22,8 +22,8 @@
     "prosemirror-markdown": "1.4.2",
     "remark-parse": "^7.0.2",
     "unified": "^8.4.2",
-    "y-prosemirror": "^0.1.5",
-    "yjs": "^13.0.0-102"
+    "y-prosemirror": "0.1.5",
+    "yjs": "13.0.0-102"
   },
   "devDependencies": {
     "@babel/cli": "^7.7.0",

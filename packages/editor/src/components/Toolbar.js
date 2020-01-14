@@ -6,7 +6,6 @@ import debounce from 'lodash.debounce';
 import React, { PureComponent } from 'react';
 
 import { setBlockType, toggleMark } from 'prosemirror-commands';
-import { yUndoPluginKey, undo, redo } from 'y-prosemirror';
 
 import { withStyles } from '@material-ui/core';
 import MUIDivider from '@material-ui/core/Divider';
@@ -21,6 +20,7 @@ import ToolbarHistoryButtons from './ToolbarHistoryButtons';
 import ToolbarMarkButtons from './ToolbarMarkButtons';
 import ToolbarWrapperButtons from './ToolbarWrapperButtons';
 import ToolbarImageButton from './ToolbarImageButton';
+import { historyListenerPluginKey } from '../plugins/history-listener-plugin';
 
 const styles = theme => ({
   root: {
@@ -52,9 +52,9 @@ class Toolbar extends PureComponent {
   componentWillUnmount() {
     const { view } = this.props;
 
-    const { undoManager } = yUndoPluginKey.getState(view.state);
-    undoManager.off('stack-item-popped', this.handleHistoryUpdate);
-    undoManager.off('stack-item-added', this.handleHistoryUpdate);
+    const { history } = historyListenerPluginKey.getState(view.state);
+
+    history.off('update', this.handleHistoryUpdate);
 
     view._props.dispatchTransaction = view._props.originalDispatch;
     this._mounted = false;
@@ -74,17 +74,13 @@ class Toolbar extends PureComponent {
         this.handleViewUpdate(newState);
       };
 
-      // Register to history changes.
-      const { undoManager } = yUndoPluginKey.getState(view.state);
-      undoManager.on('stack-item-popped', this.handleHistoryUpdate);
-      undoManager.on('stack-item-added', this.handleHistoryUpdate);
+      const { history } = historyListenerPluginKey.getState(view.state);
+
+      if (history) {
+        history.on('update', this.handleHistoryUpdate);
+      }
     }
   }
-
-  // TODO(burdon): Error.
-  // react-dom.development.js:530 Warning: Can't perform a React state update on an unmounted component.
-  // This is a no-op, but it indicates a memory leak in your application.
-  // To fix, cancel all subscriptions and asynchronous tasks in the componentWillUnmount method.
 
   handleViewUpdate = debounce(newState => {
     if (!this._mounted) {
@@ -102,13 +98,7 @@ class Toolbar extends PureComponent {
     this.setState({ canSetLink, selectedLinkNodes });
   }, 250);
 
-  handleHistoryUpdate = () => {
-    const { view } = this.props;
-    const { undoManager } = yUndoPluginKey.getState(view.state);
-
-    const canUndo = undoManager.undoStack.length > 0;
-    const canRedo = undoManager.redoStack.length > 0;
-
+  handleHistoryUpdate = ({ canUndo, canRedo }) => {
     this.setState({ canUndo, canRedo });
   };
 
@@ -125,10 +115,11 @@ class Toolbar extends PureComponent {
 
   handleHistoryButtonClick = name => event => {
     const { view } = this.props;
+    const { history } = historyListenerPluginKey.getState(view.state);
 
     event.preventDefault();
 
-    (name === 'undo' ? undo : redo)(view.state);
+    history[name](view.state, view.dispatch);
     view.focus();
   };
 

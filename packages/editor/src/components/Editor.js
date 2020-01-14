@@ -2,15 +2,19 @@
 // Copyright 2019 Wireline, Inc.
 //
 
-import React, { Component } from 'react';
+import * as Y from 'yjs';
 
-import { withStyles } from '@material-ui/core';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
+import { withStyles } from '@material-ui/core/styles';
+
+import Toolbar from './Toolbar';
 
 import prosemirrorStyles from '../styles/prosemirror';
 
-import { createProsemirrorView } from '../lib/prosemirror-view';
-
-import Toolbar from './Toolbar';
+import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
+import Channel from '../lib/Channel';
 
 const styles = theme => ({
   root: {
@@ -34,7 +38,7 @@ const styles = theme => ({
   ...prosemirrorStyles(theme)
 });
 
-class BaseEditor extends Component {
+class EditorComponent extends Component {
   _editor = React.createRef();
 
   state = {
@@ -57,8 +61,26 @@ class BaseEditor extends Component {
   }
 
   componentDidMount() {
-    const { onViewCreated, ...props } = this.props;
-    const view = createProsemirrorView(this._editor.current, props);
+    const {
+      onViewCreated,
+      schema,
+      contextMenu,
+      sync,
+      nodeViews,
+      schemaEnhancers,
+      options,
+      onContentChange,
+    } = this.props;
+
+    const view = createProsemirrorView(this._editor.current, {
+      schema: sync ? 'full' : schema,
+      contextMenu,
+      sync,
+      nodeViews,
+      schemaEnhancers,
+      options,
+      onContentChange
+    });
 
     this.setState({ view }, () => onViewCreated(view));
   }
@@ -89,6 +111,52 @@ class BaseEditor extends Component {
   }
 }
 
-const Editor = withStyles(styles)(BaseEditor);
+const Editor = withStyles(styles)(EditorComponent);
+
+EditorComponent.defaultProps = {
+  toolbar: false,
+  onViewCreated: () => null,
+  ...defaultViewProps
+};
+
+EditorComponent.propTypes = {
+  toolbar: PropTypes.bool,
+  schema: PropTypes.oneOfType([
+    PropTypes.oneOf(['basic', 'text-only', 'full']),
+    PropTypes.shape({ // https://prosemirror.net/docs/ref/#model.SchemaSpec
+      nodes: PropTypes.object,
+      marks: PropTypes.object
+    })
+  ]),
+  contextMenu: PropTypes.oneOfType([
+    PropTypes.oneOf([false]),
+    PropTypes.shape({
+      getOptions: PropTypes.func,
+      onSelect: PropTypes.func,
+      renderItem: PropTypes.func
+    })
+  ]),
+  sync: PropTypes.oneOfType([
+    PropTypes.oneOf([false]),
+    PropTypes.shape({
+      content: PropTypes.exact({
+        channel: PropTypes.instanceOf(Channel)
+      }),
+      status: PropTypes.exact({
+        channel: PropTypes.instanceOf(Channel),
+        id: PropTypes.string,
+        getUsername: PropTypes.func
+      }),
+      doc: PropTypes.instanceOf(Y.Doc)
+    })
+  ]),
+  nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
+  schemaEnhancers: PropTypes.arrayOf(PropTypes.func),
+  options: PropTypes.shape({
+    initialFontSize: PropTypes.number
+  }),
+  onContentChange: PropTypes.func,
+  onViewCreated: PropTypes.func
+};
 
 export default Editor;

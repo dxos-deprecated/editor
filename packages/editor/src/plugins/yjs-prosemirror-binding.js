@@ -52,7 +52,7 @@ class YjsProsemirrorBinding {
   };
 
   _remoteDocUpdateHandler = ({ update, author }) => {
-    const origin = { author };
+    const origin = { author, sync: true };
     Y.applyUpdate(this._doc, update, origin);
   };
 

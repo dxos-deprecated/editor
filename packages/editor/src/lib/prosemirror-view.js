@@ -6,8 +6,11 @@ import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
+import { baseKeymap } from 'prosemirror-commands';
+import { DOMSerializer } from 'prosemirror-model';
+import { history, undo, redo } from 'prosemirror-history';
 
-import { yUndoPlugin, undo as yUndo, redo as yRedo } from 'y-prosemirror';
+import { yUndoPlugin, undo as yUndo, redo as yRedo } from '../plugins/yjs-undo-plugin';
 
 import { yCursorPlugin } from '../plugins/cursor-plugin';
 import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
@@ -17,25 +20,33 @@ import ContextMenu from '../components/ContextMenu';
 
 import { createSchema } from './schema';
 import Provider from './provider';
-import { baseKeymap } from 'prosemirror-commands';
-import { DOMSerializer } from 'prosemirror-model';
+import historyListenerPlugin from '../plugins/history-listener-plugin';
+
+export const defaultViewProps = {
+  schema: 'basic',
+  contextMenu: false,
+  sync: false,
+  nodeViews: {},
+  schemaEnhancers: [],
+  options: {},
+  onContentChange: () => null
+};
 
 export const createProsemirrorView = (element, {
-  sync = false,
-  contextMenu = false,
-  nodeViews = {},
-  schemaEnhancers = {},
-  basic = true,
-  onContentChange = console.log,
-  options = {}
-} = {}) => {
+  schema: customSchema,
+  contextMenu,
+  sync,
+  nodeViews,
+  schemaEnhancers,
+  options,
+  onContentChange,
+} = defaultViewProps) => {
 
-  const { initialFontSize = 16 } = options;
+  const { initialFontSize } = options;
 
   const plugins = [];
 
-  const useBasicSchema = sync ? false : basic;
-  const schema = createSchema(schemaEnhancers, useBasicSchema);
+  const schema = createSchema(schemaEnhancers, customSchema);
 
   const serializer = DOMSerializer.fromSchema(schema);
 
@@ -98,7 +109,7 @@ export const createProsemirrorView = (element, {
       yCursorPlugin(provider.awareness, status),
 
       // Yjs history plugin
-      yUndoPlugin()
+      yUndoPlugin({ trackedOrigins: [({}).constructor] })
     );
 
     keysToMap['Mod-z'] = yUndo;
@@ -117,16 +128,46 @@ export const createProsemirrorView = (element, {
     );
   }
 
+  if (customSchema === 'text-only') {
+    keysToMap['Enter'] = (state, dispatch) => {
+      const {
+        $from: { pos: from },
+        $to: { pos: to }
+      } = state.selection;
+
+      dispatch(
+        state.tr
+          .replaceWith(from, to, state.schema.node('hard_break'))
+          .scrollIntoView()
+      );
+
+      return true;
+    };
+
+    const historyPlugin = history();
+
+    plugins.push(historyPlugin);
+
+    keysToMap['Mod-z'] = undo;
+    keysToMap['Mod-y'] = redo;
+    keysToMap['Mod-Shift-z'] = redo;
+  } else {
+    plugins.push(...exampleSetup({
+      menuBar: false,
+      schema
+    }));
+  }
+
+  // Put this at the end
   plugins.push(keymap(keysToMap));
+  plugins.push(historyListenerPlugin());
+
+  // TODO: Fix incompatible undo/redo operations when sync is enabled
+  // plugins.push(historyListenerPlugin({ yjsHistory: Boolean(sync) }));
 
   const state = EditorState.create({
     schema,
-    plugins: plugins.concat(
-      exampleSetup({
-        menuBar: false,
-        schema
-      })
-    )
+    plugins
   });
 
   const view = new EditorView(

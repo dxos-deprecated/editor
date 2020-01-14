@@ -108,7 +108,6 @@ class BasicEditor extends Component {
         nodeViews={nodeViews}
         schemaEnhancers={schemaEnhancers}
         onViewCreated={onViewCreated}
-        toolbar
       />
     );
   }
