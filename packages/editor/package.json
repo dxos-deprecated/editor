@@ -41,7 +41,7 @@
     "prosemirror-view": "^1.13.4",
     "y-prosemirror": "0.1.5",
     "y-protocols": "0.1.0",
-    "yjs": "13.0.0-102"
+    "yjs": "13.0.0-103"
   },
   "devDependencies": {
     "@babel/cli": "^7.7.0",
@@ -63,7 +63,8 @@
     "@material-ui/core": "4.8.0",
     "@material-ui/icons": "^4.5.1",
     "@material-ui/styles": "^4.7.1",
-    "react": "^16.12.0"
+    "react": "^16.12.0",
+    "react-dom": "16.12.0"
   },
   "publishConfig": {
     "access": "public"
