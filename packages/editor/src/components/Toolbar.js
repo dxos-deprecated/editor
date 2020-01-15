@@ -52,6 +52,8 @@ class Toolbar extends PureComponent {
   componentWillUnmount() {
     const { view } = this.props;
 
+    if (!view) return;
+
     const { history } = historyListenerPluginKey.getState(view.state);
 
     history.off('update', this.handleHistoryUpdate);
