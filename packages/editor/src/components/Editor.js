@@ -136,20 +136,24 @@ EditorComponent.propTypes = {
       renderItem: PropTypes.func
     })
   ]),
-  sync: PropTypes.oneOfType([
-    PropTypes.oneOf([false]),
-    PropTypes.shape({
-      content: PropTypes.exact({
-        channel: PropTypes.instanceOf(Channel)
-      }),
-      status: PropTypes.exact({
-        channel: PropTypes.instanceOf(Channel),
-        id: PropTypes.string,
-        getUsername: PropTypes.func
-      }),
-      doc: PropTypes.instanceOf(Y.Doc)
-    })
-  ]),
+  sync: PropTypes.shape({
+    content: PropTypes.exact({
+      channel: PropTypes.instanceOf(Channel)
+    }),
+    status: PropTypes.exact({
+      channel: PropTypes.instanceOf(Channel),
+      id: PropTypes.string,
+      getUsername: PropTypes.func
+    }),
+    doc: (props, propName, componentName) => {
+      if (!(props[propName].constructor instanceof Y.Doc.constructor)) {
+        return new Error(
+          'Invalid prop `' + propName + '` supplied to' +
+          ' `' + componentName + '`. Validation failed.'
+        );
+      }
+    }
+  }),
   nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
   schemaEnhancers: PropTypes.arrayOf(PropTypes.func),
   options: PropTypes.shape({
