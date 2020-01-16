@@ -20,7 +20,7 @@ class ReactContent extends Component {
     );
   };
 
-  handleViewCreated = view => {
+  handleCreated = ({ view }) => {
     const reactElement = view.state.schema.node('reactelement');
 
     view.dispatch(view.state.tr.insert(0, reactElement));
@@ -30,7 +30,7 @@ class ReactContent extends Component {
     return (
       <Editor
         schema="full"
-        onViewCreated={this.handleViewCreated}
+        onCreated={this.handleCreated}
         schemaEnhancers={[reactElement]}
         nodeViews={{
           reactelement: buildReactElementNodeView(

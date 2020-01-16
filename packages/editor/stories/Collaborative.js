@@ -84,16 +84,13 @@ class Collaborative extends Component {
     return editors[id].username;
   };
 
-  handleViewCreated = editorId => view => {
-    const { onViewCreated = () => null } = this.props;
+  handleCreated = editorId => ({ view }) => {
     const { editors } = this.state;
 
     const newEditors = { ...editors };
     newEditors[editorId].view = view;
 
     this.setState({ editors: newEditors });
-
-    onViewCreated(view);
   };
 
   render() {
@@ -108,7 +105,7 @@ class Collaborative extends Component {
       <div key={editor.id} className={classes.container}>
         <Editor
           schema="full"
-          onViewCreated={this.handleViewCreated(editor.id)}
+          onCreated={this.handleCreated(editor.id)}
           toolbar
           sync={{
             doc: editor.doc,

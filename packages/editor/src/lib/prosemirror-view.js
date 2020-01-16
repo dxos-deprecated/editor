@@ -7,7 +7,7 @@ import { EditorState } from 'prosemirror-state';
 import { keymap } from 'prosemirror-keymap';
 import { exampleSetup } from 'prosemirror-example-setup';
 import { baseKeymap } from 'prosemirror-commands';
-import { DOMSerializer } from 'prosemirror-model';
+import { DOMSerializer, DOMParser } from 'prosemirror-model';
 import { history, undo, redo } from 'prosemirror-history';
 
 import { yUndoPlugin, undo as yUndo, redo as yRedo } from '../plugins/yjs-undo-plugin';
@@ -22,24 +22,29 @@ import { createSchema } from './schema';
 import Provider from './provider';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
 
+
 export const defaultViewProps = {
   schema: 'basic',
+  htmlContent: undefined,
   contextMenu: false,
   sync: false,
   nodeViews: {},
   schemaEnhancers: [],
   options: {},
-  onContentChange: () => null
+  onContentChange: false,
+  onKeyDown: false
 };
 
 export const createProsemirrorView = (element, {
   schema: customSchema,
+  htmlContent,
   contextMenu,
   sync,
   nodeViews,
   schemaEnhancers,
   options,
   onContentChange,
+  onKeyDown
 } = defaultViewProps) => {
 
   const { initialFontSize } = options;
@@ -165,7 +170,15 @@ export const createProsemirrorView = (element, {
   // TODO: Fix incompatible undo/redo operations when sync is enabled
   // plugins.push(historyListenerPlugin({ yjsHistory: Boolean(sync) }));
 
+  let doc;
+  if (htmlContent) {
+    const html = document.createElement('div');
+    html.innerHTML = htmlContent;
+    doc = DOMParser.fromSchema(schema).parse(html);
+  }
+
   const state = EditorState.create({
+    doc,
     schema,
     plugins
   });
@@ -175,6 +188,11 @@ export const createProsemirrorView = (element, {
     {
       state,
       nodeViews,
+      handleKeyDown(view, event) {
+        if (onKeyDown) {
+          return onKeyDown(event);
+        }
+      },
       handleClickOn(view, pos, node, nodePos, event) {
         // Handle link ctrl+click.
         if (
@@ -199,7 +217,7 @@ export const createProsemirrorView = (element, {
           console.error(err);
         }
 
-        if (transaction.docChanged) {
+        if (onContentChange && transaction.docChanged) {
           const contentContainer = document.createElement('div');
           serializer.serializeFragment(newState.doc.content, { document }, contentContainer);
           onContentChange(contentContainer.innerHTML);

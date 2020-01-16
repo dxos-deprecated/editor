@@ -7,6 +7,8 @@ import * as Y from 'yjs';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import { EditorView } from 'prosemirror-view'; // eslint-disable-line no-unused-vars
+
 import { withStyles } from '@material-ui/core/styles';
 
 import Toolbar from './Toolbar';
@@ -42,8 +44,27 @@ class EditorComponent extends Component {
   _editor = React.createRef();
 
   state = {
-    view: undefined
+    /** @type {EditorView} */
+    view: undefined,
+    htmlContent: undefined
   };
+
+  static getDerivedStateFromProps(props, state) {
+    const { htmlContent } = props;
+    const { htmlContent: prevHtmlContent } = state;
+
+    if (htmlContent !== prevHtmlContent) {
+      return {
+        htmlContent
+      };
+    }
+
+    return null;
+  }
+
+  componentDidMount() {
+    this.createProsemirrorView(this.props);
+  }
 
   componentWillUnmount() {
     const { view } = this.state;
@@ -60,29 +81,57 @@ class EditorComponent extends Component {
     }
   }
 
-  componentDidMount() {
+  createProsemirrorView = ({
+    schema,
+    htmlContent,
+    contextMenu,
+    sync,
+    nodeViews,
+    schemaEnhancers,
+    options,
+    onContentChange,
+    onKeyDown
+  }) => {
+
     const {
-      onViewCreated,
-      schema,
+      onCreated,
+    } = this.props;
+
+    const viewConfig = {
+      schema: sync ? 'full' : schema,
+      htmlContent,
       contextMenu,
       sync,
       nodeViews,
       schemaEnhancers,
       options,
       onContentChange,
-    } = this.props;
+      onKeyDown
+    };
 
-    const view = createProsemirrorView(this._editor.current, {
-      schema: sync ? 'full' : schema,
-      contextMenu,
-      sync,
-      nodeViews,
-      schemaEnhancers,
-      options,
-      onContentChange
-    });
+    const view = createProsemirrorView(this._editor.current, viewConfig);
 
-    this.setState({ view }, () => onViewCreated(view));
+    this.setState({ view }, () => onCreated ? onCreated({
+      view,
+      destroy: this.destroyProsemirrorView,
+      reset: this.resetProsemirrorView
+    }) : null);
+  }
+
+  destroyProsemirrorView = () => {
+    const { view } = this.state;
+
+    view.destroy();
+  }
+
+  resetProsemirrorView = () => {
+    const { view } = this.state;
+
+    let tr = view.state.tr;
+
+    tr = tr.delete(0, view.state.doc.content.size);
+
+    view.dispatch(tr);
   }
 
   handleEditorContainerClick = () => {
@@ -104,7 +153,7 @@ class EditorComponent extends Component {
         )}
 
         <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
-          <div ref={this._editor} className={classes.prosemirror} />
+          <div ref={this._editor} className={classes.editor} />
         </div>
       </div>
     );
@@ -115,12 +164,14 @@ const Editor = withStyles(styles)(EditorComponent);
 
 EditorComponent.defaultProps = {
   toolbar: false,
-  onViewCreated: () => null,
+  onCreated: undefined,
+  classes: {},
   ...defaultViewProps
 };
 
 EditorComponent.propTypes = {
   toolbar: PropTypes.bool,
+  htmlContent: PropTypes.string,
   schema: PropTypes.oneOfType([
     PropTypes.oneOf(['basic', 'text-only', 'full']),
     PropTypes.shape({ // https://prosemirror.net/docs/ref/#model.SchemaSpec
@@ -136,31 +187,42 @@ EditorComponent.propTypes = {
       renderItem: PropTypes.func
     })
   ]),
-  sync: PropTypes.shape({
-    content: PropTypes.exact({
-      channel: PropTypes.instanceOf(Channel)
-    }),
-    status: PropTypes.exact({
-      channel: PropTypes.instanceOf(Channel),
-      id: PropTypes.string,
-      getUsername: PropTypes.func
-    }),
-    doc: (props, propName, componentName) => {
-      if (!(props[propName].constructor instanceof Y.Doc.constructor)) {
-        return new Error(
-          'Invalid prop `' + propName + '` supplied to' +
-          ' `' + componentName + '`. Validation failed.'
-        );
+  sync: PropTypes.oneOfType([
+    PropTypes.oneOf([false]),
+    PropTypes.shape({
+      content: PropTypes.exact({
+        channel: PropTypes.instanceOf(Channel)
+      }),
+      status: PropTypes.exact({
+        channel: PropTypes.instanceOf(Channel),
+        id: PropTypes.string,
+        getUsername: PropTypes.func
+      }),
+      doc: (props, propName, componentName) => {
+        if (!(props[propName].constructor instanceof Y.Doc.constructor)) {
+          return new Error(
+            'Invalid prop `' + propName + '` supplied to' +
+            ' `' + componentName + '`. Validation failed.'
+          );
+        }
       }
-    }
-  }),
+    }),
+  ]),
   nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
   schemaEnhancers: PropTypes.arrayOf(PropTypes.func),
   options: PropTypes.shape({
     initialFontSize: PropTypes.number
   }),
   onContentChange: PropTypes.func,
-  onViewCreated: PropTypes.func
+  onCreated: PropTypes.func,
+  onKeyDown: PropTypes.func,
+  classes: PropTypes.shape({
+    root: PropTypes.string,
+    editorContainer: PropTypes.string,
+    editor: PropTypes.string,
+    toolbarContainer: PropTypes.string,
+    toolbar: PropTypes.string
+  })
 };
 
 export default Editor;

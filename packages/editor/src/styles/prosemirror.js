@@ -3,7 +3,7 @@
 //
 
 const styles = theme => ({
-  prosemirror: {
+  editor: {
     wordWrap: 'break-word',
     whiteSpace: 'break-spaces',
     '-webkit-font-variant-ligatures': 'none',
