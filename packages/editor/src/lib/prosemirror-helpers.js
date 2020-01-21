@@ -2,10 +2,6 @@
 // Copyright 2019 Wireline, Inc.
 //
 
-import { Node } from 'prosemirror-model'; // eslint-disable-line no-unused-vars
-import * as Y from 'yjs'; // eslint-disable-line no-unused-vars
-import { EditorState } from 'prosemirror-state'; // eslint-disable-line no-unused-vars
-
 /**
  *
  * @param {Node} type

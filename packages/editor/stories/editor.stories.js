@@ -27,6 +27,6 @@ storiesOf('Editor', module)
   .add('Text only schema', () => <Editor schema="text-only" />)
   .add('Full schema', () => <Editor schema="full" />)
   .add('Toolbar', () => <Editor schema="full" toolbar />)
-  .add('Collaborative', () => <Collaborative editorsCount={2} />)
+  .add('Collaborative', () => <Collaborative peers={2} />)
   .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />);

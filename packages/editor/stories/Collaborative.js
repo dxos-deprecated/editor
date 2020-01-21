@@ -3,9 +3,9 @@
 //
 
 import React, { Component } from 'react';
-import * as Y from 'yjs';
 
 import { withStyles } from '@material-ui/core/styles';
+import { EVENT_DOC_UPDATE, Document } from '@wirelineio/document';
 
 import { Channel, Editor } from '../src';
 
@@ -15,107 +15,98 @@ class Collaborative extends Component {
   static count = 0;
 
   state = {
-    editors: undefined
+    peers: undefined,
+    messages: []
   };
 
   componentDidMount() {
-    const { editorsCount = 1 } = this.props;
+    const { peers: peersCount = 1 } = this.props;
 
-    const editors = Array.from({ length: editorsCount }).reduce((editors, current, index) => {
-      const id = 'editor-' + index;
-      editors[id] = this.createEditor(id, `user-${index}`);
-      return editors;
+    const peers = Array.from({ length: peersCount }).reduce((peers, current, index) => {
+      const peerId = 'peer-' + index;
+      peers[peerId] = this.createPeer(peerId);
+      return peers;
     }, {});
 
-    this.setState({ editors });
+    this.setState({ peers });
   }
 
-  createEditor = (id, username) => {
-    // View's doc mock.
-    const doc = new Y.Doc();
+  createPeer = peerId => {
 
-    const contentChannel = new Channel();
-    const statusChannel = new Channel();
+    const document = Document.create();
 
-    contentChannel.on('local', data => {
-      const { editors } = this.state;
+    document.on(EVENT_DOC_UPDATE, ({ update, origin }) => {
+      const { peers } = this.state;
 
-      // Update view's doc.
-      Y.applyUpdate(doc, data.update, data.origin);
+      const local = origin === null; // This is a y-prosemirror thing
 
-      Object.values(editors)
-        .filter(editor => editor.id !== id)
-        .forEach(editor => {
-          editor.contentChannel.receive({ ...data, author: editor.id });
+      if (!local) return;
+
+      Object.values(peers)
+        .filter(peer => peer.id !== peerId)
+        .forEach(peer => {
+          // New origin: avoid loop
+          peer.document.applyUpdate(update, { author: peerId });
         });
     });
 
-    contentChannel.on('remote', data => {
-      // Update view's doc.
-      Y.applyUpdate(doc, data.update, data.origin);
-    });
-
+    const statusChannel = new Channel();
     statusChannel.on('local', data => {
-      const { editors } = this.state;
+      const { peers } = this.state;
 
-      Object.values(editors)
-        .filter(editor => editor.id !== id)
-        .forEach(editor => {
-          editor.statusChannel.receive(data);
+      Object.values(peers)
+        .filter(peer => peer.id !== peerId)
+        .forEach(peer => {
+          peer.statusChannel.receive(data);
         });
     });
 
     return {
-      id,
-      username,
-      doc,
-      contentChannel,
+      id: peerId,
+      username: peerId,
+      document,
       statusChannel
     };
   };
 
-  handleGetUsername = editorId => id => {
-    const { editors } = this.state;
+  handleGetUsername = peerId => id => {
+    const { peers } = this.state;
 
     if (!id) {
-      return editors[editorId].username;
+      return peers[peerId].username;
     }
 
-    return editors[id].username;
+    return peers[id].username;
   };
 
-  handleCreated = editorId => ({ view }) => {
-    const { editors } = this.state;
+  handleCreated = peerId => ({ view }) => {
+    const { peers } = this.state;
 
-    const newEditors = { ...editors };
-    newEditors[editorId].view = view;
+    const newPeers = { ...peers };
+    newPeers[peerId].view = view;
 
-    this.setState({ editors: newEditors });
+    this.setState({ peers: newPeers });
   };
 
   render() {
     const { classes } = this.props;
-    const { editors } = this.state;
+    const { peers } = this.state;
 
-    if (!editors) {
+    if (!peers) {
       return 'Loading...';
     }
 
-    const components = Object.values(editors).map(editor => (
-      <div key={editor.id} className={classes.container}>
+    const components = Object.values(peers).map(peer => (
+      <div key={peer.id} className={classes.container}>
         <Editor
           schema="full"
-          onCreated={this.handleCreated(editor.id)}
+          onCreated={this.handleCreated(peer.id)}
           toolbar
           sync={{
-            doc: editor.doc,
-            content: {
-              channel: editor.contentChannel
-            },
+            document: peer.document,
             status: {
-              id: editor.id,
-              getUsername: this.handleGetUsername(editor.id),
-              channel: editor.statusChannel
+              channel: peer.statusChannel,
+              getUsername: this.handleGetUsername(peer.id)
             }
           }}
         />

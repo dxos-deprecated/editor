@@ -10,10 +10,11 @@ import { baseKeymap } from 'prosemirror-commands';
 import { DOMSerializer, DOMParser } from 'prosemirror-model';
 import { history, undo, redo } from 'prosemirror-history';
 
+import { ySyncPlugin } from 'y-prosemirror';
+
 import { yUndoPlugin, undo as yUndo, redo as yRedo } from '../plugins/yjs-undo-plugin';
 
 import { yCursorPlugin } from '../plugins/cursor-plugin';
-import YjsProsemirrorBinding from '../plugins/yjs-prosemirror-binding';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 
 import ContextMenu from '../components/ContextMenu';
@@ -26,13 +27,13 @@ import historyListenerPlugin from '../plugins/history-listener-plugin';
 export const defaultViewProps = {
   schema: 'basic',
   htmlContent: undefined,
-  contextMenu: false,
-  sync: false,
+  contextMenu: undefined,
+  sync: undefined,
   nodeViews: {},
   schemaEnhancers: [],
   options: {},
-  onContentChange: false,
-  onKeyDown: false
+  onContentChange: undefined,
+  onKeyDown: undefined
 };
 
 export const createProsemirrorView = (element, {
@@ -95,26 +96,28 @@ export const createProsemirrorView = (element, {
   };
 
   if (sync) {
-    const { content, status, doc } = sync;
+    const { status, document, id } = sync;
 
-    const yjsBinding = new YjsProsemirrorBinding(content.channel, doc);
+    // Content sync plugin
+    const syncPlugin = ySyncPlugin(document.content);
 
-    const provider = new Provider(yjsBinding.doc, status.channel);
+    const provider = new Provider(document.doc, status.channel);
 
     provider.awareness.setLocalStateField('user', {
-      id: status.id,
+      id,
       username: status.getUsername()
     });
 
+    // Cursor indicator plugin
+    const cursorPlugin = yCursorPlugin(provider.awareness, ({ id, getUsername: status.getUsername }));
+
+    // Yjs history plugin
+    const undoPlugin = yUndoPlugin({ trackedOrigins: [({}).constructor] });
+
     plugins.push(
-      // Content sync plugin
-      yjsBinding.plugin,
-
-      // Cursor indicator plugin
-      yCursorPlugin(provider.awareness, status),
-
-      // Yjs history plugin
-      yUndoPlugin({ trackedOrigins: [({}).constructor] })
+      syncPlugin,
+      cursorPlugin,
+      undoPlugin
     );
 
     keysToMap['Mod-z'] = yUndo;

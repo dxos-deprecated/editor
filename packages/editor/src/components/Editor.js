@@ -2,12 +2,10 @@
 // Copyright 2019 Wireline, Inc.
 //
 
-import * as Y from 'yjs';
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
-import { EditorView } from 'prosemirror-view'; // eslint-disable-line no-unused-vars
+import { Document } from '@wirelineio/document';
 
 import { withStyles } from '@material-ui/core/styles';
 
@@ -41,6 +39,14 @@ const styles = theme => ({
 });
 
 class EditorComponent extends Component {
+
+  static defaultProps = {
+    toolbar: undefined,
+    onCreated: undefined,
+    classes: {},
+    ...defaultViewProps
+  };
+
   _editor = React.createRef();
 
   state = {
@@ -141,7 +147,7 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { classes, toolbar = false } = this.props;
+    const { classes, toolbar } = this.props;
     const { view } = this.state;
 
     return (
@@ -162,13 +168,6 @@ class EditorComponent extends Component {
 
 const Editor = withStyles(styles)(EditorComponent);
 
-EditorComponent.defaultProps = {
-  toolbar: false,
-  onCreated: undefined,
-  classes: {},
-  ...defaultViewProps
-};
-
 EditorComponent.propTypes = {
   toolbar: PropTypes.bool,
   htmlContent: PropTypes.string,
@@ -179,35 +178,19 @@ EditorComponent.propTypes = {
       marks: PropTypes.object
     })
   ]),
-  contextMenu: PropTypes.oneOfType([
-    PropTypes.oneOf([false]),
-    PropTypes.shape({
-      getOptions: PropTypes.func,
-      onSelect: PropTypes.func,
-      renderItem: PropTypes.func
-    })
-  ]),
-  sync: PropTypes.oneOfType([
-    PropTypes.oneOf([false]),
-    PropTypes.shape({
-      content: PropTypes.exact({
-        channel: PropTypes.instanceOf(Channel)
-      }),
-      status: PropTypes.exact({
-        channel: PropTypes.instanceOf(Channel),
-        id: PropTypes.string,
-        getUsername: PropTypes.func
-      }),
-      doc: (props, propName, componentName) => {
-        if (!(props[propName].constructor instanceof Y.Doc.constructor)) {
-          return new Error(
-            'Invalid prop `' + propName + '` supplied to' +
-            ' `' + componentName + '`. Validation failed.'
-          );
-        }
-      }
+  contextMenu: PropTypes.shape({
+    getOptions: PropTypes.func,
+    onSelect: PropTypes.func,
+    renderItem: PropTypes.func
+  }),
+  sync: PropTypes.shape({
+    status: PropTypes.exact({
+      channel: PropTypes.instanceOf(Channel),
+      getUsername: PropTypes.func
     }),
-  ]),
+    id: PropTypes.string,
+    document: PropTypes.instanceOf(Document)
+  }),
   nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
   schemaEnhancers: PropTypes.arrayOf(PropTypes.func),
   options: PropTypes.shape({
