@@ -64,8 +64,9 @@ class Toolbar extends PureComponent {
 
   componentDidUpdate(prevProps) {
     const { view } = this.props;
+    const { view: prevView = {} } = prevProps;
 
-    if (!prevProps.view && view) {
+    if (view && view.id !== prevView.id) {
       let originalDispatch = view._props.dispatchTransaction;
 
       view._props.originalDispatch = originalDispatch;
@@ -173,6 +174,7 @@ class Toolbar extends PureComponent {
   render() {
     const { classes, view } = this.props;
     const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
+
     if (!view) {
       return null;
     }

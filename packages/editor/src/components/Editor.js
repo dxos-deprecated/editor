@@ -4,6 +4,7 @@
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import uuid from 'uuid/v4';
 
 import { Document } from '@wirelineio/document';
 
@@ -52,39 +53,24 @@ class EditorComponent extends Component {
   state = {
     /** @type {EditorView} */
     view: undefined,
-    htmlContent: undefined
+
+    toolbar: undefined,
   };
 
-  static getDerivedStateFromProps(props, state) {
-    const { htmlContent } = props;
-    const { htmlContent: prevHtmlContent } = state;
+  static getDerivedStateFromProps(props) {
+    const { toolbar } = props;
 
-    if (htmlContent !== prevHtmlContent) {
-      return {
-        htmlContent
-      };
-    }
-
-    return null;
+    return {
+      toolbar
+    };
   }
 
   componentDidMount() {
-    this.createProsemirrorView(this.props);
+    this.init();
   }
 
   componentWillUnmount() {
-    const { view } = this.state;
-    if (!view) {
-      return;
-    }
-
-    this.setState({ view: undefined });
-
-    try {
-      view.destroy();
-    } catch (err) {
-      console.warn(err);
-    }
+    this.destroy();
   }
 
   createProsemirrorView = ({
@@ -116,28 +102,40 @@ class EditorComponent extends Component {
     };
 
     const view = createProsemirrorView(this._editor.current, viewConfig);
+    view.id = uuid();
 
     this.setState({ view }, () => onCreated ? onCreated({
       view,
-      destroy: this.destroyProsemirrorView,
-      reset: this.resetProsemirrorView
+      destroy: this.destroy,
+      init: this.init,
+      reset: this.reset
     }) : null);
+  }
+
+  reset = () => {
+    this.destroy();
+    this.init();
+  }
+
+  init = () => {
+    this.createProsemirrorView(this.props);
+  }
+
+  destroy = () => {
+    this.destroyProsemirrorView();
+
+    this.setState({
+      view: undefined,
+      toolbar: undefined
+    });
   }
 
   destroyProsemirrorView = () => {
     const { view } = this.state;
 
-    view.destroy();
-  }
-
-  resetProsemirrorView = () => {
-    const { view } = this.state;
-
-    let tr = view.state.tr;
-
-    tr = tr.delete(0, view.state.doc.content.size);
-
-    view.dispatch(tr);
+    try {
+      view.destroy();
+    } catch (err) { } // eslint-disable-line no-empty
   }
 
   handleEditorContainerClick = () => {
@@ -147,8 +145,8 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { classes, toolbar } = this.props;
-    const { view } = this.state;
+    const { classes } = this.props;
+    const { view, toolbar } = this.state;
 
     return (
       <div className={classes.root}>
