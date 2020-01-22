@@ -24,7 +24,7 @@
     "last 1 chrome versions"
   ],
   "dependencies": {
-    "@wirelineio/document": "^0.0.3",
+    "@wirelineio/document": "^0.0.4",
     "classnames": "^2.2.6",
     "color-hash": "^1.0.3",
     "lib0": "0.1.7",
@@ -39,6 +39,7 @@
     "prosemirror-tables": "^0.9.5",
     "prosemirror-utils": "^0.9.6",
     "prosemirror-view": "^1.13.4",
+    "uuid": "3.4.0",
     "y-prosemirror": "0.1.5",
     "y-protocols": "0.1.0",
     "yjs": "13.0.0-103"
