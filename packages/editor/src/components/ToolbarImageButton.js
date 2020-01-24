@@ -4,61 +4,37 @@
 
 import React, { Component } from 'react';
 
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import TextField from '@material-ui/core/TextField';
-
 import ImageIcon from '@material-ui/icons/Image';
 
 import ToolbarButton from './ToolbarButton';
 import { canInsert } from '../lib/prosemirror-helpers';
-
-// eslint-disable-next-line no-useless-escape
-const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/gim;
+import ToolbarImagePopup from './ToolbarImagePopup';
 
 class ToolbarImageButton extends Component {
+
+  static defaultProps = {
+    view: undefined
+  }
+
   state = {
-    dialogOpen: false,
-    src: '',
-    title: '',
-    alt: '',
-    error: undefined
+    dialogOpen: false
   };
 
   handleClickOpen = () => {
     this.setState({
-      dialogOpen: true,
-      src: '',
-      title: '',
-      alt: '',
-      error: undefined
+      dialogOpen: true
     });
   };
 
   handleClose = () => {
     this.setState({
-      dialogOpen: false,
-      src: '',
-      title: '',
-      alt: '',
-      error: undefined
+      dialogOpen: false
     });
   };
 
-  handleImageFieldChange = field => event => {
-    this.setState({ [field]: event.target.value, error: undefined });
-  };
-
-  handleInsertImage = () => {
-    const { title, src, alt } = this.state;
+  handleInsertImage = ({ title, src, alt }) => {
     const { view } = this.props;
     const { state, dispatch } = view;
-
-    if (!validURLRegex.test(src)) {
-      return this.setState({ error: 'Invalid image URL address' });
-    }
 
     const img = state.schema.nodes.image.createAndFill({ src, alt, title });
     dispatch(state.tr.replaceSelectionWith(img));
@@ -69,9 +45,10 @@ class ToolbarImageButton extends Component {
 
   render() {
     const {
-      view: { state }
+      view: { state },
+      popupSrcLabel
     } = this.props;
-    const { src, title, alt, error, dialogOpen } = this.state;
+    const { dialogOpen } = this.state;
 
     return (
       <div>
@@ -81,59 +58,12 @@ class ToolbarImageButton extends Component {
           onClick={this.handleClickOpen}
           disabled={!canInsert(state.schema.nodes.image)(state)}
         />
-        <Dialog
+        <ToolbarImagePopup
+          srcLabel={popupSrcLabel}
           open={dialogOpen}
           onClose={this.handleClose}
-          aria-labelledby="image-dialog-title"
-        >
-          <DialogContent>
-            <TextField
-              value={title}
-              onChange={this.handleImageFieldChange('title')}
-              autoFocus
-              margin="dense"
-              id="image-title"
-              label="Title"
-              type="text"
-              fullWidth
-              variant="outlined"
-            />
-            <TextField
-              value={alt}
-              onChange={this.handleImageFieldChange('alt')}
-              margin="dense"
-              id="image-alt"
-              label="Description"
-              type="text"
-              fullWidth
-              variant="outlined"
-            />
-            <TextField
-              value={src}
-              onChange={this.handleImageFieldChange('src')}
-              margin="dense"
-              id="image-src"
-              label="Image URL address"
-              type="url"
-              fullWidth
-              variant="outlined"
-              error={Boolean(error)}
-              helperText={error}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={this.handleClose} color="primary">
-              Cancel
-            </Button>
-            <Button
-              disabled={src === ''}
-              onClick={this.handleInsertImage}
-              color="primary"
-            >
-              Insert image
-            </Button>
-          </DialogActions>
-        </Dialog>
+          onSubmit={this.handleInsertImage}
+        />
       </div>
     );
   }

@@ -4,6 +4,7 @@
 
 import debounce from 'lodash.debounce';
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 
 import { setBlockType, toggleMark } from 'prosemirror-commands';
 
@@ -37,7 +38,7 @@ const styles = theme => ({
   }
 });
 
-class Toolbar extends PureComponent {
+class ToolbarComponent extends PureComponent {
   state = {
     canUndo: false,
     canRedo: false,
@@ -172,7 +173,11 @@ class Toolbar extends PureComponent {
   };
 
   render() {
-    const { classes, view } = this.props;
+    const {
+      view,
+      imagePopupSrcLabel,
+      classes
+    } = this.props;
     const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
 
     if (!view) {
@@ -200,14 +205,24 @@ class Toolbar extends PureComponent {
           disabled={!canSetLink}
           selectedLinkNodes={selectedLinkNodes}
         />
-        <ToolbarImageButton view={view} />
+        <ToolbarImageButton
+          view={view}
+          popupSrcLabel={imagePopupSrcLabel}
+        />
       </MUIToolbar>
     );
   }
 }
 
+const Toolbar = withStyles(styles)(ToolbarComponent);
+export const ToolbarPropTypes = PropTypes.shape({
+  imagePopupSrcLabel: PropTypes.string,
+}).isRequired;
+
+Toolbar.propTypes = ToolbarPropTypes;
+
 const ToolbarDivider = withStyles(styles)(({ classes }) => {
   return <MUIDivider orientation="vertical" className={classes.divider} />;
 });
 
-export default withStyles(styles)(Toolbar);
+export default Toolbar;

@@ -10,7 +10,7 @@ import { Document } from '@wirelineio/document';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import Toolbar from './Toolbar';
+import Toolbar, { ToolbarPropTypes } from './Toolbar';
 
 import prosemirrorStyles from '../styles/prosemirror';
 
@@ -152,7 +152,7 @@ class EditorComponent extends Component {
       <div className={classes.root}>
         {toolbar && (
           <div className={classes.toolbarContainer}>
-            <Toolbar view={view} className={classes.toolbar} />
+            <Toolbar view={view} className={classes.toolbar} {...toolbar} />
           </div>
         )}
 
@@ -167,7 +167,10 @@ class EditorComponent extends Component {
 const Editor = withStyles(styles)(EditorComponent);
 
 EditorComponent.propTypes = {
-  toolbar: PropTypes.bool,
+  toolbar: PropTypes.oneOfType([
+    PropTypes.bool,
+    ToolbarPropTypes
+  ]),
   htmlContent: PropTypes.string,
   schema: PropTypes.oneOfType([
     PropTypes.oneOf(['basic', 'text-only', 'full']),

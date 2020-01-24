@@ -26,7 +26,20 @@ storiesOf('Editor', module)
   .add('Default', () => <Editor />)
   .add('Text only schema', () => <Editor schema="text-only" />)
   .add('Full schema', () => <Editor schema="full" />)
-  .add('Toolbar', () => <Editor schema="full" toolbar />)
+
   .add('Collaborative', () => <Collaborative peers={2} />)
   .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />);
+
+storiesOf('Editor Toolbar', module)
+  .addDecorator(MuiTheme)
+  .addDecorator(RootContainer)
+  .add('Default', () => <Editor schema="full" toolbar />)
+  .add('Custom image popup', () => (
+    <Editor
+      schema="full"
+      toolbar={{
+        imagePopupSrcLabel: 'Any image address'
+      }}
+    />
+  ));
