@@ -99,7 +99,7 @@ export const createProsemirrorView = (element, {
     const { status, document, id } = sync;
 
     // Content sync plugin
-    const syncPlugin = ySyncPlugin(document.content);
+    const syncPlugin = ySyncPlugin(document.content.xmlFragment);
 
     const provider = new Provider(document.doc, status.channel);
 

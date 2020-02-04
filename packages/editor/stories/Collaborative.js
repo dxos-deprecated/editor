@@ -5,7 +5,7 @@
 import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
-import { EVENT_DOC_UPDATE, Document } from '@wirelineio/document';
+import { Document } from '@wirelineio/document';
 
 import { Channel, Editor } from '../src';
 
@@ -15,27 +15,36 @@ class Collaborative extends Component {
   static count = 0;
 
   state = {
-    peers: undefined,
-    messages: []
+    peers: undefined
   };
 
   componentDidMount() {
     const { peers: peersCount = 1 } = this.props;
 
-    const peers = Array.from({ length: peersCount }).reduce((peers, current, index) => {
+    const peerId = `peer-${peersCount - 1}`;
+    const peers = [];
+
+    // First peer with sync message
+    peers[peerId] = this.createPeer(peerId);
+    const originalDocument = peers[peerId].document;
+
+    for (let index = 0; index < peersCount - 1; index++) {
       const peerId = 'peer-' + index;
-      peers[peerId] = this.createPeer(peerId);
-      return peers;
-    }, {});
+      peers[peerId] = this.createPeer(peerId, originalDocument);
+    }
 
     this.setState({ peers });
   }
 
-  createPeer = peerId => {
+  createPeer = (peerId, originalDocument = null) => {
 
-    const document = Document.create();
+    const document = new Document();
 
-    document.on(EVENT_DOC_UPDATE, ({ update, origin }) => {
+    if (originalDocument) {
+      document.applyUpdate(originalDocument.docState);
+    }
+
+    document.on('update', ({ update, origin }) => {
       const { peers } = this.state;
 
       const local = origin === null; // This is a y-prosemirror thing
