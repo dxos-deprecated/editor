@@ -1,6 +1,6 @@
 {
   "name": "@wirelineio/editor",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "description": "Wireline editor",
   "keywords": [],
   "homepage": "https://github.com/wirelineio/editor",
@@ -18,13 +18,14 @@
     "build": "npm run clean && babel ./src --source-maps --out-dir ./dist/es --ignore \"**/*.test.js\"",
     "clean": "rm -rf dist && mkdir -p ./dist/es",
     "lint": "eslint ./src",
+    "prepublishOnly": "npm run build",
     "storybook": "start-storybook"
   },
   "browserslist": [
     "last 1 chrome versions"
   ],
   "dependencies": {
-    "@wirelineio/document": "^0.0.4",
+    "@wirelineio/document": "^1.0.4",
     "classnames": "^2.2.6",
     "color-hash": "^1.0.3",
     "lib0": "0.1.7",
