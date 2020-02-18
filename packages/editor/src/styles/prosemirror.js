@@ -28,13 +28,6 @@ const styles = theme => ({
       position: 'relative'
     },
 
-    '& pad': {
-      display: 'block',
-      border: '1px solid #555',
-      padding: theme.spacing(0.5),
-      margin: theme.spacing(0.5)
-    },
-
     '& .ProseMirror-hideselection *::selection': {
       background: 'transparent'
     },
