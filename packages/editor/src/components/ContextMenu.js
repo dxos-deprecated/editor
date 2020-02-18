@@ -10,6 +10,7 @@ import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
+import ListSubheader from '@material-ui/core/ListSubheader';
 import Paper from '@material-ui/core/Paper';
 
 const MENU_NO_ITEMS_LABEL = 'None';
@@ -32,8 +33,7 @@ const contextMenuStyles = () => ({
   listSubheader: {
     fontSize: 14,
     lineHeight: '18px',
-    padding: 4,
-    color: '#000'
+    padding: 4
   },
 
   listItem: {
@@ -74,7 +74,7 @@ class ContextMenu extends Component {
     const { classes } = this.props;
 
     return (
-      <ListItem
+      <ListSubheader
         key={key}
         disabled
         disableGutters
@@ -82,7 +82,7 @@ class ContextMenu extends Component {
         className={classes.listSubheader}
       >
         <ListItemText primary={title} />
-      </ListItem>
+      </ListSubheader>
     );
   }
 
@@ -106,21 +106,29 @@ class ContextMenu extends Component {
       );
     }
 
-    return options.slice(optionIndexStart).map((option, index) => {
-      const optionIndex = optionIndexStart + index;
+    let optionIndex = optionIndexStart;
+
+    const items = options.slice(optionIndexStart).map(option => {
+      let item;
 
       if (option.subheader) {
         const subheader = this.renderListSubheader(option.subheader, optionIndex);
 
-        if (optionIndex !== 0) {
-          return [<Divider key={optionIndex} />, subheader];
-        }
+        item = subheader;
 
-        return subheader;
+        if (optionIndex !== 0) {
+          optionIndex++;
+          item = [<Divider key={optionIndex} />, subheader];
+        }
       } else {
-        return this.renderItemOption(option, optionIndex);
+        item = this.renderItemOption(option, optionIndex);
       }
-    }).flat();
+
+      optionIndex++;
+      return item;
+    });
+
+    return items;
   }
 
   render() {
@@ -128,7 +136,18 @@ class ContextMenu extends Component {
 
     let optionIndexStart = 0;
 
-    const firstSubheader = options.length > 0 && options[0].subheader && this.renderListSubheader(options[0].subheader);
+    const firstSubheader = options.length > 0 && options[0].subheader && (
+      <ListSubheader
+        key={0}
+        disabled
+        component="div"
+        disableGutters
+        className={classes.listSubheader}
+      >
+        {options[0].subheader}
+      </ListSubheader>
+    );
+
     optionIndexStart += firstSubheader ? 1 : 0;
 
     return (
