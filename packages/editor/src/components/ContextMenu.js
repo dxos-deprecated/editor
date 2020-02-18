@@ -4,16 +4,13 @@
 
 import React, { Component } from 'react';
 
-import { withStyles, Divider } from '@material-ui/core';
+import { withStyles } from '@material-ui/core';
 import ClickAwayListener from '@material-ui/core/ClickAwayListener';
+import Divider from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
-import Paper from '@material-ui/core/Paper';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import ListSubheader from '@material-ui/core/ListSubheader';
-
-const MENU_INSERT_HEADER = 'Insert Item';
-const MENU_CREATE_HEADER = 'New Item';
+import Paper from '@material-ui/core/Paper';
 
 const MENU_NO_ITEMS_LABEL = 'None';
 const MENU_MAX_ITEMS = 8; // To scroll.
@@ -45,7 +42,7 @@ const contextMenuStyles = () => ({
 });
 
 /**
- * The context menu let's users create links and/or embed other pads.
+ * Context menu component.
  */
 class ContextMenu extends Component {
   handleClick = option => () => {
@@ -60,7 +57,7 @@ class ContextMenu extends Component {
 
     return (
       <ListItem
-        key={option.id}
+        key={index}
         button
         dense
         disableGutters
@@ -73,13 +70,66 @@ class ContextMenu extends Component {
     );
   };
 
+  renderListSubheader = (title, key) => {
+    const { classes } = this.props;
+
+    return (
+      <ListItem
+        key={key}
+        disabled
+        disableGutters
+        component="div"
+        className={classes.listSubheader}
+      >
+        <ListItemText primary={title} />
+      </ListItem>
+    );
+  }
+
+  renderListItems = (optionIndexStart = 0) => {
+    const { options, classes } = this.props;
+
+    if (optionIndexStart > options.length) {
+      return (
+        <ListItem
+          key="no-items"
+          disabled
+          dense
+          disableGutters
+          className={classes.listItem}
+        >
+          <ListItemText
+            primary={MENU_NO_ITEMS_LABEL}
+            className={classes.listItemText}
+          />
+        </ListItem>
+      );
+    }
+
+    return options.slice(optionIndexStart).map((option, index) => {
+      const optionIndex = optionIndexStart + index;
+
+      if (option.subheader) {
+        const subheader = this.renderListSubheader(option.subheader, optionIndex);
+
+        if (optionIndex !== 0) {
+          return [<Divider key={optionIndex} />, subheader];
+        }
+
+        return subheader;
+      } else {
+        return this.renderItemOption(option, optionIndex);
+      }
+    }).flat();
+  }
+
   render() {
     const { options = [], onClose, left, top, classes } = this.props;
 
-    const optionsGroup1 = options.filter(({ create }) => !create);
-    const optionsGroup2 = options.filter(({ create }) => create);
+    let optionIndexStart = 0;
 
-    let optionIndex = 0;
+    const firstSubheader = options.length > 0 && options[0].subheader && this.renderListSubheader(options[0].subheader);
+    optionIndexStart += firstSubheader ? 1 : 0;
 
     return (
       <ClickAwayListener onClickAway={onClose}>
@@ -87,53 +137,11 @@ class ContextMenu extends Component {
           component={Paper}
           dense
           disablePadding
-          subheader={
-            <ListSubheader
-              component="div"
-              disableGutters
-              className={classes.listSubheader}
-            >
-              {MENU_INSERT_HEADER}
-            </ListSubheader>
-          }
+          subheader={firstSubheader}
           className={classes.list}
           style={{ left: left + MENU_OFFSET_X, top: top + MENU_OFFSET_Y }}
         >
-          {options.length === 0 && (
-            <ListItem
-              key="no-items"
-              disabled
-              dense
-              disableGutters
-              className={classes.listItem}
-            >
-              <ListItemText
-                primary={MENU_NO_ITEMS_LABEL}
-                className={classes.listItemText}
-              />
-            </ListItem>
-          )}
-          {optionsGroup1.map(option =>
-            this.renderItemOption(option, optionIndex++)
-          )}
-
-          {optionsGroup2.length > 0 && optionsGroup1.length > 0 && (
-            <Divider key="divider" />
-          )}
-          {optionsGroup2.length > 0 && (
-            <ListItem
-              key="subheader"
-              disabled
-              disableGutters
-              component="div"
-              className={classes.listSubheader}
-            >
-              <ListItemText primary={MENU_CREATE_HEADER} />
-            </ListItem>
-          )}
-          {optionsGroup2.map((option, index) =>
-            this.renderItemOption(option, optionIndex + index)
-          )}
+          {this.renderListItems(optionIndexStart)}
         </List>
       </ClickAwayListener>
     );
