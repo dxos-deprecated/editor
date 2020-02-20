@@ -59,7 +59,7 @@ const styles = theme => ({
       pointerEvents: 'none'
     },
 
-    '& p': {
+    '& > p': {
       marginTop: '.5em',
       marginBottom: '.5em'
     },
