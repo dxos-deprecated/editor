@@ -11,9 +11,9 @@ import { Document } from '@wirelineio/document';
 import { withStyles } from '@material-ui/core/styles';
 
 import Toolbar, { ToolbarPropTypes } from './Toolbar';
+import ContextMenu, { ContextMenuPropTypes } from './ContextMenu';
 
 import prosemirrorStyles from '../styles/prosemirror';
-
 import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
 import Channel from '../lib/Channel';
 
@@ -145,11 +145,12 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { classes } = this.props;
+    const { contextMenu, classes } = this.props;
     const { view, toolbar } = this.state;
 
     return (
       <div className={classes.root}>
+        {contextMenu && <ContextMenu view={view} {...contextMenu} />}
         {toolbar && (
           <div className={classes.toolbarContainer}>
             <Toolbar view={view} className={classes.toolbar} {...toolbar} />
@@ -179,11 +180,10 @@ EditorComponent.propTypes = {
       marks: PropTypes.object
     })
   ]),
-  contextMenu: PropTypes.shape({
-    getOptions: PropTypes.func,
-    onSelect: PropTypes.func,
-    renderItem: PropTypes.func
-  }),
+  contextMenu: PropTypes.oneOfType([
+    PropTypes.bool,
+    ContextMenuPropTypes
+  ]),
   sync: PropTypes.shape({
     status: PropTypes.exact({
       channel: PropTypes.instanceOf(Channel),

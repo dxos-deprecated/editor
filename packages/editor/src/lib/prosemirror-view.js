@@ -17,8 +17,6 @@ import { yUndoPlugin, undo as yUndo, redo as yRedo } from '../plugins/yjs-undo-p
 import { yCursorPlugin } from '../plugins/cursor-plugin';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 
-import ContextMenu from '../components/ContextMenu';
-
 import { createSchema } from './schema';
 import Provider from './provider';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
@@ -127,12 +125,7 @@ export const createProsemirrorView = (element, {
 
   if (contextMenu) {
     plugins.push(
-      contextMenuPlugin({
-        MenuComponent: ContextMenu,
-        getOptions: contextMenu.getOptions,
-        onSelect: contextMenu.onSelect,
-        renderItem: contextMenu.renderItem
-      })
+      contextMenuPlugin({ triggerMenuEventKeys: contextMenu.triggerMenuEventKeys })
     );
   }
 
@@ -226,7 +219,7 @@ export const createProsemirrorView = (element, {
           onContentChange(contentContainer.innerHTML);
         }
 
-        return { oldState, newState };
+        return { oldState, newState, transaction };
       }
     }
   );

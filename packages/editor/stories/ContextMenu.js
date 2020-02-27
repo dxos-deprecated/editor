@@ -1,27 +1,21 @@
 import React, { Component } from 'react';
 
-import ListItemText from '@material-ui/core/ListItemText';
-
 import { Editor } from '../src';
 
 class ContextMenu extends Component {
   handleContextMenuGetOptions = () => {
-    return [
+    return Math.random() > 0.5 ? [
       { subheader: 'First subheader' },
       { id: 1, label: 'Item 1' },
       { id: 2, label: 'Item 2' },
       { subheader: 'Second subheader' },
       { id: 3, label: 'Item 3' },
       { id: 4, label: 'Item 4' }
-    ];
+    ] : [];
   };
 
-  handleContextMenuRenderItem = ({ option }) => {
-    return (
-      <ListItemText
-        primary={<>{option.label}</>}
-      />
-    );
+  handleContextMenuRenderItem = (option) => {
+    return `${option.id} - ${option.label}`;
   };
 
   handleContextMenuOptionSelect = async (option, view) => {
@@ -38,7 +32,10 @@ class ContextMenu extends Component {
         contextMenu={{
           getOptions: this.handleContextMenuGetOptions,
           onSelect: this.handleContextMenuOptionSelect,
-          renderItem: this.handleContextMenuRenderItem
+          renderMenuItem: this.handleContextMenuRenderItem,
+          emptyOptionsLabel: 'NO OPTIONS HERE TO SHOW',
+          visibleItems: 3,
+          triggerMenuEventKeys: ['@', '#', '$']
         }}
       />
     );

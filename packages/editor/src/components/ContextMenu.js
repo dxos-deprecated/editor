@@ -3,168 +3,169 @@
 //
 
 import React, { Component } from 'react';
+import { TextSelection } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
+import PropTypes from 'prop-types';
 
-import { withStyles } from '@material-ui/core';
-import ClickAwayListener from '@material-ui/core/ClickAwayListener';
-import Divider from '@material-ui/core/Divider';
-import List from '@material-ui/core/List';
-import ListItem from '@material-ui/core/ListItem';
-import ListItemText from '@material-ui/core/ListItemText';
-import ListSubheader from '@material-ui/core/ListSubheader';
-import Paper from '@material-ui/core/Paper';
+import { contextMenuPluginKey, contextMenuPluginDefaults } from '../plugins/context-menu-plugin';
+import Menu from './Menu';
 
-const MENU_NO_ITEMS_LABEL = 'None';
-const MENU_MAX_ITEMS = 8; // To scroll.
-const MENU_OFFSET_X = 10; // Points from mouse x click.
-const MENU_OFFSET_Y = 10; // Points from mouse y click.
-
-const contextMenuStyles = () => ({
-  list: {
-    position: 'absolute',
-    // 8px padding top and bottom + 18px relative to listItemText font-size
-    // MENU_LIST_MAX_ITEMS + 1 to discount header
-    maxHeight: `calc(${MENU_MAX_ITEMS + 1} * 26px)`,
-    overflow: 'auto',
-    minWidth: 200
-  },
-
-  listItemText: {},
-
-  listSubheader: {
-    fontSize: 14,
-    lineHeight: '18px',
-    padding: 4
-  },
-
-  listItem: {
-    padding: 4
-  }
-});
-
-/**
- * Context menu component.
- */
 class ContextMenu extends Component {
-  handleClick = option => () => {
-    const { onSelect, onClose } = this.props;
 
-    onSelect(option);
-    onClose();
-  };
-
-  renderItemOption = (option, index) => {
-    const { selectedIndex = null, renderItem, classes } = this.props;
-
-    return (
-      <ListItem
-        key={index}
-        button
-        dense
-        disableGutters
-        selected={selectedIndex === index}
-        onClick={this.handleClick(option)}
-        className={classes.listItem}
-      >
-        {renderItem({ option })}
-      </ListItem>
-    );
-  };
-
-  renderListSubheader = (title, key) => {
-    const { classes } = this.props;
-
-    return (
-      <ListSubheader
-        key={key}
-        disabled
-        disableGutters
-        component="div"
-        className={classes.listSubheader}
-      >
-        <ListItemText primary={title} />
-      </ListSubheader>
-    );
+  state = {
+    prevViewId: undefined,
+    open: false,
+    options: undefined,
+    position: undefined
   }
 
-  renderListItems = (optionIndexStart = 0) => {
-    const { options, classes } = this.props;
+  static defaultProps = {
+    renderMenuItem: option => option.label,
+    getOptions: () => [],
+    onSelect: () => null,
+    triggerMenuEventKeys: contextMenuPluginDefaults.triggerMenuEventKeys,
+    ...Menu.defaultProps
+  }
 
-    if (optionIndexStart > options.length) {
-      return (
-        <ListItem
-          key="no-items"
-          disabled
-          dense
-          disableGutters
-          className={classes.listItem}
-        >
-          <ListItemText
-            primary={MENU_NO_ITEMS_LABEL}
-            className={classes.listItemText}
-          />
-        </ListItem>
-      );
+  static getDerivedStateFromProps(props, state) {
+    const { view } = props;
+    const { prevViewId } = state;
+
+    if (view && view.id !== prevViewId) {
+      return {
+        prevViewId: view.id
+      };
     }
 
-    let optionIndex = optionIndexStart;
+    return null;
+  }
 
-    const items = options.slice(optionIndexStart).map(option => {
-      let item;
+  componentDidUpdate(prevProps) {
+    const { view } = this.props;
+    const { view: prevView = {} } = prevProps;
 
-      if (option.subheader) {
-        const subheader = this.renderListSubheader(option.subheader, optionIndex);
+    if (view && view.id !== prevView.id) {
+      let originalDispatch = view._props.dispatchTransaction;
 
-        item = subheader;
+      view._props.originalDispatch = originalDispatch;
 
-        if (optionIndex !== 0) {
-          optionIndex++;
-          item = [<Divider key={optionIndex} />, subheader];
-        }
-      } else {
-        item = this.renderItemOption(option, optionIndex);
-      }
+      // Register to view changes.
+      view._props.dispatchTransaction = transaction => {
+        originalDispatch(transaction);
 
-      optionIndex++;
-      return item;
+        const meta = transaction.getMeta(contextMenuPluginKey);
+
+        if (!meta) return;
+
+        this.handleViewUpdate(meta);
+      };
+    }
+  }
+
+  updateOptions = () => {
+    const { getOptions } = this.props;
+
+    const options = getOptions();
+
+    this.setState({ options });
+  }
+
+  handleViewUpdate = data => {
+    if (data.open) {
+      return this.handleOpenMenu(data);
+    }
+
+    this.setState({ open: false });
+  }
+
+  handleOpenMenu = ({ position }) => {
+    this.updateOptions();
+
+    this.setState({
+      open: true,
+      position
     });
+  }
 
-    return items;
+  handleCloseMenu = () => {
+    const { view } = this.props;
+
+    this.setState({ open: false });
+
+    view.dispatch(
+      view.state.tr.setMeta(contextMenuPluginKey, {
+        open: false
+      })
+    );
+  }
+
+  handleSelectOption = async (option) => {
+    const { view, onSelect } = this.props;
+
+    await onSelect(option, view);
+
+    view.dispatch(
+      view.state.tr
+        .setSelection(
+          TextSelection.fromJSON(view.state.tr.doc, {
+            type: 'text',
+            anchor: view.state.selection.to,
+            head: view.state.selection.to
+          })
+        )
+        .scrollIntoView()
+    );
+
+    view.focus();
+  }
+
+  handleContextMenu = event => {
+    event.preventDefault();
+    event.persist();
+
+    this.setState({
+      open: false
+    }, () => this.setState({
+      open: true,
+      position: {
+        top: event.clientY,
+        left: event.clientX
+      }
+    }));
   }
 
   render() {
-    const { options = [], onClose, left, top, classes } = this.props;
+    const { view, renderMenuItem, emptyOptionsLabel, maxVisibleOptions } = this.props;
+    const { open, options, position } = this.state;
 
-    let optionIndexStart = 0;
-
-    const firstSubheader = options.length > 0 && options[0].subheader && (
-      <ListSubheader
-        key={0}
-        disabled
-        component="div"
-        disableGutters
-        className={classes.listSubheader}
-      >
-        {options[0].subheader}
-      </ListSubheader>
-    );
-
-    optionIndexStart += firstSubheader ? 1 : 0;
+    if (!open) return null;
 
     return (
-      <ClickAwayListener onClickAway={onClose}>
-        <List
-          component={Paper}
-          dense
-          disablePadding
-          subheader={firstSubheader}
-          className={classes.list}
-          style={{ left: left + MENU_OFFSET_X, top: top + MENU_OFFSET_Y }}
-        >
-          {this.renderListItems(optionIndexStart)}
-        </List>
-      </ClickAwayListener>
+      <Menu
+        options={options}
+        onSelect={this.handleSelectOption}
+        onClose={this.handleCloseMenu}
+        onContextMenu={this.handleContextMenu}
+        position={position}
+        renderMenuItem={renderMenuItem}
+        emptyOptionsLabel={emptyOptionsLabel}
+        maxVisibleOptions={maxVisibleOptions}
+        viewDom={view.dom}
+      />
     );
   }
 }
 
-export default withStyles(contextMenuStyles)(ContextMenu);
+export const ContextMenuPropTypes = PropTypes.shape({
+  view: PropTypes.instanceOf(EditorView),
+  getOptions: PropTypes.func,
+  onSelect: PropTypes.func,
+  renderMenuItem: PropTypes.func,
+  emptyOptionsLabel: PropTypes.string,
+  maxVisibleItems: PropTypes.number,
+  triggerMenuEventKeys: PropTypes.arrayOf(PropTypes.string)
+}).isRequired;
+
+ContextMenu.propTypes = ContextMenuPropTypes;
+
+export default ContextMenu;
