@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Wireline, Inc.
+// Copyright 2020 Wireline, Inc.
 //
 
 import React, { PureComponent } from 'react';

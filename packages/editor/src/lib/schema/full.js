@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Wireline, Inc.
+// Copyright 2020 Wireline, Inc.
 //
 
 const calcYchangeDomAttrs = (attrs, domAttrs = {}) => {

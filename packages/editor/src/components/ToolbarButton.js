@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Wireline, Inc.
+// Copyright 2020 Wireline, Inc.
 //
 
 import React from 'react';
@@ -30,16 +30,16 @@ const styles = theme => ({
   }
 });
 
-export const ToolbarButton = withStyles(styles)(
-  ({
-    children,
-    icon: IconComponent,
-    title,
-    active = false,
-    disabled = false,
-    onClick,
-    classes
-  }) => (
+const ToolbarButton = ({
+  children,
+  icon: IconComponent,
+  title,
+  active = false,
+  disabled = false,
+  onClick,
+  classes
+}) => {
+  return (
     <Tooltip title={title}>
       <span>
         <Button
@@ -66,7 +66,7 @@ export const ToolbarButton = withStyles(styles)(
         </Button>
       </span>
     </Tooltip>
-  )
-);
+  );
+};
 
-export default ToolbarButton;
+export default withStyles(styles)(ToolbarButton);
