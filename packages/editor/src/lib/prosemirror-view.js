@@ -5,10 +5,10 @@
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import { keymap } from 'prosemirror-keymap';
-import { exampleSetup } from 'prosemirror-example-setup';
 import { baseKeymap } from 'prosemirror-commands';
 import { DOMSerializer, DOMParser } from 'prosemirror-model';
 import { history, undo, redo } from 'prosemirror-history';
+import { exampleSetup } from 'prosemirror-example-setup';
 
 import { ySyncPlugin } from 'y-prosemirror';
 
@@ -20,12 +20,13 @@ import contextMenuPlugin from '../plugins/context-menu-plugin';
 import { createSchema } from './schema';
 import Provider from './provider';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
-
+import suggestionsPlugin from '../plugins/suggestions-plugin';
 
 export const defaultViewProps = {
   schema: 'basic',
   htmlContent: undefined,
   contextMenu: undefined,
+  suggestions: undefined,
   sync: undefined,
   nodeViews: {},
   schemaEnhancers: [],
@@ -38,6 +39,7 @@ export const createProsemirrorView = (element, {
   schema: customSchema,
   htmlContent,
   contextMenu,
+  suggestions,
   sync,
   nodeViews,
   schemaEnhancers,
@@ -129,6 +131,10 @@ export const createProsemirrorView = (element, {
     );
   }
 
+  if (suggestions) {
+    plugins.push(suggestionsPlugin());
+  }
+
   if (customSchema === 'text-only') {
     keysToMap['Enter'] = (state, dispatch) => {
       const {
@@ -159,9 +165,10 @@ export const createProsemirrorView = (element, {
     }));
   }
 
-  // Put this at the end
+  // Put this here
   plugins.push(keymap(keysToMap));
   plugins.push(historyListenerPlugin());
+
 
   // TODO: Fix incompatible undo/redo operations when sync is enabled
   // plugins.push(historyListenerPlugin({ yjsHistory: Boolean(sync) }));
@@ -176,7 +183,7 @@ export const createProsemirrorView = (element, {
   const state = EditorState.create({
     doc,
     schema,
-    plugins
+    plugins: plugins.flat()
   });
 
   const view = new EditorView(

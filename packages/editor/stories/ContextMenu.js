@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import { Editor } from '../src';
 
 class ContextMenu extends Component {
-  handleContextMenuGetOptions = () => {
+  handleGetOptions = () => {
     return Math.random() > 0.5 ? [
       { subheader: 'First subheader' },
       { id: 1, label: 'Item 1' },
@@ -14,11 +14,11 @@ class ContextMenu extends Component {
     ] : [];
   };
 
-  handleContextMenuRenderItem = (option) => {
+  handleRenderItem = (option) => {
     return `${option.id} - ${option.label}`;
   };
 
-  handleContextMenuOptionSelect = async (option, view) => {
+  handleOptionSelect = async (option, view) => {
     const { tr } = view.state;
 
     view.state.selection.replaceWith(tr, view.state.schema.text(option.label));
@@ -30,12 +30,11 @@ class ContextMenu extends Component {
     return (
       <Editor
         contextMenu={{
-          getOptions: this.handleContextMenuGetOptions,
-          onSelect: this.handleContextMenuOptionSelect,
-          renderMenuItem: this.handleContextMenuRenderItem,
+          getOptions: this.handleGetOptions,
+          onSelect: this.handleOptionSelect,
+          renderMenuItem: this.handleRenderItem,
           emptyOptionsLabel: 'NO OPTIONS HERE TO SHOW',
-          visibleItems: 3,
-          triggerMenuEventKeys: ['@', '#', '$']
+          maxVisibleItems: 3
         }}
       />
     );

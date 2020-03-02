@@ -4,9 +4,9 @@
 
 import { PluginKey, Plugin } from 'prosemirror-state';
 
-const KEY_SPACE = 'Space';
+import { KEY_SPACE, isKeyEventCombination } from '../lib/keys';
 
-const MENU_TRIGGER_EVENT_KEYS = ['@', '#'];
+const MENU_TRIGGER_EVENT_KEYS = [{ code: KEY_SPACE, ctrlKey: true }];
 
 const contextMenuState = {
   open: false,
@@ -20,20 +20,20 @@ export const contextMenuPluginDefaults = {
 };
 
 const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = contextMenuPluginDefaults) => {
-  // NOTE: Must be function since this context is used.
-  function dispatchEvent(event, view) {
+  const dispatchEvent = (event, view) => {
     const { to } = view.state.selection;
 
-    let top;
-    let left;
+    let top, left;
+
     if (event.pageX) {
       top = event.layerY;
       left = event.pageX;
     } else {
-      const coords = view.coordsAtPos(to);
+      ({ top, left } = view.coordsAtPos(to));
       const dom = view.domAtPos(to);
-      top = dom.node.clientHeight + dom.node.getBoundingClientRect().top;
-      ({ left } = coords);
+
+      const node = dom.node.nodeType === document.TEXT_NODE ? dom.node.parentElement : dom.node;
+      top = node.clientHeight + node.getBoundingClientRect().top;
     }
 
     view.dispatch(
@@ -42,7 +42,7 @@ const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = 
         position: { top, left }
       })
     );
-  }
+  };
 
   return new Plugin({
     key: contextMenuPluginKey,
@@ -86,8 +86,7 @@ const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = 
 
         if (
           !open &&
-          (triggerMenuEventKeys.includes(event.key) ||
-            (event.code === KEY_SPACE && event.ctrlKey))
+          triggerMenuEventKeys.some(keyConfig => isKeyEventCombination(keyConfig, event))
         ) {
           event.preventDefault();
           dispatchEvent.apply(this, [event, view]);

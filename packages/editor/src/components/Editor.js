@@ -16,6 +16,7 @@ import ContextMenu, { ContextMenuPropTypes } from './ContextMenu';
 import prosemirrorStyles from '../styles/prosemirror';
 import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
 import Channel from '../lib/Channel';
+import Suggestions, { SuggestionsPropTypes } from './Suggestions';
 
 const styles = theme => ({
   root: {
@@ -77,6 +78,7 @@ class EditorComponent extends Component {
     schema,
     htmlContent,
     contextMenu,
+    suggestions,
     sync,
     nodeViews,
     schemaEnhancers,
@@ -93,6 +95,7 @@ class EditorComponent extends Component {
       schema: sync ? 'full' : schema,
       htmlContent,
       contextMenu,
+      suggestions,
       sync,
       nodeViews,
       schemaEnhancers,
@@ -145,11 +148,12 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { contextMenu, classes } = this.props;
+    const { contextMenu, suggestions, classes } = this.props;
     const { view, toolbar } = this.state;
 
     return (
       <div className={classes.root}>
+        {suggestions && <Suggestions view={view} {...suggestions} />}
         {contextMenu && <ContextMenu view={view} {...contextMenu} />}
         {toolbar && (
           <div className={classes.toolbarContainer}>
@@ -183,6 +187,10 @@ EditorComponent.propTypes = {
   contextMenu: PropTypes.oneOfType([
     PropTypes.bool,
     ContextMenuPropTypes
+  ]),
+  suggestions: PropTypes.oneOfType([
+    PropTypes.bool,
+    SuggestionsPropTypes
   ]),
   sync: PropTypes.shape({
     status: PropTypes.exact({

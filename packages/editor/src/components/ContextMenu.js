@@ -3,12 +3,11 @@
 //
 
 import React, { Component } from 'react';
-import { TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import PropTypes from 'prop-types';
 
-import { contextMenuPluginKey, contextMenuPluginDefaults } from '../plugins/context-menu-plugin';
-import Menu from './Menu';
+import { contextMenuPluginKey } from '../plugins/context-menu-plugin';
+import { FocusedMenu } from './Menu';
 
 class ContextMenu extends Component {
 
@@ -17,14 +16,6 @@ class ContextMenu extends Component {
     open: false,
     options: undefined,
     position: undefined
-  }
-
-  static defaultProps = {
-    renderMenuItem: option => option.label,
-    getOptions: () => [],
-    onSelect: () => null,
-    triggerMenuEventKeys: contextMenuPluginDefaults.triggerMenuEventKeys,
-    ...Menu.defaultProps
   }
 
   static getDerivedStateFromProps(props, state) {
@@ -62,14 +53,6 @@ class ContextMenu extends Component {
     }
   }
 
-  updateOptions = () => {
-    const { getOptions } = this.props;
-
-    const options = getOptions();
-
-    this.setState({ options });
-  }
-
   handleViewUpdate = data => {
     if (data.open) {
       return this.handleOpenMenu(data);
@@ -79,9 +62,10 @@ class ContextMenu extends Component {
   }
 
   handleOpenMenu = ({ position }) => {
-    this.updateOptions();
+    const { getOptions } = this.props;
 
     this.setState({
+      options: getOptions(),
       open: true,
       position
     });
@@ -99,22 +83,10 @@ class ContextMenu extends Component {
     );
   }
 
-  handleSelectOption = async (option) => {
+  handleSelectOption = option => {
     const { view, onSelect } = this.props;
 
-    await onSelect(option, view);
-
-    view.dispatch(
-      view.state.tr
-        .setSelection(
-          TextSelection.fromJSON(view.state.tr.doc, {
-            type: 'text',
-            anchor: view.state.selection.to,
-            head: view.state.selection.to
-          })
-        )
-        .scrollIntoView()
-    );
+    onSelect(option, view);
 
     view.focus();
   }
@@ -135,13 +107,15 @@ class ContextMenu extends Component {
   }
 
   render() {
-    const { view, renderMenuItem, emptyOptionsLabel, maxVisibleOptions } = this.props;
+    const { view, renderMenuItem, emptyOptionsLabel, maxVisibleItems } = this.props;
     const { open, options, position } = this.state;
 
-    if (!open) return null;
+    if (!view) return null;
 
     return (
-      <Menu
+      <FocusedMenu
+        open={open}
+        dom={view.dom}
         options={options}
         onSelect={this.handleSelectOption}
         onClose={this.handleCloseMenu}
@@ -149,8 +123,7 @@ class ContextMenu extends Component {
         position={position}
         renderMenuItem={renderMenuItem}
         emptyOptionsLabel={emptyOptionsLabel}
-        maxVisibleOptions={maxVisibleOptions}
-        viewDom={view.dom}
+        maxVisibleItems={maxVisibleItems}
       />
     );
   }
@@ -158,12 +131,7 @@ class ContextMenu extends Component {
 
 export const ContextMenuPropTypes = PropTypes.shape({
   view: PropTypes.instanceOf(EditorView),
-  getOptions: PropTypes.func,
-  onSelect: PropTypes.func,
-  renderMenuItem: PropTypes.func,
-  emptyOptionsLabel: PropTypes.string,
-  maxVisibleItems: PropTypes.number,
-  triggerMenuEventKeys: PropTypes.arrayOf(PropTypes.string)
+  getOptions: PropTypes.func
 }).isRequired;
 
 ContextMenu.propTypes = ContextMenuPropTypes;
