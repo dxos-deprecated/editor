@@ -185,6 +185,10 @@ const withMenuHandlers = WrappedComponent => {
   return MenuHandlerWrapper;
 };
 
+const commonDefaultProps = {
+  renderMenuItem: item => (item || {}).label
+};
+
 export const UnfocusedMenu = compose(
   withMenuHandlers,
   withStyles(unfocusedMenuStyles)
@@ -194,3 +198,6 @@ export const FocusedMenu = compose(
   withMenuHandlers,
   withStyles(focusedMenuStyles)
 )(FocusedMenuComponent);
+
+FocusedMenu.defaultProps = commonDefaultProps;
+UnfocusedMenu.defaultProps = commonDefaultProps;

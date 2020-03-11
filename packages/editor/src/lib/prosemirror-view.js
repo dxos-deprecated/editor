@@ -132,7 +132,7 @@ export const createProsemirrorView = (element, {
   }
 
   if (suggestions) {
-    plugins.push(suggestionsPlugin());
+    plugins.push(suggestionsPlugin(suggestions));
   }
 
   if (customSchema === 'text-only') {
