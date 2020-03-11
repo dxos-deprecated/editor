@@ -61,13 +61,15 @@ class Suggestions extends Component {
 
       // Register to view changes.
       view._props.dispatchTransaction = transaction => {
-        originalDispatch(transaction);
+        const { oldState, newState } = originalDispatch(transaction);
 
         const meta = transaction.getMeta(suggestionsPluginKey);
 
-        if (!meta) return;
+        if (meta) {
+          this.handleViewUpdate(meta);
+        }
 
-        this.handleViewUpdate(meta);
+        return { oldState, newState, transaction };
       };
     }
   }

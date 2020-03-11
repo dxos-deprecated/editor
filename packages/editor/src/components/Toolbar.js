@@ -74,8 +74,9 @@ class ToolbarComponent extends PureComponent {
 
       // Register to view changes.
       view._props.dispatchTransaction = transaction => {
-        const { newState } = originalDispatch(transaction);
+        const { oldState, newState } = originalDispatch(transaction);
         this.handleViewUpdate(newState);
+        return { oldState, newState, transaction };
       };
 
       const { history } = historyListenerPluginKey.getState(view.state);

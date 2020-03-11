@@ -11,11 +11,8 @@ import { FocusedMenu } from './Menu';
 
 class ContextMenu extends Component {
 
-  state = {
-    prevViewId: undefined,
-    open: false,
-    options: undefined,
-    position: undefined
+  static defaultProps = {
+    ...FocusedMenu.defaultProps
   }
 
   static getDerivedStateFromProps(props, state) {
@@ -31,6 +28,13 @@ class ContextMenu extends Component {
     return null;
   }
 
+  state = {
+    prevViewId: undefined,
+    open: false,
+    options: undefined,
+    position: undefined
+  }
+
   componentDidUpdate(prevProps) {
     const { view } = this.props;
     const { view: prevView = {} } = prevProps;
@@ -42,13 +46,15 @@ class ContextMenu extends Component {
 
       // Register to view changes.
       view._props.dispatchTransaction = transaction => {
-        originalDispatch(transaction);
+        const { oldState, newState } = originalDispatch(transaction);
 
         const meta = transaction.getMeta(contextMenuPluginKey);
 
-        if (!meta) return;
+        if (meta) {
+          this.handleViewUpdate(meta);
+        }
 
-        this.handleViewUpdate(meta);
+        return { oldState, newState, transaction };
       };
     }
   }
