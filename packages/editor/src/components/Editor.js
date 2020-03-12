@@ -33,6 +33,8 @@ const styles = theme => ({
     backgroundColor: '#FFF'
   },
 
+  editor: {},
+
   toolbarContainer: {
     flex: '0 1 auto'
   },
@@ -157,7 +159,7 @@ class EditorComponent extends Component {
         {contextMenu && <ContextMenu view={view} {...contextMenu} />}
         {toolbar && (
           <div className={classes.toolbarContainer}>
-            <Toolbar view={view} className={classes.toolbar} {...toolbar} />
+            <Toolbar view={view} {...toolbar} />
           </div>
         )}
 
@@ -212,8 +214,7 @@ EditorComponent.propTypes = {
     root: PropTypes.string,
     editorContainer: PropTypes.string,
     editor: PropTypes.string,
-    toolbarContainer: PropTypes.string,
-    toolbar: PropTypes.string
+    toolbarContainer: PropTypes.string
   })
 };
 

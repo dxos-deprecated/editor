@@ -23,16 +23,18 @@ import ToolbarWrapperButtons from './ToolbarWrapperButtons';
 import ToolbarImageButton from './ToolbarImageButton';
 import { historyListenerPluginKey } from '../plugins/history-listener-plugin';
 
-const styles = theme => ({
+const toolbarStyles = theme => ({
   root: {
     minHeight: 'fit-content',
     paddingTop: theme.spacing(0.5),
     paddingBottom: theme.spacing(0.5),
     backgroundColor: grey[50],
     whiteSpace: 'nowrap'
-  },
+  }
+});
 
-  divider: {
+const dividerStyles = theme => ({
+  root: {
     marginRight: theme.spacing(0.5),
     marginLeft: theme.spacing(0.5)
   }
@@ -186,7 +188,7 @@ class ToolbarComponent extends PureComponent {
     }
 
     return (
-      <MUIToolbar disableGutters className={classes.root}>
+      <MUIToolbar disableGutters classes={classes}>
         <ToolbarHistoryButtons
           canUndo={canUndo}
           canRedo={canRedo}
@@ -215,15 +217,15 @@ class ToolbarComponent extends PureComponent {
   }
 }
 
-const Toolbar = withStyles(styles)(ToolbarComponent);
+const Toolbar = withStyles(toolbarStyles)(ToolbarComponent);
 export const ToolbarPropTypes = PropTypes.shape({
   imagePopupSrcLabel: PropTypes.string,
 }).isRequired;
 
 Toolbar.propTypes = ToolbarPropTypes;
 
-const ToolbarDivider = withStyles(styles)(({ classes }) => {
-  return <MUIDivider orientation="vertical" className={classes.divider} />;
+const ToolbarDivider = withStyles(dividerStyles)(({ classes }) => {
+  return <MUIDivider orientation="vertical" classes={classes} />;
 });
 
 export default Toolbar;
