@@ -12,6 +12,12 @@ import TextField from '@material-ui/core/TextField';
 
 import { DialogTitle } from '@material-ui/core';
 
+const initialState = {
+  src: '',
+  title: '',
+  alt: ''
+};
+
 class ToolbarImagePopup extends Component {
 
   static defaultProps = {
@@ -21,11 +27,16 @@ class ToolbarImagePopup extends Component {
     srcLabel: 'Image URL address'
   }
 
-  state = {
-    src: '',
-    title: '',
-    alt: ''
-  };
+  state = initialState;
+
+  componentDidUpdate(prevProps) {
+    const { open } = this.props;
+    const { open: prevOpen } = prevProps;
+
+    if (open && !prevOpen) {
+      this.setState(initialState);
+    }
+  }
 
   handleImageFieldChange = field => event => {
     this.setState({ [field]: event.target.value });
