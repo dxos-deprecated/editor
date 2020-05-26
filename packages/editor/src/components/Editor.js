@@ -4,7 +4,7 @@
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import uuid from 'uuid/v4';
+import { uuidv4 } from 'lib0/random';
 
 import { Document } from '@wirelineio/document';
 
@@ -13,10 +13,11 @@ import { withStyles } from '@material-ui/core/styles';
 import Toolbar, { ToolbarPropTypes } from './Toolbar';
 import ContextMenu, { ContextMenuPropTypes } from './ContextMenu';
 
-import prosemirrorStyles from '../styles/prosemirror';
 import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
 import Channel from '../lib/Channel';
 import Suggestions, { SuggestionsPropTypes } from './Suggestions';
+
+import 'prosemirror-view/style/prosemirror.css';
 
 const styles = theme => ({
   root: {
@@ -26,20 +27,61 @@ const styles = theme => ({
   },
 
   editorContainer: {
-    display: 'flex',
-    flex: 1,
+    flexGrow: 1,
     overflow: 'auto',
-    padding: theme.spacing(1),
-    backgroundColor: '#FFF'
+    backgroundColor: '#ffffff',
+    cursor: 'text',
+    wordBreak: 'break-word'
   },
 
-  editor: {},
+  editor: {
+    padding: theme.spacing(1),
+    backgroundColor: '#ffffff',
+    fontSize: 22,
+    outline: 'none',
+    '-webkit-font-variant-ligatures': 'none',
+    fontVariantLigatures: 'none',
+    fontFeatureSettings: '"liga" 0',
+
+    '& pre': {
+      whiteSpace: 'pre-wrap',
+      backgroundColor: theme.palette.grey[200],
+      marginTop: theme.spacing(1),
+      marginBottom: theme.spacing(1),
+      padding: theme.spacing(1)
+    },
+
+    '& > p': {
+      marginTop: '.5em',
+      marginBottom: '.5em'
+    },
+
+    '& .cursor': {
+      position: 'relative',
+      marginLeft: -1.5,
+      marginRight: -1.5,
+      borderLeft: '1.5px solid',
+      borderRight: '1.5px solid',
+      wordBreak: 'normal',
+      pointerEvents: 'none',
+
+      '& > .name': {
+        position: 'absolute',
+        transform: 'translateY(-100%)',
+        top: '0',
+        left: -1.5,
+        padding: '1px 4px',
+        color: 'white',
+        userSelect: 'none',
+        whiteSpace: 'nowrap',
+        fontSize: 12
+      }
+    }
+  },
 
   toolbarContainer: {
     flex: '0 1 auto'
-  },
-
-  ...prosemirrorStyles(theme)
+  }
 });
 
 class EditorComponent extends Component {
@@ -107,7 +149,7 @@ class EditorComponent extends Component {
     };
 
     const view = createProsemirrorView(this._editor.current, viewConfig);
-    view.id = uuid();
+    view.id = uuidv4();
 
     this.setState({ view }, () => onCreated ? onCreated({
       view,
@@ -149,6 +191,11 @@ class EditorComponent extends Component {
     view.focus();
   };
 
+  handleEditorClick = event => {
+    // Avoid root click handler (handleEditorContainerClick)
+    event.stopPropagation();
+  };
+
   render() {
     const { contextMenu, suggestions, classes } = this.props;
     const { view, toolbar } = this.state;
@@ -164,7 +211,7 @@ class EditorComponent extends Component {
         )}
 
         <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
-          <div ref={this._editor} className={classes.editor} />
+          <div ref={this._editor} className={classes.editor} onClick={this.handleEditorClick} />
         </div>
       </div>
     );
@@ -200,7 +247,8 @@ EditorComponent.propTypes = {
       getUsername: PropTypes.func
     }),
     id: PropTypes.string,
-    document: PropTypes.instanceOf(Document)
+    document: PropTypes.instanceOf(Document),
+    onDocumentLocalUpdate: PropTypes.func
   }),
   nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
   schemaEnhancers: PropTypes.arrayOf(PropTypes.func),

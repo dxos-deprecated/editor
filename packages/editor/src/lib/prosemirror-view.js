@@ -9,18 +9,20 @@ import { baseKeymap } from 'prosemirror-commands';
 import { DOMSerializer, DOMParser } from 'prosemirror-model';
 import { history, undo, redo } from 'prosemirror-history';
 import { exampleSetup } from 'prosemirror-example-setup';
+import ColorHash from 'color-hash';
 
-import { ySyncPlugin } from 'y-prosemirror';
+import { ySyncPlugin, ySyncPluginKey, yCursorPlugin } from 'y-prosemirror';
 
 import { yUndoPlugin, undo as yUndo, redo as yRedo } from '../plugins/yjs-undo-plugin';
 
-import { yCursorPlugin } from '../plugins/cursor-plugin';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 
 import { createSchema } from './schema';
 import Provider from './provider';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
 import suggestionsPlugin from '../plugins/suggestions-plugin';
+
+const colorHash = new ColorHash();
 
 export const defaultViewProps = {
   schema: 'basic',
@@ -96,20 +98,40 @@ export const createProsemirrorView = (element, {
   };
 
   if (sync) {
-    const { status, document, id } = sync;
+    const { status, document, id, onDocumentLocalUpdate = () => null } = sync;
+
+    const provider = new Provider(document.doc, status.channel);
+
+    provider.awareness.setLocalStateField('user', { id, color: colorHash.hex(id), name: status.getUsername() });
 
     // Content sync plugin
     const syncPlugin = ySyncPlugin(document.content.xmlFragment);
 
-    const provider = new Provider(document.doc, status.channel);
+    document.on('update', ({ update, origin }) => {
+      const local = origin === ySyncPluginKey; // This is a y-prosemirror thing
 
-    provider.awareness.setLocalStateField('user', {
-      id,
-      username: status.getUsername()
+      if (!local) return;
+
+      onDocumentLocalUpdate(update, doc);
     });
 
+    const cursorBuilder = user => {
+      const cursor = window.document.createElement('span');
+      cursor.className = 'cursor';
+      cursor.style.borderColor = user.color;
+
+      const cursorName = window.document.createElement('span');
+      cursorName.className = 'name';
+      cursorName.style.backgroundColor = user.color;
+      cursorName.innerText = user.name;
+
+      cursor.appendChild(cursorName);
+
+      return cursor;
+    };
+
     // Cursor indicator plugin
-    const cursorPlugin = yCursorPlugin(provider.awareness, ({ id, getUsername: status.getUsername }));
+    const cursorPlugin = yCursorPlugin(provider.awareness, ({ cursorBuilder }));
 
     // Yjs history plugin
     const undoPlugin = yUndoPlugin({ trackedOrigins: [({}).constructor] });

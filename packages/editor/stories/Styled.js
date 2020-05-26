@@ -15,7 +15,7 @@ const useEditorStyles = makeStyles(() => ({
   }
 }));
 
-const Styles = () => {
+const Styled = () => {
   const toolbarClasses = useToolbarStyles();
   const editorClasses = useEditorStyles();
 
@@ -32,4 +32,4 @@ const Styles = () => {
 
 };
 
-export default Styles;
+export default Styled;

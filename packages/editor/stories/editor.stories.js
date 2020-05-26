@@ -15,7 +15,7 @@ import Collaborative from './Collaborative';
 import ContextMenu from './ContextMenu';
 import ReactContent from './ReactContent';
 import Suggestions from './Suggestions';
-import Styles from './Styles';
+import Styled from './Styled';
 
 const RootContainer = story => {
   const RootComponent = withStyles(styles)(({ classes }) => <div className={classes.root}>{story()}</div>);
@@ -33,7 +33,7 @@ storiesOf('Editor', module)
   .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />)
   .add('Suggestions', () => <Suggestions />)
-  .add('Styles', () => <Styles />);
+  .add('Styles', () => <Styled />);
 
 storiesOf('Editor Toolbar', module)
   .addDecorator(MuiTheme)

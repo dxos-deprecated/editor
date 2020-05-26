@@ -44,12 +44,8 @@ class Collaborative extends Component {
       document.applyUpdate(originalDocument.docState);
     }
 
-    document.on('update', ({ update, origin }) => {
+    const onDocumentLocalUpdate = update => {
       const { peers } = this.state;
-
-      const local = origin === null; // This is a y-prosemirror thing
-
-      if (!local) return;
 
       Object.values(peers)
         .filter(peer => peer.id !== peerId)
@@ -57,7 +53,22 @@ class Collaborative extends Component {
           // New origin: avoid loop
           peer.document.applyUpdate(update, { author: peerId });
         });
-    });
+    };
+
+    // document.on('update', ({ update, origin }) => {
+    //   const { peers } = this.state;
+
+    //   const local = origin === null; // This is a y-prosemirror thing
+
+    //   if (!local) return;
+
+    //   Object.values(peers)
+    //     .filter(peer => peer.id !== peerId)
+    //     .forEach(peer => {
+    //       // New origin: avoid loop
+    //       peer.document.applyUpdate(update, { author: peerId });
+    //     });
+    // });
 
     const statusChannel = new Channel();
     statusChannel.on('local', data => {
@@ -74,6 +85,7 @@ class Collaborative extends Component {
       id: peerId,
       username: peerId,
       document,
+      onDocumentLocalUpdate,
       statusChannel
     };
   };
@@ -113,6 +125,7 @@ class Collaborative extends Component {
           toolbar
           sync={{
             document: peer.document,
+            onDocumentLocalUpdate: peer.onDocumentLocalUpdate,
             status: {
               channel: peer.statusChannel,
               getUsername: this.handleGetUsername(peer.id)

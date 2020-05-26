@@ -5,9 +5,7 @@
 import * as awarenessProtocol from 'y-protocols/awareness';
 import * as syncProtocol from 'y-protocols/sync';
 
-import * as mutex from 'lib0/mutex';
 import { Observable } from 'lib0/observable';
-import * as Y from 'yjs'; // eslint-disable-line
 import * as time from 'lib0/time';
 import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
@@ -15,7 +13,6 @@ import * as decoding from 'lib0/decoding';
 const messageSync = 0;
 const messageQueryAwareness = 3;
 const messageAwareness = 1;
-const messageAuth = 2;
 
 const readMessage = (provider, buf, emitSynced) => {
   const decoder = decoding.createDecoder(buf);
@@ -52,12 +49,6 @@ const readMessage = (provider, buf, emitSynced) => {
       );
       break;
 
-    case messageAuth:
-      // TODO(burdon): ?
-      // authProtocol.readAuthMessage(decoder, provider, permissionDeniedHandler);
-      console.warn('messageAuth');
-      break;
-
     default:
       console.error('Invalid message:', messageType);
       return encoder;
@@ -81,9 +72,6 @@ class Provider extends Observable {
     this.doc = doc;
     this.channel = channel;
     this.awareness = new awarenessProtocol.Awareness(this.doc);
-
-    // TODO(burdon): Not used?
-    this.mux = mutex.createMutex();
 
     /**
      * Listens to Yjs updates and sends them to remote peers (via ws and broadcastchannel).
