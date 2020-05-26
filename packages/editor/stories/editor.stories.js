@@ -15,7 +15,7 @@ import Collaborative from './Collaborative';
 import ContextMenu from './ContextMenu';
 import ReactContent from './ReactContent';
 import Suggestions from './Suggestions';
-import Styles from './Styles';
+import Styles from './Styled';
 
 const RootContainer = story => {
   const RootComponent = withStyles(styles)(({ classes }) => <div className={classes.root}>{story()}</div>);
@@ -29,7 +29,7 @@ storiesOf('Editor', module)
   .add('Text only schema', () => <Editor schema="text-only" />)
   .add('Full schema', () => <Editor schema="full" />)
 
-  .add('Collaborative', () => <Collaborative peers={2} />)
+  .add('Collaborative', () => <Collaborative peers={1} />)
   .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />)
   .add('Suggestions', () => <Suggestions />)

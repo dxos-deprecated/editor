@@ -18,15 +18,30 @@
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
-  "plugins": ["react"],
+  "plugins": [
+    "react"
+  ],
   "settings": {
     "react": {
       "version": "16"
     }
   },
   "rules": {
-    "semi": ["error", "always"],
-    "indent": ["error", 2, { "SwitchCase": 1 }],
+    "quotes": [
+      "error",
+      "single"
+    ],
+    "semi": [
+      "error",
+      "always"
+    ],
+    "indent": [
+      "error",
+      2,
+      {
+        "SwitchCase": 1
+      }
+    ],
     "no-console": "off",
     "no-debugger": "off",
     "react/prop-types": "off"

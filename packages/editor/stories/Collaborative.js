@@ -2,132 +2,225 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import React, { Component } from 'react';
+import React, { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 
-import { withStyles } from '@material-ui/core/styles';
-import { Document } from '@wirelineio/document';
+import { uuidv4 } from 'lib0/random';
+import { Doc, applyUpdate } from 'yjs';
 
-import { Channel, Editor } from '../src';
+import { Button } from '@material-ui/core';
 
-import { styles } from './styles';
+import { Editor } from '../src';
 
-class Collaborative extends Component {
-  static count = 0;
+const getUpdates = () => {
+  return JSON.parse(localStorage.getItem('updates') || '[]');
+};
 
-  state = {
-    peers: undefined
-  };
+const setUpdate = (update, origin) => {
+  localStorage.setItem('updates', JSON.stringify([...getUpdates(), { update, origin }]));
+};
 
-  componentDidMount() {
-    const { peers: peersCount = 1 } = this.props;
+const Collaborative = () => {
 
-    const peerId = `peer-${peersCount - 1}`;
-    const peers = [];
+  const [doc, setDoc] = useState(null);
+  const [connected, setConnected] = useState(true);
+  const [id] = useState(`peer-id-${uuidv4()}`);
+  const editor = useRef(null);
 
-    // First peer with sync message
-    peers[peerId] = this.createPeer(peerId);
-    const originalDocument = peers[peerId].document;
+  const handleCursorGetUsername = useCallback(peerId => {
+    return peerId || id;
+  }, [id]);
 
-    for (let index = 0; index < peersCount - 1; index++) {
-      const peerId = 'peer-' + index;
-      peers[peerId] = this.createPeer(peerId, originalDocument);
+  const handleEditorCreated = useCallback(editorInstance => {
+    editor.current = editorInstance;
+  }, []);
+
+  const handleDocUpdate = useCallback((update, origin) => {
+    if (origin === 'local') {
+      setUpdate(update, { id });
     }
+  }, [id]);
 
-    this.setState({ peers });
-  }
+  const handleRemoteUpdate = useCallback(() => {
+    console.log('remote', getUpdates().length);
+  }, []);
 
-  createPeer = (peerId, originalDocument = null) => {
+  useEffect(() => {
+    const doc = new Doc();
 
-    const document = new Document();
-
-    if (originalDocument) {
-      document.applyUpdate(originalDocument.docState);
-    }
-
-    document.on('update', ({ update, origin }) => {
-      const { peers } = this.state;
-
-      const local = origin === null; // This is a y-prosemirror thing
-
-      if (!local) return;
-
-      Object.values(peers)
-        .filter(peer => peer.id !== peerId)
-        .forEach(peer => {
-          // New origin: avoid loop
-          peer.document.applyUpdate(update, { author: peerId });
-        });
+    getUpdates().forEach(({ update }) => {
+      applyUpdate(doc, Uint8Array.from(Object.values(update)), 'init');
     });
 
-    const statusChannel = new Channel();
-    statusChannel.on('local', data => {
-      const { peers } = this.state;
+    setDoc(doc);
 
-      Object.values(peers)
-        .filter(peer => peer.id !== peerId)
-        .forEach(peer => {
-          peer.statusChannel.receive(data);
-        });
-    });
+    window.addEventListener('storage', handleRemoteUpdate);
 
-    return {
-      id: peerId,
-      username: peerId,
-      document,
-      statusChannel
+    return () => {
+      window.removeEventListener('storage', handleRemoteUpdate);
     };
-  };
+  }, []);
 
-  handleGetUsername = peerId => id => {
-    const { peers } = this.state;
 
-    if (!id) {
-      return peers[peerId].username;
+  const handleToggleConnect = useCallback(() => {
+    if (!window.provider) return;
+
+    if (window.provider.shouldConnect) {
+      window.provider.disconnect();
+      setConnected(false);
+    } else {
+      window.provider.connect();
+
+      // Once connected again apply missed updates
+      getUpdates().forEach(({ update }) => {
+        applyUpdate(doc, Uint8Array.from(Object.values(update)), 'init');
+      });
+
+      setConnected(true);
     }
+  }, [window.provider, doc]);
 
-    return peers[id].username;
-  };
+  if (!doc) return null;
 
-  handleCreated = peerId => ({ view }) => {
-    const { peers } = this.state;
+  return (
+    <Fragment>
+      <Button onClick={handleToggleConnect}>{connected ? 'Disconnect' : 'Connect'}</Button>
+      <Editor
+        sync={{
+          id,
+          channel: 'some-channel',
+          // signaling: ['ws://localhost:4000'],
+          doc,
+          onDocUpdate: handleDocUpdate,
+          cursor: {
+            getUsername: handleCursorGetUsername
+          }
+        }}
+        onCreated={handleEditorCreated}
+      />
+    </Fragment>
+  );
+};
 
-    const newPeers = { ...peers };
-    newPeers[peerId].view = view;
+export default Collaborative;
 
-    this.setState({ peers: newPeers });
-  };
+// class Collaborative extends Component {
+//   state = {
+//     peers: undefined
+//   };
 
-  render() {
-    const { classes } = this.props;
-    const { peers } = this.state;
+//   componentDidMount() {
+//     const { peers: peersCount = 0 } = this.props;
 
-    if (!peers) {
-      return 'Loading...';
-    }
+//     const peerId = `peer-${Date.now()}`;
+//     // const peerId = `peer-${peersCount - 1}`;
+//     const peers = [];
 
-    const components = Object.values(peers).map(peer => (
-      <div key={peer.id} className={classes.container}>
-        <Editor
-          schema="full"
-          onCreated={this.handleCreated(peer.id)}
-          toolbar
-          sync={{
-            document: peer.document,
-            status: {
-              channel: peer.statusChannel,
-              getUsername: this.handleGetUsername(peer.id)
-            }
-          }}
-        />
-      </div>
-    ));
+//     // First peer with sync message
+//     peers[peerId] = this.createPeer(peerId);
+//     const originalDocument = peers[peerId].document;
 
-    return (
-      <div className={classes.root}>
-        {components}
-      </div>
-    );
-  }
-}
+//     for (let index = 0; index < peersCount - 1; index++) {
+//       const peerId = 'peer-' + index;
+//       peers[peerId] = this.createPeer(peerId, originalDocument);
+//     }
 
-export default withStyles(styles)(Collaborative);
+//     this.setState({ peers });
+//   }
+
+//   createPeer = (peerId, originalDocument = null) => {
+
+//     const document = new Document();
+
+//     if (originalDocument) {
+//       document.applyUpdate(originalDocument.docState);
+//     }
+
+//     document.on('update', ({ update, origin }) => {
+//       const { peers } = this.state;
+
+//       const local = origin === ySyncPluginKey; // This is a y-prosemirror thing
+
+//       if (!local) return;
+
+//       Object.values(peers)
+//         .filter(peer => peer.id !== peerId)
+//         .forEach(peer => {
+//           // New origin: avoid loop
+//           peer.document.applyUpdate(update, { author: peerId });
+//         });
+//     });
+
+//     const statusChannel = new Channel();
+//     statusChannel.on('local', data => {
+//       const { peers } = this.state;
+
+//       Object.values(peers)
+//         .filter(peer => peer.id !== peerId)
+//         .forEach(peer => {
+//           peer.statusChannel.receive(data);
+//         });
+//     });
+
+//     return {
+//       id: peerId,
+//       username: peerId,
+//       document,
+//       statusChannel
+//     };
+//   };
+
+//   handleGetUsername = peerId => id => {
+//     const { peers } = this.state;
+
+//     if (!id) {
+//       return peers[peerId].username;
+//     }
+
+//     return peers[id].username;
+//   };
+
+//   handleCreated = peerId => ({ view }) => {
+//     const { peers } = this.state;
+
+//     const newPeers = { ...peers };
+//     newPeers[peerId].view = view;
+
+//     this.setState({ peers: newPeers });
+//   };
+
+//   render() {
+//     const { classes } = this.props;
+//     const { peers } = this.state;
+
+//     if (!peers) {
+//       return 'Loading...';
+//     }
+
+//     const components = Object.values(peers).map(peer => (
+//       <div key={peer.id} className={classes.container}>
+//         <Editor
+//           schema="full"
+//           onCreated={this.handleCreated(peer.id)}
+//           toolbar
+//           sync={{
+//             id: peer.id,
+//             document: peer.document,
+//             status: {
+//               channel: peer.statusChannel,
+//               getUsername: this.handleGetUsername(peer.id)
+//             }
+//           }}
+//         />
+//       </div>
+//     ));
+
+//     return (
+//       <div className={classes.root}>
+//         {components}
+//       </div>
+//     );
+//   }
+// }
+
+// export default withStyles(styles)(Collaborative);
+
