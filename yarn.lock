@@ -2740,7 +2740,7 @@
     "@webassemblyjs/wast-parser" "1.9.0"
     "@xtuc/long" "4.2.2"
 
-"@wirelineio/document@^1.0.4":
+"@wirelineio/document@^1.0.0-beta.1":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@wirelineio/document/-/document-1.0.4.tgz#ddfef9da3d496594bede1f77a22790970041e618"
   integrity sha512-wkv3s+9kFUBtgyDcjvr70BqS+iGcdkmcViipnhKDxBUszTco+YtDeLI9UXddAHDPMzPch4FYuCX8yknTtM+QSg==
