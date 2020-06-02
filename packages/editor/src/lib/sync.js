@@ -24,8 +24,6 @@ const cursorBuilder = user => {
   return cursor;
 };
 
-
-
 const buildSyncPlugin = (doc, { onDocUpdate = () => null }) => {
 
   const docUpdateHandler = (update, origin, doc) => {

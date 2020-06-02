@@ -5,18 +5,25 @@
 import React, { useState, useCallback, useEffect, useRef, Fragment } from 'react';
 
 import { uuidv4 } from 'lib0/random';
-import { Doc, applyUpdate } from 'yjs';
+import { Doc } from 'yjs';
 
 import { Button } from '@material-ui/core';
 
 import { Editor } from '../src';
 
-const getUpdates = () => {
-  return JSON.parse(localStorage.getItem('updates') || '[]');
+let last = 0;
+const getUpdates = (all = false) => {
+  const updates = JSON.parse(localStorage.getItem('updates') || '[]');
+
+  if (all) return updates;
+
+  const lastUpdates = updates.slice(last);
+  last = updates.length;
+  return lastUpdates;
 };
 
 const setUpdate = (update, origin) => {
-  localStorage.setItem('updates', JSON.stringify([...getUpdates(), { update, origin }]));
+  localStorage.setItem('updates', JSON.stringify([...getUpdates(true), { update, origin }]));
 };
 
 const Collaborative = () => {
@@ -41,15 +48,24 @@ const Collaborative = () => {
   }, [id]);
 
   const handleRemoteUpdate = useCallback(() => {
-    console.log('remote', getUpdates().length);
-  }, []);
+    if (!doc) return;
+    // getUpdates().forEach(({ update, origin }) => {
+    //   console.log('applying remote update');
+    //   applyUpdate(doc, Uint8Array.from(Object.values(update)), origin);
+    // });
+  }, [doc]);
 
   useEffect(() => {
     const doc = new Doc();
 
-    getUpdates().forEach(({ update }) => {
-      applyUpdate(doc, Uint8Array.from(Object.values(update)), 'init');
-    });
+    doc.on('update', (_, origin) => console.log('DOC UPDATE', origin, doc.store.clients));
+
+    // getUpdates().forEach(({ update }) => {
+    //   console.log('applying remote update from init');
+    //   doc.transact(() => {
+    //     applyUpdate(doc, Uint8Array.from(Object.values(update)));
+    //   }, 'init');
+    // });
 
     setDoc(doc);
 
@@ -59,7 +75,6 @@ const Collaborative = () => {
       window.removeEventListener('storage', handleRemoteUpdate);
     };
   }, []);
-
 
   const handleToggleConnect = useCallback(() => {
     if (!window.provider) return;
@@ -71,9 +86,12 @@ const Collaborative = () => {
       window.provider.connect();
 
       // Once connected again apply missed updates
-      getUpdates().forEach(({ update }) => {
-        applyUpdate(doc, Uint8Array.from(Object.values(update)), 'init');
-      });
+      // setTimeout(() => {
+      //   getUpdates().forEach(({ update }) => {
+      //     console.log('applying remote update after re-connect');
+      //     applyUpdate(doc, Uint8Array.from(Object.values(update)), 'init');
+      //   });
+      // }, 3000);
 
       setConnected(true);
     }
