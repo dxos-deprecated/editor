@@ -5,11 +5,12 @@
 import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
-import { Document } from '@dxos/document';
 
 import { Channel, Editor } from '../src';
 
 import { styles } from './styles';
+
+import { Doc, applyUpdate, encodeStateAsUpdate } from 'yjs';
 
 class Collaborative extends Component {
   static count = 0;
@@ -26,49 +27,34 @@ class Collaborative extends Component {
 
     // First peer with sync message
     peers[peerId] = this.createPeer(peerId);
-    const originalDocument = peers[peerId].document;
+    const originalDoc = peers[peerId].doc;
 
     for (let index = 0; index < peersCount - 1; index++) {
       const peerId = 'peer-' + index;
-      peers[peerId] = this.createPeer(peerId, originalDocument);
+      peers[peerId] = this.createPeer(peerId, originalDoc);
     }
 
     this.setState({ peers });
   }
 
-  createPeer = (peerId, originalDocument = null) => {
+  createPeer = (peerId, originalDoc = null) => {
 
-    const document = new Document();
+    const doc = new Doc();
 
-    if (originalDocument) {
-      document.applyUpdate(originalDocument.docState);
+    if (originalDoc) {
+      applyUpdate(doc, encodeStateAsUpdate(originalDoc));
     }
 
-    const onDocumentLocalUpdate = update => {
+    const onLocalUpdate = update => {
       const { peers } = this.state;
 
       Object.values(peers)
         .filter(peer => peer.id !== peerId)
         .forEach(peer => {
           // New origin: avoid loop
-          peer.document.applyUpdate(update, { author: peerId });
+          applyUpdate(peer.doc, update, { author: peerId });
         });
     };
-
-    // document.on('update', ({ update, origin }) => {
-    //   const { peers } = this.state;
-
-    //   const local = origin === null; // This is a y-prosemirror thing
-
-    //   if (!local) return;
-
-    //   Object.values(peers)
-    //     .filter(peer => peer.id !== peerId)
-    //     .forEach(peer => {
-    //       // New origin: avoid loop
-    //       peer.document.applyUpdate(update, { author: peerId });
-    //     });
-    // });
 
     const statusChannel = new Channel();
     statusChannel.on('local', data => {
@@ -84,8 +70,8 @@ class Collaborative extends Component {
     return {
       id: peerId,
       username: peerId,
-      document,
-      onDocumentLocalUpdate,
+      doc,
+      onLocalUpdate,
       statusChannel
     };
   };
@@ -124,8 +110,8 @@ class Collaborative extends Component {
           onCreated={this.handleCreated(peer.id)}
           toolbar
           sync={{
-            document: peer.document,
-            onDocumentLocalUpdate: peer.onDocumentLocalUpdate,
+            doc: peer.doc,
+            onLocalUpdate: peer.onLocalUpdate,
             status: {
               channel: peer.statusChannel,
               getUsername: this.handleGetUsername(peer.id)

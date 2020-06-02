@@ -98,21 +98,21 @@ export const createProsemirrorView = (element, {
   };
 
   if (sync) {
-    const { status, document, id, onDocumentLocalUpdate = () => null } = sync;
+    const { status, doc, id, onLocalUpdate = () => null } = sync;
 
-    const provider = new Provider(document.doc, status.channel);
+    const provider = new Provider(doc, status.channel);
 
     provider.awareness.setLocalStateField('user', { id, color: colorHash.hex(id), name: status.getUsername() });
 
     // Content sync plugin
-    const syncPlugin = ySyncPlugin(document.content.xmlFragment);
+    const syncPlugin = ySyncPlugin(doc.getXmlFragment('content'));
 
-    document.on('update', ({ update, origin }) => {
+    doc.on('update', (update, origin) => {
       const local = origin === ySyncPluginKey; // This is a y-prosemirror thing
 
       if (!local) return;
 
-      onDocumentLocalUpdate(update, doc);
+      onLocalUpdate(update, doc);
     });
 
     const cursorBuilder = user => {
@@ -197,7 +197,7 @@ export const createProsemirrorView = (element, {
 
   let doc;
   if (htmlContent) {
-    const html = document.createElement('div');
+    const html = window.document.createElement('div');
     html.innerHTML = htmlContent;
     doc = DOMParser.fromSchema(schema).parse(html);
   }
@@ -243,8 +243,8 @@ export const createProsemirrorView = (element, {
         }
 
         if (onContentChange && transaction.docChanged) {
-          const contentContainer = document.createElement('div');
-          serializer.serializeFragment(newState.doc.content, { document }, contentContainer);
+          const contentContainer = window.document.createElement('div');
+          serializer.serializeFragment(newState.doc.content, { document: window.document }, contentContainer);
           onContentChange(contentContainer.innerHTML);
         }
 
