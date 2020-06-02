@@ -3,19 +3,15 @@
 //
 
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
 import { uuidv4 } from 'lib0/random';
-
-import { Document } from '@dxos/document';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import Toolbar, { ToolbarPropTypes } from './Toolbar';
-import ContextMenu, { ContextMenuPropTypes } from './ContextMenu';
+import Toolbar from './Toolbar';
+import ContextMenu from './ContextMenu';
+import Suggestions from './Suggestions';
 
 import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
-import Channel from '../lib/Channel';
-import Suggestions, { SuggestionsPropTypes } from './Suggestions';
 
 import 'prosemirror-view/style/prosemirror.css';
 
@@ -196,6 +192,15 @@ class EditorComponent extends Component {
     event.stopPropagation();
   };
 
+  handleEditorContainerContextMenu = event => {
+    event.preventDefault();
+
+    const { view } = this.state;
+    view.focus();
+    const contextMenuEvent = new MouseEvent('mouseup', { button: 2 });
+    this._editor.current.dispatchEvent(contextMenuEvent);
+  };
+
   render() {
     const { contextMenu, suggestions, classes } = this.props;
     const { view, toolbar } = this.state;
@@ -210,7 +215,11 @@ class EditorComponent extends Component {
           </div>
         )}
 
-        <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
+        <div
+          onClick={this.handleEditorContainerClick}
+          onContextMenu={this.handleEditorContainerContextMenu}
+          className={classes.editorContainer}
+        >
           <div ref={this._editor} className={classes.editor} onClick={this.handleEditorClick} />
         </div>
       </div>
@@ -219,51 +228,5 @@ class EditorComponent extends Component {
 }
 
 const Editor = withStyles(styles)(EditorComponent);
-
-EditorComponent.propTypes = {
-  toolbar: PropTypes.oneOfType([
-    PropTypes.bool,
-    ToolbarPropTypes
-  ]),
-  htmlContent: PropTypes.string,
-  schema: PropTypes.oneOfType([
-    PropTypes.oneOf(['basic', 'text-only', 'full']),
-    PropTypes.shape({ // https://prosemirror.net/docs/ref/#model.SchemaSpec
-      nodes: PropTypes.object,
-      marks: PropTypes.object
-    })
-  ]),
-  contextMenu: PropTypes.oneOfType([
-    PropTypes.bool,
-    ContextMenuPropTypes
-  ]),
-  suggestions: PropTypes.oneOfType([
-    PropTypes.bool,
-    SuggestionsPropTypes
-  ]),
-  sync: PropTypes.shape({
-    status: PropTypes.exact({
-      channel: PropTypes.instanceOf(Channel),
-      getUsername: PropTypes.func
-    }),
-    id: PropTypes.string,
-    document: PropTypes.instanceOf(Document),
-    onDocumentLocalUpdate: PropTypes.func
-  }),
-  nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
-  schemaEnhancers: PropTypes.arrayOf(PropTypes.func),
-  options: PropTypes.shape({
-    initialFontSize: PropTypes.number
-  }),
-  onContentChange: PropTypes.func,
-  onCreated: PropTypes.func,
-  onKeyDown: PropTypes.func,
-  classes: PropTypes.shape({
-    root: PropTypes.string,
-    editorContainer: PropTypes.string,
-    editor: PropTypes.string,
-    toolbarContainer: PropTypes.string
-  })
-};
 
 export default Editor;
