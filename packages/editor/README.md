@@ -22,7 +22,7 @@ EventEmitter based channel for share/sync data.
 ### Usage
 
 ```javascript
-import Channel from '@wirelineio/editor/Channel';
+import Channel from '@dxos/editor/Channel';
 
 const contentChannel = new Channel();
 
@@ -49,8 +49,8 @@ contentChannel.receive({ some: 'remote data' });
 import React, { Component } from 'react';
 import * as Y from 'yjs';
 
-import Editor from '@wirelineio/editor/Editor';
-import Channel from '@wirelineio/editor/Channel';
+import Editor from '@dxos/editor/Editor';
+import Channel from '@dxos/editor/Channel';
 
 import { withStyles } from '@material-ui/core/styles';
 

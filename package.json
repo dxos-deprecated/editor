@@ -1,9 +1,9 @@
 {
-  "name": "@wirelineio/editor-kit",
+  "name": "@dxos/editor-kit",
   "version": "0.0.1",
-  "description": "Wireline Editor Kit.",
+  "description": "DxOS Editor Kit.",
   "license": "UNLICENSED",
-  "repository": "https://github.com/wirelineio/editor-kit",
+  "repository": "https://github.com/dxos/editor-kit",
   "private": true,
   "workspaces": {
     "packages": [
