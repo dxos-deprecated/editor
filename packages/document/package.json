@@ -1,6 +1,6 @@
 {
   "name": "@dxos/document",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "CRDT yjs-based document",
   "homepage": "https://github.com/dxos/editor#readme",
   "bugs": {

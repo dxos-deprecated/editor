@@ -1,6 +1,6 @@
 {
   "name": "@dxos/editor",
-  "version": "1.0.0-beta.1",
+  "version": "1.0.0-beta.2",
   "description": "Wireline editor",
   "keywords": [],
   "homepage": "https://github.com/dxos/editor",
@@ -25,7 +25,7 @@
     "last 1 chrome versions"
   ],
   "dependencies": {
-    "@dxos/document": "^1.0.0-beta.1",
+    "@dxos/document": "^1.0.0-beta.2",
     "classnames": "^2.2.6",
     "color-hash": "^1.0.3",
     "lib0": "^0.2.26",
