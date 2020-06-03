@@ -6,7 +6,7 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import { Channel, Editor } from '../src';
+import { Editor } from '../src';
 
 import { styles } from './styles';
 
@@ -56,23 +56,37 @@ class Collaborative extends Component {
         });
     };
 
-    const statusChannel = new Channel();
-    statusChannel.on('local', data => {
+
+    const onLocalStatusUpdate = (update) => {
       const { peers } = this.state;
 
       Object.values(peers)
         .filter(peer => peer.id !== peerId)
         .forEach(peer => {
-          peer.statusChannel.receive(data);
+          if (!peer.editor) return;
+          peer.editor.sync.status.processRemoteUpdate(update);
         });
-    });
+    };
+
+    const onEditorCreated = editor => {
+      const { peers } = this.state;
+
+      const newPeers = { ...peers };
+      newPeers[peerId].editor = editor;
+
+      // Set peer name for status
+      editor.sync.status.setUserName(peers[peerId].username);
+
+      this.setState({ peers: newPeers });
+    };
 
     return {
       id: peerId,
       username: peerId,
       doc,
+      onEditorCreated,
       onLocalUpdate,
-      statusChannel
+      onLocalStatusUpdate
     };
   };
 
@@ -84,15 +98,6 @@ class Collaborative extends Component {
     }
 
     return peers[id].username;
-  };
-
-  handleCreated = peerId => ({ view }) => {
-    const { peers } = this.state;
-
-    const newPeers = { ...peers };
-    newPeers[peerId].view = view;
-
-    this.setState({ peers: newPeers });
   };
 
   render() {
@@ -107,14 +112,14 @@ class Collaborative extends Component {
       <div key={peer.id} className={classes.container}>
         <Editor
           schema="full"
-          onCreated={this.handleCreated(peer.id)}
+          onCreated={peer.onEditorCreated}
           toolbar
           sync={{
+            id: peer.id,
             doc: peer.doc,
             onLocalUpdate: peer.onLocalUpdate,
             status: {
-              channel: peer.statusChannel,
-              getUsername: this.handleGetUsername(peer.id)
+              onLocalUpdate: peer.onLocalStatusUpdate
             }
           }}
         />

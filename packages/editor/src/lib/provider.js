@@ -57,75 +57,55 @@ const readMessage = (provider, buf, emitSynced) => {
   return encoder;
 };
 
-const broadcastMessage = (provider, buf) => {
-  provider.channel.send(buf);
-};
-
 /**
- * TODO(burdon): Comment.
+ * Communication provider to send/receive status updates.
  */
 class Provider extends Observable {
   lastMessageReceived = 0;
 
-  constructor(doc, channel) {
+  constructor(doc) {
     super();
     this.doc = doc;
-    this.channel = channel;
     this.awareness = new awarenessProtocol.Awareness(this.doc);
 
-    /**
-     * Listens to Yjs updates and sends them to remote peers (via ws and broadcastchannel).
-     * @param {Uint8Array} update
-     * @param {any} origin
-     */
-    this._updateHandler = (update, origin) => {
-      if (origin !== this || origin === null) {
-        const encoder = encoding.createEncoder();
-        encoding.writeVarUint(encoder, messageSync);
-        syncProtocol.writeUpdate(encoder, update);
-
-        broadcastMessage(this, encoding.toUint8Array(encoder));
-      }
-    };
-
-    this._awarenessUpdateHandler = (/* { added, updated, removed }, origin */) => {
-      const encoder = encoding.createEncoder();
-      encoding.writeVarUint(encoder, messageAwareness);
-      encoding.writeVarUint8Array(
-        encoder,
-        awarenessProtocol.encodeAwarenessUpdate(this.awareness, [doc.clientID])
-      );
-
-      broadcastMessage(this, encoding.toUint8Array(encoder));
-    };
-
-    window.addEventListener('beforeunload', () => {
-      // Broadcast message with local awareness state set to null (indicating disconnect).
-      const encoder = encoding.createEncoder();
-      encoding.writeVarUint(encoder, messageAwareness);
-      encoding.writeVarUint8Array(
-        encoder,
-        awarenessProtocol.encodeAwarenessUpdate(
-          this.awareness,
-          [this.doc.clientID],
-          new Map()
-        )
-      );
-
-      broadcastMessage(this, encoding.toUint8Array(encoder));
-    });
+    window.addEventListener('beforeunload', this.disconnect);
 
     this.awareness.on('change', this._awarenessUpdateHandler);
+  }
 
-    this.channel.on('remote', remoteData => {
-      // decode UInt8Array
-      const data = new Uint8Array(Array.from(Object.values(remoteData)));
-      this.lastMessageReceived = time.getUnixTime();
-      const encoder = readMessage(this, new Uint8Array(data), true);
-      if (encoding.length(encoder) > 1) {
-        channel.send(encoding.toUint8Array(encoder));
-      }
-    });
+  _awarenessUpdateHandler = () => {
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, messageAwareness);
+    encoding.writeVarUint8Array(
+      encoder,
+      awarenessProtocol.encodeAwarenessUpdate(this.awareness, [this.doc.clientID])
+    );
+
+    this.emit('local-update', [encoding.toUint8Array(encoder)]);
+  };
+
+  disconnect = () => {
+    const encoder = encoding.createEncoder();
+    encoding.writeVarUint(encoder, messageAwareness);
+    encoding.writeVarUint8Array(
+      encoder,
+      awarenessProtocol.encodeAwarenessUpdate(
+        this.awareness,
+        [this.doc.clientID],
+        new Map()
+      )
+    );
+
+    this.emit('local-update', [encoding.toUint8Array(encoder)]);
+  }
+
+  processRemoteUpdate = update => {
+    const data = new Uint8Array(Array.from(Object.values(update)));
+    this.lastMessageReceived = time.getUnixTime();
+    const encoder = readMessage(this, new Uint8Array(data), true);
+    if (encoding.length(encoder) > 1) {
+      this.emit('local-update', [encoding.toUint8Array(encoder)]);
+    }
   }
 }
 

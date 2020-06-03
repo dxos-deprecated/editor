@@ -3,7 +3,7 @@
 //
 
 import React, { Component } from 'react';
-import { uuidv4 } from 'lib0/random';
+import ReactDOM from 'react-dom';
 
 import { withStyles } from '@material-ui/core/styles';
 
@@ -11,7 +11,7 @@ import Toolbar from './Toolbar';
 import ContextMenu from './ContextMenu';
 import Suggestions from './Suggestions';
 
-import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
+import { createProsemirrorEditor, defaultEditorProps } from '../lib/prosemirror-editor';
 
 import 'prosemirror-view/style/prosemirror.css';
 
@@ -86,16 +86,15 @@ class EditorComponent extends Component {
     toolbar: undefined,
     onCreated: undefined,
     classes: {},
-    ...defaultViewProps
+    ...defaultEditorProps
   };
 
-  _editor = React.createRef();
+  _editorDOM = React.createRef();
 
   state = {
-    /** @type {EditorView} */
-    view: undefined,
-
+    editor: undefined,
     toolbar: undefined,
+    reactElements: []
   };
 
   static getDerivedStateFromProps(props) {
@@ -114,7 +113,7 @@ class EditorComponent extends Component {
     this.destroy();
   }
 
-  createProsemirrorView = ({
+  createEditor = ({
     schema,
     htmlContent,
     contextMenu,
@@ -127,11 +126,9 @@ class EditorComponent extends Component {
     onKeyDown
   }) => {
 
-    const {
-      onCreated,
-    } = this.props;
+    const { onCreated } = this.props;
 
-    const viewConfig = {
+    const editorConfig = {
       schema: sync ? 'full' : schema,
       htmlContent,
       contextMenu,
@@ -144,11 +141,19 @@ class EditorComponent extends Component {
       onKeyDown
     };
 
-    const view = createProsemirrorView(this._editor.current, viewConfig);
-    view.id = uuidv4();
+    const editor = createProsemirrorEditor(this._editorDOM.current, editorConfig);
 
-    this.setState({ view }, () => onCreated ? onCreated({
-      view,
+    editor.insertReactElement = (ReactElement, props) => {
+      editor.createReactPlaceholder({
+        props,
+        onCreated: dom => {
+          this.setState({ reactElements: [...this.state.reactElements, { dom, ReactElement, props }] });
+        }
+      });
+    };
+
+    this.setState({ editor }, () => onCreated ? onCreated({
+      ...editor,
       destroy: this.destroy,
       init: this.init,
       reset: this.reset
@@ -161,30 +166,31 @@ class EditorComponent extends Component {
   }
 
   init = () => {
-    this.createProsemirrorView(this.props);
+    this.createEditor(this.props);
   }
 
   destroy = () => {
-    this.destroyProsemirrorView();
+    this.destroyEditor();
 
     this.setState({
-      view: undefined,
-      toolbar: undefined
+      editor: undefined,
+      toolbar: undefined,
+      reactElements: []
     });
   }
 
-  destroyProsemirrorView = () => {
-    const { view } = this.state;
+  destroyEditor = () => {
+    const { editor } = this.state;
 
     try {
-      view.destroy();
+      editor.destroy();
     } catch (err) { } // eslint-disable-line no-empty
   }
 
   handleEditorContainerClick = () => {
-    const { view } = this.state;
+    const { editor } = this.state;
 
-    view.focus();
+    editor.view.focus();
   };
 
   handleEditorClick = event => {
@@ -195,23 +201,23 @@ class EditorComponent extends Component {
   handleEditorContainerContextMenu = event => {
     event.preventDefault();
 
-    const { view } = this.state;
-    view.focus();
+    const { editor } = this.state;
+    editor.view.focus();
     const contextMenuEvent = new MouseEvent('mouseup', { button: 2 });
-    this._editor.current.dispatchEvent(contextMenuEvent);
+    this._editorDOM.current.dispatchEvent(contextMenuEvent);
   };
 
   render() {
     const { contextMenu, suggestions, classes } = this.props;
-    const { view, toolbar } = this.state;
+    const { editor, toolbar, reactElements } = this.state;
 
     return (
       <div className={classes.root}>
-        {suggestions && <Suggestions view={view} {...suggestions} />}
-        {contextMenu && <ContextMenu view={view} {...contextMenu} />}
+        {suggestions && <Suggestions view={editor.view} {...suggestions} />}
+        {contextMenu && <ContextMenu view={editor.view} {...contextMenu} />}
         {toolbar && (
           <div className={classes.toolbarContainer}>
-            <Toolbar view={view} {...toolbar} />
+            <Toolbar view={editor && editor.view} {...toolbar} />
           </div>
         )}
 
@@ -220,8 +226,18 @@ class EditorComponent extends Component {
           onContextMenu={this.handleEditorContainerContextMenu}
           className={classes.editorContainer}
         >
-          <div ref={this._editor} className={classes.editor} onClick={this.handleEditorClick} />
+          <div ref={this._editorDOM} className={classes.editor} onClick={this.handleEditorClick} />
         </div>
+
+        {
+          // Placeholders of React.Portals to real components
+          reactElements.map(({ dom, ReactElement, props }, i) => (
+            ReactDOM.createPortal(
+              <ReactElement key={i} {...props} />,
+              dom
+            )
+          ))
+        }
       </div>
     );
   }

@@ -187,6 +187,33 @@ export const nodes = {
     toDOM(node) {
       return ['li', calcYchangeDomAttrs(node.attrs), 0];
     }
+  },
+
+  react_element: {
+    group: 'inline',
+    content: 'inline*',
+    inline: true,
+    atom: true,
+    attrs: {
+      onCreated: { default: null },
+      reactData: { default: null }
+    },
+    parseDOM: [
+      {
+        tag: 'reactelement',
+        getAttrs(dom) {
+          return {
+            reactData: JSON.parse(decodeURI(dom.getAttribute('data-react')))
+          };
+        }
+      }
+    ],
+    toDOM: node => {
+      debugger;
+      return ['reactelement', {
+        'data-react': encodeURI(JSON.stringify(node.attrs.reactData))
+      }, 0];
+    }
   }
 };
 

@@ -5,52 +5,53 @@
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import { keymap } from 'prosemirror-keymap';
-import { baseKeymap } from 'prosemirror-commands';
 import { DOMSerializer, DOMParser } from 'prosemirror-model';
 import { history, undo, redo } from 'prosemirror-history';
 import { exampleSetup } from 'prosemirror-example-setup';
-import ColorHash from 'color-hash';
 
-import { ySyncPlugin, ySyncPluginKey, yCursorPlugin } from 'y-prosemirror';
-
-import { yUndoPlugin, undo as yUndo, redo as yRedo } from '../plugins/yjs-undo-plugin';
-
-import contextMenuPlugin from '../plugins/context-menu-plugin';
+import { uuidv4 } from 'lib0/random';
 
 import { createSchema } from './schema';
-import Provider from './provider';
+import { createSyncPlugins } from './sync';
+import { buildKeysToMap } from './keymap';
+
+import contextMenuPlugin from '../plugins/context-menu-plugin';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
 import suggestionsPlugin from '../plugins/suggestions-plugin';
 
-const colorHash = new ColorHash();
-
-export const defaultViewProps = {
+export const defaultEditorProps = {
   schema: 'basic',
   htmlContent: undefined,
   contextMenu: undefined,
   suggestions: undefined,
   sync: undefined,
-  nodeViews: {},
   schemaEnhancers: [],
   options: {},
   onContentChange: undefined,
   onKeyDown: undefined
 };
 
-export const createProsemirrorView = (element, {
+export const createProsemirrorEditor = (element, {
   schema: customSchema,
   htmlContent,
   contextMenu,
   suggestions,
   sync,
-  nodeViews,
   schemaEnhancers,
-  options,
+  options: { initialFontSize },
   onContentChange,
   onKeyDown
-} = defaultViewProps) => {
+} = defaultEditorProps) => {
 
-  const { initialFontSize } = options;
+  const editor = {
+    createReactPlaceholder({ props, onCreated }) {
+      const { tr, selection, schema } = editor.view.state;
+
+      selection.replaceWith(tr, schema.node('react_element', { onCreated, reactData: props }));
+
+      view.dispatch(tr);
+    }
+  };
 
   const plugins = [];
 
@@ -58,93 +59,10 @@ export const createProsemirrorView = (element, {
 
   const serializer = DOMSerializer.fromSchema(schema);
 
-  const keysToMap = {
-    ...baseKeymap,
-    'Mod-=': (state, dispatch, view) => {
-      const current = parseInt(
-        parseFloat(view.dom.style.fontSize || initialFontSize),
-        10
-      );
-
-      view.dom.style.fontSize = `${current + 1}px`;
-      return true;
-    },
-
-    'Mod--': (state, dispatch, view) => {
-      const current = parseInt(
-        parseFloat(view.dom.style.fontSize || initialFontSize),
-        10
-      );
-
-      view.dom.style.fontSize = `${current - 1}px`;
-      return true;
-    },
-
-    Tab: (state, dispatch) => {
-      const {
-        $from: { pos: from },
-        $to: { pos: to }
-      } = state.selection;
-
-      dispatch(
-        state.tr
-          .delete(from, to)
-          .insert(from, schema.text('  '))
-          .scrollIntoView()
-      );
-
-      return true;
-    }
-  };
+  const keysToMap = buildKeysToMap(schema, initialFontSize);
 
   if (sync) {
-    const { status, doc, id, onLocalUpdate = () => null } = sync;
-
-    const provider = new Provider(doc, status.channel);
-
-    provider.awareness.setLocalStateField('user', { id, color: colorHash.hex(id), name: status.getUsername() });
-
-    // Content sync plugin
-    const syncPlugin = ySyncPlugin(doc.getXmlFragment('content'));
-
-    doc.on('update', (update, origin) => {
-      const local = origin === ySyncPluginKey; // This is a y-prosemirror thing
-
-      if (!local) return;
-
-      onLocalUpdate(update, doc);
-    });
-
-    const cursorBuilder = user => {
-      const cursor = window.document.createElement('span');
-      cursor.className = 'cursor';
-      cursor.style.borderColor = user.color;
-
-      const cursorName = window.document.createElement('span');
-      cursorName.className = 'name';
-      cursorName.style.backgroundColor = user.color;
-      cursorName.innerText = user.name;
-
-      cursor.appendChild(cursorName);
-
-      return cursor;
-    };
-
-    // Cursor indicator plugin
-    const cursorPlugin = yCursorPlugin(provider.awareness, ({ cursorBuilder }));
-
-    // Yjs history plugin
-    const undoPlugin = yUndoPlugin({ trackedOrigins: [({}).constructor] });
-
-    plugins.push(
-      syncPlugin,
-      cursorPlugin,
-      undoPlugin
-    );
-
-    keysToMap['Mod-z'] = yUndo;
-    keysToMap['Mod-y'] = yRedo;
-    keysToMap['Mod-Shift-z'] = yRedo;
+    editor.sync = createSyncPlugins(sync, plugins, keysToMap);
   }
 
   if (contextMenu) {
@@ -191,8 +109,7 @@ export const createProsemirrorView = (element, {
   plugins.push(keymap(keysToMap));
   plugins.push(historyListenerPlugin());
 
-
-  // TODO: Fix incompatible undo/redo operations when sync is enabled
+  // Fix incompatible undo/redo operations when sync is enabled
   // plugins.push(historyListenerPlugin({ yjsHistory: Boolean(sync) }));
 
   let doc;
@@ -212,12 +129,21 @@ export const createProsemirrorView = (element, {
     { mount: element },
     {
       state,
-      nodeViews,
-      handleKeyDown(view, event) {
-        if (onKeyDown) {
-          return onKeyDown(event);
+      nodeViews: {
+        react_element(node) {
+          const { attrs: { onCreated, reactData } } = node;
+
+          const dom = window.document.createElement('reactelement');
+          dom.setAttribute('data-react', encodeURI(JSON.stringify(reactData)));
+
+          onCreated(dom);
+
+          return {
+            dom
+          };
         }
       },
+      onKeyDown: onKeyDown ? (view, event) => onKeyDown(event) : undefined,
       handleClickOn(view, pos, node, nodePos, event) {
         // Handle link ctrl+click.
         if (
@@ -253,5 +179,9 @@ export const createProsemirrorView = (element, {
     }
   );
 
-  return view;
+  view.id = uuidv4();
+
+  editor.view = view;
+
+  return editor;
 };
