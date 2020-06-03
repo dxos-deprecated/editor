@@ -1,15 +1,15 @@
 {
-  "name": "@wirelineio/editor",
+  "name": "@dxos/editor",
   "version": "1.0.0-beta.1",
   "description": "Wireline editor",
   "keywords": [],
-  "homepage": "https://github.com/wirelineio/editor",
+  "homepage": "https://github.com/dxos/editor",
   "bugs": {
-    "url": "https://github.com/wirelineio/editor/issues"
+    "url": "https://github.com/dxos/editor/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/wirelineio/editor.git"
+    "url": "git+https://github.com/dxos/editor.git"
   },
   "license": "GPL-3.0",
   "main": "src/index.js",
@@ -25,7 +25,7 @@
     "last 1 chrome versions"
   ],
   "dependencies": {
-    "@wirelineio/document": "^1.0.0-beta.1",
+    "@dxos/document": "^1.0.0-beta.1",
     "classnames": "^2.2.6",
     "color-hash": "^1.0.3",
     "lib0": "^0.2.26",

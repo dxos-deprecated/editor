@@ -6,7 +6,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { uuidv4 } from 'lib0/random';
 
-import { Document } from '@wirelineio/document';
+import { Document } from '@dxos/document';
 
 import { withStyles } from '@material-ui/core/styles';
 

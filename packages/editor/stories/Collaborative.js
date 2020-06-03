@@ -5,7 +5,7 @@
 import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
-import { Document } from '@wirelineio/document';
+import { Document } from '@dxos/document';
 
 import { Channel, Editor } from '../src';
 
