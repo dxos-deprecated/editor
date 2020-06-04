@@ -138,19 +138,11 @@ class EditorComponent extends Component {
       schemaEnhancers,
       options,
       onContentChange,
-      onKeyDown
+      onKeyDown,
+      onReactElementDomCreated: this.handleReactElementDomCreated
     };
 
     const editor = createProsemirrorEditor(this._editorDOM.current, editorConfig);
-
-    editor.insertReactElement = (ReactElement, props) => {
-      editor.createReactPlaceholder({
-        props,
-        onCreated: dom => {
-          this.setState({ reactElements: [...this.state.reactElements, { dom, ReactElement, props }] });
-        }
-      });
-    };
 
     this.setState({ editor }, () => onCreated ? onCreated({
       ...editor,
@@ -187,6 +179,11 @@ class EditorComponent extends Component {
     } catch (err) { } // eslint-disable-line no-empty
   }
 
+  handleReactElementDomCreated = (dom, props) => {
+    console.log('handleReactElementDomCreated', this.state.reactElements);
+    this.setState(state => ({ reactElements: [...state.reactElements, { dom, props }] }));
+  }
+
   handleEditorContainerClick = () => {
     const { editor } = this.state;
 
@@ -208,7 +205,7 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { contextMenu, suggestions, classes } = this.props;
+    const { contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
     const { editor, toolbar, reactElements } = this.state;
 
     return (
@@ -231,9 +228,9 @@ class EditorComponent extends Component {
 
         {
           // Placeholders of React.Portals to real components
-          reactElements.map(({ dom, ReactElement, props }, i) => (
+          reactElements.map(({ dom, props }, i) => (
             ReactDOM.createPortal(
-              <ReactElement key={i} {...props} />,
+              reactElementRenderFn({ key: i, ...props }),
               dom
             )
           ))

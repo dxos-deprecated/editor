@@ -4,32 +4,31 @@ import Button from '@material-ui/core/Button';
 
 import { Editor } from '../src';
 
-const ReactElement = (...props) => {
-  return (
-    <Button
-      onClick={event => {
-        event.preventDefault();
-        console.log('Button click', JSON.stringify(props, null, 2));
-      }}
-    >
-      Test
-    </Button>
-  );
-};
-
 const ReactContent = () => {
   const handleCreated = useCallback((editor) => {
-    editor.insertReactElement(ReactElement, { a: 'a', b: 'b', c: [1, 2] });
+    editor.createReactElement({ id: '1' });
+    editor.createReactElement({ id: '2' });
   }, []);
 
-  // const handleRenderReactElement = props => {
-
-  // }
+  const handleReactElementRender = props => {
+    console.log('render', props);
+    return (
+      <Button
+        color={props.id === '1' ? 'primary' : 'secondary'}
+        onClick={() => {
+          console.log('Button click', JSON.stringify(props, null, 2));
+        }}
+      >
+        Test
+      </Button>
+    );
+  };
 
   return (
     <Editor
       schema="full"
       onCreated={handleCreated}
+      reactElementRenderFn={handleReactElementRender}
     />
   );
 };

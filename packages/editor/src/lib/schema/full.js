@@ -195,7 +195,6 @@ export const nodes = {
     inline: true,
     atom: true,
     attrs: {
-      onCreated: { default: null },
       reactData: { default: null }
     },
     parseDOM: [

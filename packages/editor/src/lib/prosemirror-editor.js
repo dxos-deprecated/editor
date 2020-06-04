@@ -28,7 +28,8 @@ export const defaultEditorProps = {
   schemaEnhancers: [],
   options: {},
   onContentChange: undefined,
-  onKeyDown: undefined
+  onKeyDown: undefined,
+  onRenderReactElement: undefined
 };
 
 export const createProsemirrorEditor = (element, {
@@ -40,14 +41,15 @@ export const createProsemirrorEditor = (element, {
   schemaEnhancers,
   options: { initialFontSize },
   onContentChange,
-  onKeyDown
+  onKeyDown,
+  onReactElementDomCreated
 } = defaultEditorProps) => {
 
   const editor = {
-    createReactPlaceholder({ props, onCreated }) {
+    createReactElement(props) {
       const { tr, selection, schema } = editor.view.state;
 
-      selection.replaceWith(tr, schema.node('react_element', { onCreated, reactData: props }));
+      selection.replaceWith(tr, schema.node('react_element', { reactData: props }));
 
       view.dispatch(tr);
     }
@@ -131,12 +133,12 @@ export const createProsemirrorEditor = (element, {
       state,
       nodeViews: {
         react_element(node) {
-          const { attrs: { onCreated, reactData } } = node;
+          const { attrs: { reactData } } = node;
 
           const dom = window.document.createElement('reactelement');
           dom.setAttribute('data-react', encodeURI(JSON.stringify(reactData)));
 
-          onCreated(dom);
+          onReactElementDomCreated(dom, reactData);
 
           return {
             dom
