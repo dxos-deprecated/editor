@@ -28,8 +28,7 @@ export const defaultEditorProps = {
   schemaEnhancers: [],
   options: {},
   onContentChange: undefined,
-  onKeyDown: undefined,
-  onRenderReactElement: undefined
+  onKeyDown: undefined
 };
 
 export const createProsemirrorEditor = (element, {
