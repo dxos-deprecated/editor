@@ -49,7 +49,7 @@ export const createProsemirrorEditor = (element, {
     createReactElement(props) {
       const { tr, selection, schema } = editor.view.state;
 
-      selection.replaceWith(tr, schema.node('react_element', { reactData: props }));
+      selection.replaceWith(tr, schema.node('react_element', { props }));
 
       view.dispatch(tr);
     }
@@ -133,12 +133,13 @@ export const createProsemirrorEditor = (element, {
       state,
       nodeViews: {
         react_element(node) {
-          const { attrs: { reactData } } = node;
+          const { attrs: { props = {} } } = node;
 
           const dom = window.document.createElement('reactelement');
-          dom.setAttribute('data-react', encodeURI(JSON.stringify(reactData)));
 
-          onReactElementDomCreated(dom, reactData);
+          dom.setAttribute('props', encodeURI(JSON.stringify(props)));
+
+          onReactElementDomCreated(dom, props);
 
           return {
             dom

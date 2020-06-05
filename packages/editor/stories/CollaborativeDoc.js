@@ -10,7 +10,9 @@ import { Editor } from '../src';
 
 import { styles } from './styles';
 
-class Collaborative extends Component {
+import { Doc, applyUpdate } from 'yjs';
+
+class CollaborativeDoc extends Component {
   static count = 0;
 
   state = {
@@ -35,6 +37,9 @@ class Collaborative extends Component {
   }
 
   createPeer = peerId => {
+
+    const doc = new Doc();
+
     const onLocalUpdate = update => {
       const { peers } = this.state;
 
@@ -42,7 +47,7 @@ class Collaborative extends Component {
         .filter(peer => peer.id !== peerId)
         .forEach(peer => {
           // New origin: avoid loop
-          peer.editor.sync.processRemoteUpdate(update, { author: peerId });
+          applyUpdate(peer.doc, update, { author: peerId });
         });
     };
 
@@ -73,6 +78,7 @@ class Collaborative extends Component {
     return {
       id: peerId,
       username: peerId,
+      doc,
       onEditorCreated,
       onLocalUpdate,
       onLocalStatusUpdate
@@ -95,6 +101,7 @@ class Collaborative extends Component {
           toolbar
           sync={{
             id: peer.id,
+            doc: peer.doc,
             onLocalUpdate: peer.onLocalUpdate,
             status: {
               onLocalUpdate: peer.onLocalStatusUpdate
@@ -112,4 +119,4 @@ class Collaborative extends Component {
   }
 }
 
-export default withStyles(styles)(Collaborative);
+export default withStyles(styles)(CollaborativeDoc);

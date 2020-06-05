@@ -180,7 +180,6 @@ class EditorComponent extends Component {
   }
 
   handleReactElementDomCreated = (dom, props) => {
-    console.log('handleReactElementDomCreated', this.state.reactElements);
     this.setState(state => ({ reactElements: [...state.reactElements, { dom, props }] }));
   }
 
@@ -206,7 +205,7 @@ class EditorComponent extends Component {
 
   render() {
     const { contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
-    const { editor, toolbar, reactElements } = this.state;
+    const { editor = {}, toolbar, reactElements } = this.state;
 
     return (
       <div className={classes.root}>

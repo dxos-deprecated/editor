@@ -2,6 +2,7 @@
 // Copyright 2020 Wireline, Inc.
 //
 
+import { Doc, applyUpdate } from "yjs";
 import { ySyncPluginKey, ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from "y-prosemirror";
 import ColorHash from 'color-hash';
 
@@ -9,7 +10,7 @@ import Provider from "./provider";
 
 const colorHash = new ColorHash();
 
-const createSyncTextPlugin = (doc, onLocalUpdate) => {
+const createSyncTextPlugin = (doc, onLocalUpdate = () => null) => {
   doc.on('update', (update, origin) => {
     const local = origin === ySyncPluginKey; // This is a y-prosemirror thing
 
@@ -18,20 +19,33 @@ const createSyncTextPlugin = (doc, onLocalUpdate) => {
     onLocalUpdate(update, doc);
   });
 
-  // Content sync plugin
-  const syncPlugin = ySyncPlugin(doc.getXmlFragment('content'));
+  const plugin = ySyncPlugin(doc.getXmlFragment('content'));
 
-  return syncPlugin;
+  const handler = {
+    doc,
+    processRemoteUpdate(update, origin) {
+      const uIntArrayUpdate = update.constructor === Uint8Array
+        ? update
+        : new Uint8Array(Object.values(update));
+
+      applyUpdate(doc, uIntArrayUpdate, origin);
+    }
+  };
+
+  return {
+    plugin,
+    handler
+  };
 };
 
 const cursorBuilder = user => {
   const cursor = window.document.createElement('span');
   cursor.className = 'cursor';
-  cursor.style.borderColor = user.color;
+  cursor.style.borderColor = colorHash.hex(user.user.id);
 
   const cursorName = window.document.createElement('span');
   cursorName.className = 'name';
-  cursorName.style.backgroundColor = user.color;
+  cursorName.style.backgroundColor = colorHash.hex(user.user.id);
   cursorName.innerText = user.name;
 
   cursor.appendChild(cursorName);
@@ -48,7 +62,7 @@ const createStatusPlugin = (id, doc, status) => {
   // Initial state
   provider.awareness.setLocalStateField(
     'user',
-    { id, color: colorHash.hex(id) }
+    { id }
   );
 
   // Cursor indicator plugin
@@ -66,9 +80,9 @@ const createStatusPlugin = (id, doc, status) => {
 
 export const createSyncPlugins = (options, plugins, keysToMap) => {
 
-  const { id, doc, status, onLocalUpdate = () => null } = options;
+  const { id, doc = new Doc(), onLocalUpdate, status } = options;
 
-  const syncPlugin = createSyncTextPlugin(doc, onLocalUpdate);
+  const { plugin: syncPlugin, handler } = createSyncTextPlugin(doc, onLocalUpdate);
   const { plugin: statusPlugin, handler: statusHandler } = createStatusPlugin(id, doc, status);
   const undoPlugin = yUndoPlugin({ trackedOrigins: [({}).constructor] });
 
@@ -83,6 +97,7 @@ export const createSyncPlugins = (options, plugins, keysToMap) => {
   keysToMap['Mod-Shift-z'] = redo;
 
   return {
+    ...handler,
     status: statusHandler
   };
 };

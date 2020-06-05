@@ -11,7 +11,6 @@ const ReactContent = () => {
   }, []);
 
   const handleReactElementRender = props => {
-    console.log('render', props);
     return (
       <Button
         color={props.id === '1' ? 'primary' : 'secondary'}

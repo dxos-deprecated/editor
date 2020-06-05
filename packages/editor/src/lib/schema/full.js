@@ -195,22 +195,23 @@ export const nodes = {
     inline: true,
     atom: true,
     attrs: {
-      reactData: { default: null }
+      props: { default: null }
     },
     parseDOM: [
       {
         tag: 'reactelement',
         getAttrs(dom) {
           return {
-            reactData: JSON.parse(decodeURI(dom.getAttribute('data-react')))
+            props: JSON.parse(decodeURI(dom.getAttribute('props')))
           };
         }
       }
     ],
+
     toDOM: node => {
       debugger;
       return ['reactelement', {
-        'data-react': encodeURI(JSON.stringify(node.attrs.reactData))
+        'props': encodeURI(JSON.stringify(node.attrs.props))
       }, 0];
     }
   }
