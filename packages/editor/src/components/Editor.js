@@ -119,7 +119,6 @@ class EditorComponent extends Component {
     contextMenu,
     suggestions,
     sync,
-    nodeViews,
     schemaEnhancers,
     options,
     onContentChange,
@@ -134,7 +133,6 @@ class EditorComponent extends Component {
       contextMenu,
       suggestions,
       sync,
-      nodeViews,
       schemaEnhancers,
       options,
       onContentChange,
@@ -204,14 +202,16 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
+    const { schema, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
     const { editor = {}, toolbar, reactElements } = this.state;
+
+    const showToolbar = toolbar && (schema === 'full' || sync);
 
     return (
       <div className={classes.root}>
         {suggestions && <Suggestions view={editor.view} {...suggestions} />}
         {contextMenu && <ContextMenu view={editor.view} {...contextMenu} />}
-        {toolbar && (
+        {showToolbar && (
           <div className={classes.toolbarContainer}>
             <Toolbar view={editor && editor.view} {...toolbar} />
           </div>
