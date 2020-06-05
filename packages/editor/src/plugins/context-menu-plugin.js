@@ -32,7 +32,7 @@ const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = 
       ({ top, left } = view.coordsAtPos(to));
       const dom = view.domAtPos(to);
 
-      const node = dom.node.nodeType === document.TEXT_NODE ? dom.node.parentElement : dom.node;
+      const node = dom.node.nodeType === window.document.TEXT_NODE ? dom.node.parentElement : dom.node;
       top = node.clientHeight + node.getBoundingClientRect().top;
     }
 

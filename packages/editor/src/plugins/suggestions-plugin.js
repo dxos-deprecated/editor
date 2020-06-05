@@ -80,7 +80,7 @@ const suggestionsPlugin = ({
       let { top, left } = pluginView.coordsAtPos(start);
       const dom = pluginView.domAtPos(start);
 
-      const node = dom.node.nodeType === document.TEXT_NODE ? dom.node.parentElement : dom.node;
+      const node = dom.node.nodeType === window.document.TEXT_NODE ? dom.node.parentElement : dom.node;
       top = node.clientHeight + node.getBoundingClientRect().top;
 
       meta.open = true;
