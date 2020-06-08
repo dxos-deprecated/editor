@@ -1,18 +1,21 @@
-import React, { Component } from 'react';
+import React, { useCallback } from 'react';
 
 import Button from '@material-ui/core/Button';
 
 import { Editor } from '../src';
 
-import { buildReactElementNodeView, reactElement } from './util';
+const ReactContent = () => {
+  const handleCreated = useCallback((editor) => {
+    editor.createReactElement({ id: '1' });
+    editor.createReactElement({ id: '2' });
+  }, []);
 
-class ReactContent extends Component {
-  handleRenderReactNodeView = node => {
+  const handleReactElementRender = props => {
     return (
       <Button
-        onClick={event => {
-          event.preventDefault();
-          console.log('Button click', JSON.stringify(node, null, 2));
+        color={props.id === '1' ? 'primary' : 'secondary'}
+        onClick={() => {
+          console.log('Button click', JSON.stringify(props, null, 2));
         }}
       >
         Test
@@ -20,26 +23,13 @@ class ReactContent extends Component {
     );
   };
 
-  handleCreated = ({ view }) => {
-    const reactElement = view.state.schema.node('reactelement');
-
-    view.dispatch(view.state.tr.insert(0, reactElement));
-  };
-
-  render() {
-    return (
-      <Editor
-        schema="full"
-        onCreated={this.handleCreated}
-        schemaEnhancers={[reactElement]}
-        nodeViews={{
-          reactelement: buildReactElementNodeView(
-            this.handleRenderReactNodeView
-          )
-        }}
-      />
-    );
-  }
-}
+  return (
+    <Editor
+      schema="full"
+      onCreated={handleCreated}
+      reactElementRenderFn={handleReactElementRender}
+    />
+  );
+};
 
 export default ReactContent;

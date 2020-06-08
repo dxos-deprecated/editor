@@ -25,14 +25,14 @@
     "lint:staged": "lint-staged"
   },
   "devDependencies": {
-    "babel-eslint": "^10.0.3",
-    "eslint": "^6.6.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.1.0",
     "eslint-config-jest-enzyme": "^7.1.2",
-    "eslint-loader": "^3.0.2",
+    "eslint-loader": "^4.0.2",
     "eslint-plugin-jsx-a11y": "^6.2.3",
-    "eslint-plugin-react": "^7.16.0",
-    "lerna": "^3.18.4",
-    "lint-staged": "^9.4.3",
+    "eslint-plugin-react": "^7.20.0",
+    "lerna": "^3.22.0",
+    "lint-staged": "^10.2.7",
     "pre-commit": "^1.2.2"
   }
 }

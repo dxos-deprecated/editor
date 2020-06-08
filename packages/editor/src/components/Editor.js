@@ -3,19 +3,15 @@
 //
 
 import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import { uuidv4 } from 'lib0/random';
-
-import { Document } from '@dxos/document';
+import ReactDOM from 'react-dom';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import Toolbar, { ToolbarPropTypes } from './Toolbar';
-import ContextMenu, { ContextMenuPropTypes } from './ContextMenu';
+import Toolbar from './Toolbar';
+import ContextMenu from './ContextMenu';
+import Suggestions from './Suggestions';
 
-import { createProsemirrorView, defaultViewProps } from '../lib/prosemirror-view';
-import Channel from '../lib/Channel';
-import Suggestions, { SuggestionsPropTypes } from './Suggestions';
+import { createProsemirrorEditor, defaultEditorProps } from '../lib/prosemirror-editor';
 
 import 'prosemirror-view/style/prosemirror.css';
 
@@ -90,16 +86,15 @@ class EditorComponent extends Component {
     toolbar: undefined,
     onCreated: undefined,
     classes: {},
-    ...defaultViewProps
+    ...defaultEditorProps
   };
 
-  _editor = React.createRef();
+  _editorDOM = React.createRef();
 
   state = {
-    /** @type {EditorView} */
-    view: undefined,
-
+    editor: undefined,
     toolbar: undefined,
+    reactElements: []
   };
 
   static getDerivedStateFromProps(props) {
@@ -118,41 +113,37 @@ class EditorComponent extends Component {
     this.destroy();
   }
 
-  createProsemirrorView = ({
+  createEditor = ({
     schema,
     htmlContent,
     contextMenu,
     suggestions,
     sync,
-    nodeViews,
     schemaEnhancers,
     options,
     onContentChange,
     onKeyDown
   }) => {
 
-    const {
-      onCreated,
-    } = this.props;
+    const { onCreated } = this.props;
 
-    const viewConfig = {
+    const editorConfig = {
       schema: sync ? 'full' : schema,
       htmlContent,
       contextMenu,
       suggestions,
       sync,
-      nodeViews,
       schemaEnhancers,
       options,
       onContentChange,
-      onKeyDown
+      onKeyDown,
+      onReactElementDomCreated: this.handleReactElementDomCreated
     };
 
-    const view = createProsemirrorView(this._editor.current, viewConfig);
-    view.id = uuidv4();
+    const editor = createProsemirrorEditor(this._editorDOM.current, editorConfig);
 
-    this.setState({ view }, () => onCreated ? onCreated({
-      view,
+    this.setState({ editor }, () => onCreated ? onCreated({
+      ...editor,
       destroy: this.destroy,
       init: this.init,
       reset: this.reset
@@ -165,30 +156,35 @@ class EditorComponent extends Component {
   }
 
   init = () => {
-    this.createProsemirrorView(this.props);
+    this.createEditor(this.props);
   }
 
   destroy = () => {
-    this.destroyProsemirrorView();
+    this.destroyEditor();
 
     this.setState({
-      view: undefined,
-      toolbar: undefined
+      editor: undefined,
+      toolbar: undefined,
+      reactElements: []
     });
   }
 
-  destroyProsemirrorView = () => {
-    const { view } = this.state;
+  destroyEditor = () => {
+    const { editor } = this.state;
 
     try {
-      view.destroy();
+      editor.destroy();
     } catch (err) { } // eslint-disable-line no-empty
   }
 
-  handleEditorContainerClick = () => {
-    const { view } = this.state;
+  handleReactElementDomCreated = (dom, props) => {
+    this.setState(state => ({ reactElements: [...state.reactElements, { dom, props }] }));
+  }
 
-    view.focus();
+  handleEditorContainerClick = () => {
+    const { editor } = this.state;
+
+    editor.view.focus();
   };
 
   handleEditorClick = event => {
@@ -196,74 +192,53 @@ class EditorComponent extends Component {
     event.stopPropagation();
   };
 
+  handleEditorContainerContextMenu = event => {
+    event.preventDefault();
+
+    const { editor } = this.state;
+    editor.view.focus();
+    const contextMenuEvent = new MouseEvent('mouseup', { button: 2 });
+    this._editorDOM.current.dispatchEvent(contextMenuEvent);
+  };
+
   render() {
-    const { contextMenu, suggestions, classes } = this.props;
-    const { view, toolbar } = this.state;
+    const { schema, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
+    const { editor = {}, toolbar, reactElements } = this.state;
+
+    const showToolbar = toolbar && (schema === 'full' || sync);
 
     return (
       <div className={classes.root}>
-        {suggestions && <Suggestions view={view} {...suggestions} />}
-        {contextMenu && <ContextMenu view={view} {...contextMenu} />}
-        {toolbar && (
+        {suggestions && <Suggestions view={editor.view} {...suggestions} />}
+        {contextMenu && <ContextMenu view={editor.view} {...contextMenu} />}
+        {showToolbar && (
           <div className={classes.toolbarContainer}>
-            <Toolbar view={view} {...toolbar} />
+            <Toolbar view={editor && editor.view} {...toolbar} />
           </div>
         )}
 
-        <div className={classes.editorContainer} onClick={this.handleEditorContainerClick}>
-          <div ref={this._editor} className={classes.editor} onClick={this.handleEditorClick} />
+        <div
+          onClick={this.handleEditorContainerClick}
+          onContextMenu={this.handleEditorContainerContextMenu}
+          className={classes.editorContainer}
+        >
+          <div ref={this._editorDOM} className={classes.editor} onClick={this.handleEditorClick} />
         </div>
+
+        {
+          // Placeholders of React.Portals to real components
+          reactElements.map(({ dom, props }, i) => (
+            ReactDOM.createPortal(
+              reactElementRenderFn({ key: i, ...props }),
+              dom
+            )
+          ))
+        }
       </div>
     );
   }
 }
 
 const Editor = withStyles(styles)(EditorComponent);
-
-EditorComponent.propTypes = {
-  toolbar: PropTypes.oneOfType([
-    PropTypes.bool,
-    ToolbarPropTypes
-  ]),
-  htmlContent: PropTypes.string,
-  schema: PropTypes.oneOfType([
-    PropTypes.oneOf(['basic', 'text-only', 'full']),
-    PropTypes.shape({ // https://prosemirror.net/docs/ref/#model.SchemaSpec
-      nodes: PropTypes.object,
-      marks: PropTypes.object
-    })
-  ]),
-  contextMenu: PropTypes.oneOfType([
-    PropTypes.bool,
-    ContextMenuPropTypes
-  ]),
-  suggestions: PropTypes.oneOfType([
-    PropTypes.bool,
-    SuggestionsPropTypes
-  ]),
-  sync: PropTypes.shape({
-    status: PropTypes.exact({
-      channel: PropTypes.instanceOf(Channel),
-      getUsername: PropTypes.func
-    }),
-    id: PropTypes.string,
-    document: PropTypes.instanceOf(Document),
-    onDocumentLocalUpdate: PropTypes.func
-  }),
-  nodeViews: PropTypes.object, // https://prosemirror.net/docs/ref/#view.NodeView
-  schemaEnhancers: PropTypes.arrayOf(PropTypes.func),
-  options: PropTypes.shape({
-    initialFontSize: PropTypes.number
-  }),
-  onContentChange: PropTypes.func,
-  onCreated: PropTypes.func,
-  onKeyDown: PropTypes.func,
-  classes: PropTypes.shape({
-    root: PropTypes.string,
-    editorContainer: PropTypes.string,
-    editor: PropTypes.string,
-    toolbarContainer: PropTypes.string
-  })
-};
 
 export default Editor;
