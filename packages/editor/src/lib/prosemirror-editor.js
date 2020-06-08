@@ -18,6 +18,8 @@ import { buildKeysToMap } from './keymap';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
 import suggestionsPlugin from '../plugins/suggestions-plugin';
+import { buildNodeViews } from './node-views';
+import { buildProsemirrorEvents } from './prosemirror-events';
 
 export const defaultEditorProps = {
   schema: 'basic',
@@ -31,18 +33,18 @@ export const defaultEditorProps = {
   onKeyDown: undefined
 };
 
-export const createProsemirrorEditor = (element, {
-  schema: customSchema,
-  htmlContent,
-  contextMenu,
-  suggestions,
-  sync,
-  schemaEnhancers,
-  options: { initialFontSize },
-  onContentChange,
-  onKeyDown,
-  onReactElementDomCreated
-} = defaultEditorProps) => {
+export const createProsemirrorEditor = (element, options = defaultEditorProps) => {
+
+  const {
+    schema: customSchema,
+    htmlContent,
+    contextMenu,
+    suggestions,
+    sync,
+    schemaEnhancers,
+    options: { initialFontSize },
+    onContentChange
+  } = options;
 
   const editor = {
     createReactElement(props) {
@@ -130,35 +132,11 @@ export const createProsemirrorEditor = (element, {
     { mount: element },
     {
       state,
-      nodeViews: {
-        react_element(node) {
-          const { attrs: { props = {} } } = node;
 
-          const dom = window.document.createElement('reactelement');
+      // Prosemirror node view customizations
+      nodeViews: buildNodeViews(options, schema),
 
-          dom.setAttribute('props', encodeURI(JSON.stringify(props)));
-
-          onReactElementDomCreated(dom, props);
-
-          return {
-            dom
-          };
-        }
-      },
-      onKeyDown: onKeyDown ? (view, event) => onKeyDown(event) : undefined,
-      handleClickOn(view, pos, node, nodePos, event) {
-        // Handle link ctrl+click.
-        if (
-          event.target.nodeName === 'A' &&
-          event.ctrlKey &&
-          event.target.href
-        ) {
-          window.open(event.target.href, '_blank');
-          return true;
-        }
-
-        return false;
-      },
+      ...buildProsemirrorEvents(options, schema),
 
       dispatchTransaction(transaction) {
         const oldState = view.state;

@@ -209,7 +209,6 @@ export const nodes = {
     ],
 
     toDOM: node => {
-      debugger;
       return ['reactelement', {
         'props': encodeURI(JSON.stringify(node.attrs.props))
       }, 0];
@@ -240,28 +239,6 @@ export const marks = {
     ],
     toDOM() {
       return ['strong'];
-    }
-  },
-
-  link: {
-    attrs: {
-      href: {},
-      title: { default: null }
-    },
-    inclusive: false,
-    parseDOM: [
-      {
-        tag: 'a[href]',
-        getAttrs(dom) {
-          return {
-            href: dom.getAttribute('href'),
-            title: dom.getAttribute('title')
-          };
-        }
-      }
-    ],
-    toDOM(node) {
-      return ['a', node.attrs];
     }
   },
 

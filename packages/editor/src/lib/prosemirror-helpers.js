@@ -72,7 +72,7 @@ export const getSelectedTextNodes = state => {
  * @param {Node} node
  */
 export const isLink = schema => node => {
-  return schema.marks.link.isInSet(node.marks);
+  return schema.marks.link ? schema.marks.link.isInSet(node.marks) : false;
 };
 
 /**
