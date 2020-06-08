@@ -96,13 +96,15 @@ class ToolbarComponent extends PureComponent {
 
     const { view } = this.props;
 
-    const canSetLink = !newState.selection.empty &&
-      this.dispatchCommand(toggleMark(view.state.schema.marks.link), { dryRun: true });
+    if (view.state.schema.marks.link) {
+      const canSetLink = !newState.selection.empty &&
+        this.dispatchCommand(toggleMark(view.state.schema.marks.link), { dryRun: true });
 
-    const selectedTextNodes = getSelectedTextNodes(view.state);
-    const selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
+      const selectedTextNodes = getSelectedTextNodes(view.state);
+      const selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
 
-    this.setState({ canSetLink, selectedLinkNodes });
+      this.setState({ canSetLink, selectedLinkNodes });
+    }
   }, 250);
 
   handleHistoryUpdate = ({ canUndo, canRedo }) => {
@@ -181,6 +183,7 @@ class ToolbarComponent extends PureComponent {
       imagePopupSrcLabel,
       classes
     } = this.props;
+
     const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
 
     if (!view) {
@@ -201,13 +204,13 @@ class ToolbarComponent extends PureComponent {
         <ToolbarDivider />
         <ToolbarWrapperButtons view={view} />
         <ToolbarDivider />
-        <ToolbarLinkButton
+        {view.state.schema.marks.link && <ToolbarLinkButton
           view={view}
           onSetLink={this.handleSetLink}
           onRemoveLink={this.handleRemoveLink}
           disabled={!canSetLink}
           selectedLinkNodes={selectedLinkNodes}
-        />
+        />}
         <ToolbarImageButton
           view={view}
           popupSrcLabel={imagePopupSrcLabel}

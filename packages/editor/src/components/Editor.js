@@ -52,6 +52,10 @@ const styles = theme => ({
       marginBottom: '.5em'
     },
 
+    '& > p a.hovered': {
+      cursor: 'pointer'
+    },
+
     '& .cursor': {
       position: 'relative',
       marginLeft: -1.5,
@@ -93,17 +97,8 @@ class EditorComponent extends Component {
 
   state = {
     editor: undefined,
-    toolbar: undefined,
     reactElements: []
   };
-
-  static getDerivedStateFromProps(props) {
-    const { toolbar } = props;
-
-    return {
-      toolbar
-    };
-  }
 
   componentDidMount() {
     this.init();
@@ -164,7 +159,6 @@ class EditorComponent extends Component {
 
     this.setState({
       editor: undefined,
-      toolbar: undefined,
       reactElements: []
     });
   }
@@ -202,8 +196,8 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { schema, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
-    const { editor = {}, toolbar, reactElements } = this.state;
+    const { schema, toolbar, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
+    const { editor = {}, reactElements } = this.state;
 
     const showToolbar = toolbar && (schema === 'full' || sync);
 
@@ -211,9 +205,11 @@ class EditorComponent extends Component {
       <div className={classes.root}>
         {suggestions && <Suggestions view={editor.view} {...suggestions} />}
         {contextMenu && <ContextMenu view={editor.view} {...contextMenu} />}
-        {showToolbar && (
+        {editor && showToolbar && (
           <div className={classes.toolbarContainer}>
-            <Toolbar view={editor && editor.view} {...toolbar} />
+            <Toolbar
+              view={editor && editor.view}
+              {...toolbar} />
           </div>
         )}
 
