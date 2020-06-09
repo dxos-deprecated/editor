@@ -2,7 +2,6 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import debounce from 'lodash.debounce';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
@@ -89,23 +88,28 @@ class ToolbarComponent extends PureComponent {
     }
   }
 
-  handleViewUpdate = debounce(newState => {
+  // handleViewUpdate = debounce(newState => {
+  handleViewUpdate = newState => {
     if (!this._mounted) {
       return;
     }
 
     const { view } = this.props;
 
+    let canSetLink = false;
+    let selectedLinkNodes = [];
+
     if (view.state.schema.marks.link) {
-      const canSetLink = !newState.selection.empty &&
+      canSetLink = !newState.selection.empty &&
         this.dispatchCommand(toggleMark(view.state.schema.marks.link), { dryRun: true });
 
       const selectedTextNodes = getSelectedTextNodes(view.state);
-      const selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
-
-      this.setState({ canSetLink, selectedLinkNodes });
+      selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
     }
-  }, 250);
+
+    this.setState({ canSetLink, selectedLinkNodes });
+    // }, 250);
+  }
 
   handleHistoryUpdate = ({ canUndo, canRedo }) => {
     this.setState({ canUndo, canRedo });

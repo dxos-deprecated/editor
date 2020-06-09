@@ -97,8 +97,17 @@ class EditorComponent extends Component {
 
   state = {
     editor: undefined,
+    toolbar: undefined,
     reactElements: []
   };
+
+  static getDerivedStateFromProps(props) {
+    const { toolbar } = props;
+
+    return {
+      toolbar
+    };
+  }
 
   componentDidMount() {
     this.init();
@@ -159,6 +168,7 @@ class EditorComponent extends Component {
 
     this.setState({
       editor: undefined,
+      toolbar: undefined,
       reactElements: []
     });
   }
@@ -196,8 +206,8 @@ class EditorComponent extends Component {
   };
 
   render() {
-    const { schema, toolbar, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
-    const { editor = {}, reactElements } = this.state;
+    const { schema, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
+    const { editor = {}, toolbar, reactElements } = this.state;
 
     const showToolbar = toolbar && (schema === 'full' || sync);
 
@@ -205,7 +215,7 @@ class EditorComponent extends Component {
       <div className={classes.root}>
         {suggestions && <Suggestions view={editor.view} {...suggestions} />}
         {contextMenu && <ContextMenu view={editor.view} {...contextMenu} />}
-        {editor && showToolbar && (
+        {showToolbar && (
           <div className={classes.toolbarContainer}>
             <Toolbar
               view={editor && editor.view}
