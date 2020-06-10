@@ -2,81 +2,57 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import React, { Component } from 'react';
+import React, { useCallback, useState } from 'react';
 
-import { wrapInList } from 'prosemirror-schema-list';
-import { lift } from 'prosemirror-commands';
-
-import FormatIndentDecreaseIcon from '@material-ui/icons/FormatIndentDecrease';
 import ListBulletedIcon from '@material-ui/icons/FormatListBulleted';
 import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
 
-import { blockActive } from '../lib/prosemirror-helpers';
+import { toggleList, isListItemOfType, canToggleList } from '../lib/prosemirror-helpers';
 
 import ToolbarButton from './ToolbarButton';
 
-const buildWrapperButtons = schema => [
-  {
+const buildWrapperButtons = schema => ({
+  orderedList: {
     title: 'Toggle ordered list',
     icon: ListNumberedIcon,
-    fn: wrapInList(schema.nodes.ordered_list),
-    isEnabled: wrapInList(schema.nodes.ordered_list),
-    isActive: blockActive(schema.nodes.ordered_list)
+    fn: toggleList(schema.nodes.ordered_list),
+    enabled: canToggleList(schema.nodes.ordered_list),
+    active: isListItemOfType(schema.nodes.ordered_list)
   },
-  {
+  unorderedList: {
     title: 'Toggle bullet list',
     icon: ListBulletedIcon,
-    fn: wrapInList(schema.nodes.bullet_list),
-    isEnabled: wrapInList(schema.nodes.bullet_list),
-    isActive: blockActive(schema.nodes.bullet_list)
-  },
-  {
-    title: 'Lift out of enclosing block',
-    icon: FormatIndentDecreaseIcon,
-    fn: lift,
-    isEnabled: lift
+    fn: toggleList(schema.nodes.bullet_list),
+    enabled: canToggleList(schema.nodes.bullet_list),
+    active: isListItemOfType(schema.nodes.bullet_list)
   }
-];
+});
 
-class ToolbarWrapperButtons extends Component {
-  state = {
-    buttons: []
-  };
+const ToolbarWrapperButtons = ({ view }) => {
+  const [buttons] = useState(() => buildWrapperButtons(view.state.schema));
 
-  componentDidMount() {
-    const {
-      view: {
-        state: { schema }
-      }
-    } = this.props;
-    this.setState({ buttons: buildWrapperButtons(schema) });
-  }
-
-  render() {
-    const { buttons } = this.state;
-    const { view } = this.props;
+  const handleClick = useCallback(fn => event => {
+    event.preventDefault();
     const { state, dispatch } = view;
+    fn(state, dispatch);
+    view.focus();
+  }, []);
 
-    return buttons.map(({ title, icon, fn, isEnabled, isActive }) => {
-      const disabled = isEnabled && !isEnabled(state);
-      const active = isActive && isActive(state);
+  window.view = view;
 
-      return (
-        <ToolbarButton
-          key={title}
-          icon={icon}
-          title={title}
-          onClick={event => {
-            event.preventDefault();
-            fn(state, dispatch);
-            view.focus();
-          }}
-          active={active}
-          disabled={disabled}
-        />
-      );
-    });
-  }
-}
+  return Object.entries(buttons).map(([name, { title, icon, enabled, active, fn }]) => {
+    return (
+      <ToolbarButton
+        key={name}
+        icon={icon}
+        title={title}
+        onClick={handleClick(fn)}
+        active={active(view.state)}
+        disabled={!enabled(view.state)}
+      />
+    );
+  });
+  // }
+};
 
 export default ToolbarWrapperButtons;
