@@ -3,6 +3,9 @@
 //
 
 import { baseKeymap } from 'prosemirror-commands';
+import { wrapInList } from "prosemirror-schema-list";
+
+import { isEmptyListItem, getListType } from './prosemirror-helpers';
 
 export const buildKeysToMap = (schema, initialFontSize) => {
   const keysToMap = {
@@ -32,6 +35,13 @@ export const buildKeysToMap = (schema, initialFontSize) => {
         $from: { pos: from },
         $to: { pos: to }
       } = state.selection;
+
+      if (
+        isEmptyListItem(state)
+      ) {
+        wrapInList(getListType(state))(state, dispatch);
+        return true;
+      }
 
       dispatch(
         state.tr
