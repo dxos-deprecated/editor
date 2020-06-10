@@ -2,7 +2,7 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import React, { Component } from 'react';
+import React, { useState, useCallback } from 'react';
 
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -19,22 +19,22 @@ import { linkMark } from '../lib/prosemirror-helpers';
 // eslint-disable-next-line no-useless-escape
 const validURLRegex = /(ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/gim;
 
-class ToolbarLinkButton extends Component {
-  state = {
+const ToolbarLinkButton = ({
+  selectedLinkNodes,
+  view: {
+    state: { schema }
+  },
+  disabled = false,
+  onRemoveLink
+}) => {
+  const [state, setState] = useState({
     dialogOpen: false,
     href: '',
     title: '',
     error: undefined
-  };
+  });
 
-  handleClickOpen = () => {
-    const {
-      selectedLinkNodes,
-      view: {
-        state: { schema }
-      }
-    } = this.props;
-
+  const handleClickOpen = useCallback(() => {
     let attrs = { href: '', title: '', error: undefined };
 
     if (selectedLinkNodes.length === 1) {
@@ -42,99 +42,94 @@ class ToolbarLinkButton extends Component {
       ({ attrs } = linkMark(schema)(node));
     }
 
-    this.setState({ dialogOpen: true, ...attrs });
-  };
+    setState({ dialogOpen: true, ...attrs });
+  }, []);
 
-  handleClose = () => {
-    this.setState({ dialogOpen: false, href: '', title: '', error: undefined });
-  };
+  const handleClose = useCallback(() => {
+    setState({ dialogOpen: false, href: '', title: '', error: undefined });
+  }, []);
 
-  handlelinkUrlChange = event => {
-    this.setState({ href: event.target.value, error: undefined });
-  };
+  const handlelinkUrlChange = useCallback(event => {
+    setState(state => ({ ...state, href: event.target.value, error: undefined }));
+  }, []);
 
-  handleLinkTextChange = event => {
-    this.setState({ title: event.target.value });
-  };
+  const handleLinkTextChange = useCallback(event => {
+    setState(state => ({ ...state, title: event.target.value }));
+  }, []);
 
-  handleSetLink = () => {
+  const handleSetLink = useCallback(() => {
     const { onSetLink } = this.props;
     const { title, href } = this.state;
 
     if (!validURLRegex.test(href)) {
-      return this.setState({ error: 'Invalid URL' });
+      return setState(state => ({ ...state, error: 'Invalid URL' }));
     }
 
     onSetLink(title, href);
-    this.handleClose();
-  };
+    handleClose();
+  }, []);
 
-  render() {
-    const { disabled = false, onRemoveLink, selectedLinkNodes } = this.props;
-    const { href, title, error, dialogOpen } = this.state;
-
-    return (
-      <div>
+  return (
+    <div>
+      <ToolbarButton
+        icon={LinkIcon}
+        title='Set link'
+        onClick={handleClickOpen}
+        disabled={disabled}
+      />
+      {
         <ToolbarButton
-          icon={LinkIcon}
-          title={'Set link'}
-          onClick={this.handleClickOpen}
-          disabled={disabled}
+          icon={LinkOffIcon}
+          title='Remove link'
+          onClick={onRemoveLink}
+          disabled={selectedLinkNodes.length === 0}
         />
-        {
-          <ToolbarButton
-            icon={LinkOffIcon}
-            title={'Remove link'}
-            onClick={onRemoveLink}
-            disabled={selectedLinkNodes.length === 0}
+      }
+      <Dialog
+        open={state.dialogOpen}
+        onClose={handleClose}
+        aria-labelledby='link-dialog-title'
+      >
+        <DialogContent>
+          <TextField
+            value={state.title}
+            onChange={handleLinkTextChange}
+            autoFocus
+            margin='dense'
+            id='link-title'
+            label='Title'
+            type='text'
+            fullWidth
+            variant='outlined'
           />
-        }
-        <Dialog
-          open={dialogOpen}
-          onClose={this.handleClose}
-          aria-labelledby="link-dialog-title"
-        >
-          <DialogContent>
-            <TextField
-              value={title}
-              onChange={this.handleLinkTextChange}
-              autoFocus
-              margin="dense"
-              id="link-title"
-              label="Title"
-              type="text"
-              fullWidth
-              variant="outlined"
-            />
-            <TextField
-              value={href}
-              onChange={this.handlelinkUrlChange}
-              margin="dense"
-              id="link-url"
-              label="Link address"
-              type="url"
-              fullWidth
-              variant="outlined"
-              error={Boolean(error)}
-              helperText={error}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={this.handleClose} color="primary">
-              Cancel
-            </Button>
-            <Button
-              disabled={href === ''}
-              onClick={this.handleSetLink}
-              color="primary"
-            >
-              Set link
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </div>
-    );
-  }
-}
+          <TextField
+            value={state.href}
+            onChange={handlelinkUrlChange}
+            margin='dense'
+            id='link-url'
+            label='Link address'
+            type='url'
+            fullWidth
+            variant='outlined'
+            error={Boolean(state.error)}
+            helperText={state.error}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color='primary'>
+            Cancel
+          </Button>
+          <Button
+            disabled={state.href === ''}
+            onClick={handleSetLink}
+            color='primary'
+          >
+            Set link
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </div>
+  );
+};
 
 export default ToolbarLinkButton;

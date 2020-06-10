@@ -21,7 +21,7 @@ export const nodes = {
     content: 'inline*',
     group: 'block',
     parseDOM: [{ tag: 'p' }],
-    toDOM(node) {
+    toDOM (node) {
       return ['p', calcYchangeDomAttrs(node.attrs), 0];
     }
   },
@@ -36,7 +36,7 @@ export const nodes = {
     group: 'block',
     defining: true,
     parseDOM: [{ tag: 'blockquote' }],
-    toDOM(node) {
+    toDOM (node) {
       return ['blockquote', calcYchangeDomAttrs(node.attrs), 0];
     }
   },
@@ -45,7 +45,7 @@ export const nodes = {
     attrs: { ychange: { default: null } },
     group: 'block',
     parseDOM: [{ tag: 'hr' }],
-    toDOM(node) {
+    toDOM (node) {
       return ['div', ['hr', calcYchangeDomAttrs(node.attrs)]];
     }
   },
@@ -66,7 +66,7 @@ export const nodes = {
       { tag: 'h5', attrs: { level: 5 } },
       { tag: 'h6', attrs: { level: 6 } }
     ],
-    toDOM(node) {
+    toDOM (node) {
       return [`h${node.attrs.level}`, calcYchangeDomAttrs(node.attrs), 0];
     }
   },
@@ -79,7 +79,7 @@ export const nodes = {
     code: true,
     defining: true,
     parseDOM: [{ tag: 'pre', preserveWhitespace: 'full' }],
-    toDOM(node) {
+    toDOM (node) {
       return ['pre', calcYchangeDomAttrs(node.attrs), ['code', 0]];
     }
   },
@@ -97,7 +97,7 @@ export const nodes = {
     parseDOM: [
       {
         tag: 'img[src]',
-        getAttrs(dom) {
+        getAttrs (dom) {
           return {
             src: dom.getAttribute('src'),
             title: dom.getAttribute('title'),
@@ -106,7 +106,7 @@ export const nodes = {
         }
       }
     ],
-    toDOM(node) {
+    toDOM (node) {
       const domAttrs = {
         src: node.attrs.src,
         title: node.attrs.title,
@@ -121,7 +121,7 @@ export const nodes = {
     group: 'inline',
     selectable: false,
     parseDOM: [{ tag: 'br' }],
-    toDOM() {
+    toDOM () {
       return ['br'];
     }
   },
@@ -137,7 +137,7 @@ export const nodes = {
     parseDOM: [
       {
         tag: 'ol',
-        getAttrs(dom) {
+        getAttrs (dom) {
           return {
             order: dom.hasAttribute('start') ? +dom.getAttribute('start') : 1,
             tight: dom.hasAttribute('data-tight')
@@ -145,7 +145,7 @@ export const nodes = {
         }
       }
     ],
-    toDOM(node) {
+    toDOM (node) {
       const domAttrs = {
         start: node.attrs.order === 1 ? null : node.attrs.order,
         'data-tight': node.attrs.tight ? 'true' : null
@@ -168,7 +168,7 @@ export const nodes = {
         getAttrs: dom => ({ tight: dom.hasAttribute('data-tight') })
       }
     ],
-    toDOM(node) {
+    toDOM (node) {
       const domAttrs = {
         'data-tight': node.attrs.tight ? 'true' : null
       };
@@ -184,7 +184,7 @@ export const nodes = {
       ychange: { default: null }
     },
     parseDOM: [{ tag: 'li' }],
-    toDOM(node) {
+    toDOM (node) {
       return ['li', calcYchangeDomAttrs(node.attrs), 0];
     }
   },
@@ -200,7 +200,7 @@ export const nodes = {
     parseDOM: [
       {
         tag: 'reactelement',
-        getAttrs(dom) {
+        getAttrs (dom) {
           return {
             props: JSON.parse(decodeURI(dom.getAttribute('props')))
           };
@@ -210,7 +210,7 @@ export const nodes = {
 
     toDOM: node => {
       return ['reactelement', {
-        'props': encodeURI(JSON.stringify(node.attrs.props))
+        props: encodeURI(JSON.stringify(node.attrs.props))
       }, 0];
     }
   }
@@ -223,7 +223,7 @@ export const marks = {
       { tag: 'em' },
       { style: 'font-style', getAttrs: value => value === 'italic' && null }
     ],
-    toDOM() {
+    toDOM () {
       return ['em'];
     }
   },
@@ -237,14 +237,14 @@ export const marks = {
         getAttrs: value => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null
       }
     ],
-    toDOM() {
+    toDOM () {
       return ['strong'];
     }
   },
 
   code: {
     parseDOM: [{ tag: 'code' }],
-    toDOM() {
+    toDOM () {
       return ['code'];
     }
   },
@@ -257,7 +257,7 @@ export const marks = {
         getAttrs: value => value === 'underline'
       }
     ],
-    toDOM() {
+    toDOM () {
       return ['u', 0];
     }
   },
@@ -269,7 +269,7 @@ export const marks = {
     },
     inclusive: false,
     parseDOM: [{ tag: 'ychange' }],
-    toDOM(node) {
+    toDOM (node) {
       return [
         'ychange',
         {

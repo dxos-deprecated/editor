@@ -17,7 +17,7 @@
   "scripts": {
     "build": "npm run clean && babel ./src --source-maps --out-dir ./dist/es --ignore \"**/*.test.js\"",
     "clean": "rm -rf dist && mkdir -p ./dist/es",
-    "lint": "eslint ./src",
+    "lint": "semistandard 'src/**/*.js'",
     "prepublishOnly": "npm run build",
     "storybook": "start-storybook"
   },
@@ -57,7 +57,8 @@
     "@storybook/react": "^5.3.18",
     "babel-loader": "^8.1.0",
     "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react-dom": "^16.13.1",
+    "semistandard": "^14.2.0"
   },
   "peerDependencies": {
     "@material-ui/core": "^4.9.14",
@@ -67,5 +68,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "semistandard": {
+    "parser": "babel-eslint",
+    "env": [
+      "jest",
+      "node",
+      "browser"
+    ]
   }
 }

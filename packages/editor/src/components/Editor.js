@@ -85,7 +85,6 @@ const styles = theme => ({
 });
 
 class EditorComponent extends Component {
-
   static defaultProps = {
     toolbar: undefined,
     onCreated: undefined,
@@ -101,7 +100,7 @@ class EditorComponent extends Component {
     reactElements: []
   };
 
-  static getDerivedStateFromProps(props) {
+  static getDerivedStateFromProps (props) {
     const { toolbar } = props;
 
     return {
@@ -109,11 +108,11 @@ class EditorComponent extends Component {
     };
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.init();
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     this.destroy();
   }
 
@@ -128,7 +127,6 @@ class EditorComponent extends Component {
     onContentChange,
     onKeyDown
   }) => {
-
     const { onCreated } = this.props;
 
     const editorConfig = {
@@ -205,7 +203,7 @@ class EditorComponent extends Component {
     this._editorDOM.current.dispatchEvent(contextMenuEvent);
   };
 
-  render() {
+  render () {
     const { schema, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
     const { editor = {}, toolbar, reactElements } = this.state;
 
@@ -219,7 +217,8 @@ class EditorComponent extends Component {
           <div className={classes.toolbarContainer}>
             <Toolbar
               view={editor && editor.view}
-              {...toolbar} />
+              {...toolbar}
+            />
           </div>
         )}
 

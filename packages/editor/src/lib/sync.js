@@ -2,11 +2,11 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import { Doc, applyUpdate } from "yjs";
-import { ySyncPluginKey, ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from "y-prosemirror";
+import { Doc, applyUpdate } from 'yjs';
+import { ySyncPluginKey, ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
 import ColorHash from 'color-hash';
 
-import Provider from "./provider";
+import Provider from './provider';
 
 const colorHash = new ColorHash();
 
@@ -23,7 +23,7 @@ const createSyncTextPlugin = (doc, onLocalUpdate = () => null) => {
 
   const handler = {
     doc,
-    processRemoteUpdate(update, origin) {
+    processRemoteUpdate (update, origin) {
       const uIntArrayUpdate = update.constructor === Uint8Array
         ? update
         : new Uint8Array(Object.values(update));
@@ -79,7 +79,6 @@ const createStatusPlugin = (id, doc, status) => {
 };
 
 export const createSyncPlugins = (options, plugins, keysToMap) => {
-
   const { id, doc = new Doc(), onLocalUpdate, status } = options;
 
   const { plugin: syncPlugin, handler } = createSyncTextPlugin(doc, onLocalUpdate);

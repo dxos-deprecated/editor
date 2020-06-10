@@ -38,8 +38,6 @@ const ToolbarWrapperButtons = ({ view }) => {
     view.focus();
   }, []);
 
-  window.view = view;
-
   return Object.entries(buttons).map(([name, { title, icon, enabled, active, fn }]) => {
     return (
       <ToolbarButton
@@ -52,7 +50,6 @@ const ToolbarWrapperButtons = ({ view }) => {
       />
     );
   });
-  // }
 };
 
 export default ToolbarWrapperButtons;

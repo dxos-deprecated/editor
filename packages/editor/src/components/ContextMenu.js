@@ -10,12 +10,11 @@ import { contextMenuPluginKey } from '../plugins/context-menu-plugin';
 import { FocusedMenu } from './Menu';
 
 class ContextMenu extends Component {
-
   static defaultProps = {
     ...FocusedMenu.defaultProps
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps (props, state) {
     const { view } = props;
     const { prevViewId } = state;
 
@@ -35,12 +34,12 @@ class ContextMenu extends Component {
     position: undefined
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate (prevProps) {
     const { view } = this.props;
     const { view: prevView = {} } = prevProps;
 
     if (view && view.id !== prevView.id) {
-      let originalDispatch = view._props.dispatchTransaction;
+      const originalDispatch = view._props.dispatchTransaction;
 
       view._props.originalDispatch = originalDispatch;
 
@@ -112,7 +111,7 @@ class ContextMenu extends Component {
     }));
   }
 
-  render() {
+  render () {
     const { view, renderMenuItem, emptyOptionsLabel, maxVisibleItems } = this.props;
     const { open, options, position } = this.state;
 

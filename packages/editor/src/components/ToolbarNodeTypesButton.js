@@ -70,7 +70,7 @@ class ToolbarNodeTypesButton extends PureComponent {
     nodeTypesMenuAnchorElement: undefined
   };
 
-  componentDidMount() {
+  componentDidMount () {
     const {
       view: {
         state: { schema }
@@ -98,7 +98,7 @@ class ToolbarNodeTypesButton extends PureComponent {
     this.handleNodeTypesMenuClose();
   };
 
-  render() {
+  render () {
     const {
       view: { state }
     } = this.props;
@@ -107,16 +107,16 @@ class ToolbarNodeTypesButton extends PureComponent {
     return (
       <div>
         <ToolbarButton
-          title="Set block type"
-          aria-controls="node-types-menu"
-          aria-haspopup="true"
-          color="default"
+          title='Set block type'
+          aria-controls='node-types-menu'
+          aria-haspopup='true'
+          color='default'
           onClick={this.handleNodeTypesButtonClick}
         >
           Type
         </ToolbarButton>
         <Menu
-          id="node-types-menu"
+          id='node-types-menu'
           anchorEl={nodeTypesMenuAnchorElement}
           keepMounted
           open={Boolean(nodeTypesMenuAnchorElement)}
@@ -137,7 +137,7 @@ class ToolbarNodeTypesButton extends PureComponent {
                   selected={isActive(state)}
                 >
                   <ListItemIcon>{icon}</ListItemIcon>
-                  {title && <Typography variant="inherit">{title}</Typography>}
+                  {title && <Typography variant='inherit'>{title}</Typography>}
                   {component}
                 </MenuItem>
               );

@@ -20,7 +20,6 @@ import {
 import { UnfocusedMenu } from './Menu';
 
 class Suggestions extends Component {
-
   state = {
     prevViewId: undefined,
     open: false,
@@ -37,7 +36,7 @@ class Suggestions extends Component {
     getOptions: () => []
   }
 
-  static getDerivedStateFromProps(props, state) {
+  static getDerivedStateFromProps (props, state) {
     const { view } = props;
     const { prevViewId } = state;
 
@@ -50,12 +49,12 @@ class Suggestions extends Component {
     return null;
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate (prevProps) {
     const { view } = this.props;
     const { view: prevView = {} } = prevProps;
 
     if (view && view.id !== prevView.id) {
-      let originalDispatch = view._props.dispatchTransaction;
+      const originalDispatch = view._props.dispatchTransaction;
 
       view._props.originalDispatch = originalDispatch;
 
@@ -197,7 +196,7 @@ class Suggestions extends Component {
     }));
   }
 
-  render() {
+  render () {
     const { view, renderMenuItem, emptyOptionsLabel, maxVisibleItems } = this.props;
     const { open, options, position, selectedIndex } = this.state;
 
@@ -224,7 +223,7 @@ export const SuggestionsPropTypes = PropTypes.shape({
   view: PropTypes.instanceOf(EditorView),
   getOptions: PropTypes.func,
   onSelect: PropTypes.func,
-  renderMenuItem: PropTypes.func,
+  renderMenuItem: PropTypes.func
 }).isRequired;
 
 Suggestions.propTypes = SuggestionsPropTypes;

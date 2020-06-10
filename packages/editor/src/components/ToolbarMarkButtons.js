@@ -46,7 +46,7 @@ class ToolbarMarkButtons extends Component {
     buttons: []
   };
 
-  componentDidMount() {
+  componentDidMount () {
     const {
       view: {
         state: { schema }
@@ -55,7 +55,7 @@ class ToolbarMarkButtons extends Component {
     this.setState({ buttons: buildMarkButtons(schema) });
   }
 
-  render() {
+  render () {
     const { view } = this.props;
     const { buttons } = this.state;
     const { state, dispatch } = view;

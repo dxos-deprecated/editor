@@ -19,7 +19,6 @@ const initialState = {
 };
 
 class ToolbarImagePopup extends Component {
-
   static defaultProps = {
     open: false,
     onClose: () => null,
@@ -29,7 +28,7 @@ class ToolbarImagePopup extends Component {
 
   state = initialState;
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate (prevProps) {
     const { open } = this.props;
     const { open: prevOpen } = prevProps;
 
@@ -49,7 +48,7 @@ class ToolbarImagePopup extends Component {
     onSubmit({ title, src, alt });
   }
 
-  render() {
+  render () {
     const {
       open,
       onClose,
@@ -61,7 +60,7 @@ class ToolbarImagePopup extends Component {
       <Dialog
         open={open}
         onClose={onClose}
-        aria-labelledby="image-dialog-title"
+        aria-labelledby='image-dialog-title'
       >
         <DialogTitle>Insert image</DialogTitle>
         <DialogContent>
@@ -69,42 +68,42 @@ class ToolbarImagePopup extends Component {
             value={title}
             onChange={this.handleImageFieldChange('title')}
             autoFocus
-            margin="dense"
-            id="image-title"
-            label="Title"
-            type="text"
+            margin='dense'
+            id='image-title'
+            label='Title'
+            type='text'
             fullWidth
-            variant="outlined"
+            variant='outlined'
           />
           <TextField
             value={alt}
             onChange={this.handleImageFieldChange('alt')}
-            margin="dense"
-            id="image-alt"
-            label="Description"
-            type="text"
+            margin='dense'
+            id='image-alt'
+            label='Description'
+            type='text'
             fullWidth
-            variant="outlined"
+            variant='outlined'
           />
           <TextField
             value={src}
             onChange={this.handleImageFieldChange('src')}
             required
-            margin="dense"
-            id="image-src"
+            margin='dense'
+            id='image-src'
             label={srcLabel}
             fullWidth
-            variant="outlined"
+            variant='outlined'
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose} color="primary">
+          <Button onClick={onClose} color='primary'>
             Cancel
           </Button>
           <Button
             disabled={src === ''}
             onClick={this.handleSubmit}
-            color="primary"
+            color='primary'
           >
             Insert image
           </Button>

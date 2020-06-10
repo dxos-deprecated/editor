@@ -11,7 +11,6 @@ import { canInsert } from '../lib/prosemirror-helpers';
 import ToolbarImagePopup from './ToolbarImagePopup';
 
 class ToolbarImageButton extends Component {
-
   static defaultProps = {
     view: undefined
   }
@@ -43,7 +42,7 @@ class ToolbarImageButton extends Component {
     this.handleClose();
   };
 
-  render() {
+  render () {
     const {
       view: { state },
       popupSrcLabel
@@ -54,7 +53,7 @@ class ToolbarImageButton extends Component {
       <div>
         <ToolbarButton
           icon={ImageIcon}
-          title="Insert image"
+          title='Insert image'
           onClick={this.handleClickOpen}
           disabled={!canInsert(state.schema.nodes.image)(state)}
         />

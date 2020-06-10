@@ -4,14 +4,14 @@
 
 export const nodes = {
   doc: {
-    content: 'paragraph',
+    content: 'paragraph'
   },
 
   paragraph: {
     content: 'inline*',
     group: 'paragraph',
     parseDOM: [{ tag: 'p' }],
-    toDOM() {
+    toDOM () {
       return ['p', 0];
     }
   },
@@ -25,10 +25,10 @@ export const nodes = {
     group: 'inline',
     selectable: false,
     parseDOM: [{ tag: 'br' }],
-    toDOM() {
+    toDOM () {
       return ['br'];
     }
-  },
+  }
 };
 
 export const marks = {
@@ -38,7 +38,7 @@ export const marks = {
       { tag: 'em' },
       { style: 'font-style', getAttrs: value => value === 'italic' && null }
     ],
-    toDOM() {
+    toDOM () {
       return ['em'];
     }
   },
@@ -52,7 +52,7 @@ export const marks = {
         getAttrs: value => /^(bold(er)?|[5-9]\d{2,})$/.test(value) && null
       }
     ],
-    toDOM() {
+    toDOM () {
       return ['strong'];
     }
   },
@@ -66,7 +66,7 @@ export const marks = {
     parseDOM: [
       {
         tag: 'a[href]',
-        getAttrs(dom) {
+        getAttrs (dom) {
           return {
             href: dom.getAttribute('href'),
             title: dom.getAttribute('title')
@@ -74,14 +74,14 @@ export const marks = {
         }
       }
     ],
-    toDOM(node) {
+    toDOM (node) {
       return ['a', node.attrs];
     }
   },
 
   code: {
     parseDOM: [{ tag: 'code' }],
-    toDOM() {
+    toDOM () {
       return ['code'];
     }
   },
@@ -94,7 +94,7 @@ export const marks = {
         getAttrs: value => value === 'underline'
       }
     ],
-    toDOM() {
+    toDOM () {
       return ['u', 0];
     }
   }

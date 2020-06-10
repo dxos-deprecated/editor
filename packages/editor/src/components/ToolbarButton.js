@@ -47,7 +47,7 @@ const ToolbarButton = ({
             root: classnames(classes.button, active && classes.buttonActive),
             startIcon: classes.buttonIcon
           }}
-          color="default"
+          color='default'
           disabled={disabled}
           onClick={onClick}
           {...(IconComponent
