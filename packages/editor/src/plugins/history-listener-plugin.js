@@ -10,7 +10,7 @@ import { EventEmitter } from 'events';
 class YjsHistory extends EventEmitter {
   _undoManager = undefined;
 
-  init(state) {
+  init (state) {
     this._undoManager = yUndoPluginKey.getState(state).undoManager;
     this._undoManager.on('stack-item-added', this.historyUpdated);
     this._undoManager.on('stack-item-popped', this.historyUpdated);
@@ -26,40 +26,39 @@ class YjsHistory extends EventEmitter {
     });
   }
 
-  destroy() {
+  destroy () {
     this._undoManager.off('stack-item-added', this.historyUpdated);
     this._undoManager.off('stack-item-popped', this.historyUpdated);
   }
 
-  update() { }
+  update () { }
 
-  undo(state) {
+  undo (state) {
     return yUndo(state);
   }
 
-  redo(state) {
+  redo (state) {
     return yRedo(state);
   }
 }
 
 class History extends EventEmitter {
+  init () { }
 
-  init() { }
+  destroy () { }
 
-  destroy() { }
-
-  update(view) {
+  update (view) {
     this.emit('update', {
       canUndo: this.undo(view.state),
       canRedo: this.redo(view.state)
     });
   }
 
-  undo(state, dispatch) {
+  undo (state, dispatch) {
     return undo(state, dispatch);
   }
 
-  redo(state, dispatch) {
+  redo (state, dispatch) {
     return redo(state, dispatch);
   }
 }
@@ -67,12 +66,11 @@ class History extends EventEmitter {
 export const historyListenerPluginKey = new PluginKey('history-listener');
 
 const historyListenerPlugin = (config = { yjsHistory: false }) => {
-
   return new Plugin({
     key: historyListenerPluginKey,
 
     state: {
-      init() {
+      init () {
         const history = config.yjsHistory ? new YjsHistory() : new History();
 
         return {
@@ -81,24 +79,24 @@ const historyListenerPlugin = (config = { yjsHistory: false }) => {
           canRedo: false
         };
       },
-      apply(tr, value) {
+      apply (tr, value) {
         return value;
       }
     },
 
-    view(view) {
+    view (view) {
       const { history } = historyListenerPluginKey.getState(view.state);
       history.init(view.state);
 
       return {
-        update(view) {
+        update (view) {
           const { history } = historyListenerPluginKey.getState(view.state);
 
           if (history) {
             history.update(view);
           }
         },
-        destroy() {
+        destroy () {
           const { history } = historyListenerPluginKey.getState(view.state);
           history.destroy();
         }

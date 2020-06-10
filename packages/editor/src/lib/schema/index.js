@@ -15,12 +15,11 @@ export const schemaConfigs = {
 };
 
 /**
- * 
- * @param {function[]} enhancers 
- * @param {string|object} schemaConfig 
+ *
+ * @param {function[]} enhancers
+ * @param {string|object} schemaConfig
  */
 export const createSchema = (enhancers = [], schemaConfig = basic) => {
-
   let config = schemaConfig;
 
   if (typeof config === 'string') {

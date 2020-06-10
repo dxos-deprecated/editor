@@ -34,7 +34,6 @@ export const defaultEditorProps = {
 };
 
 export const createProsemirrorEditor = (element, options = defaultEditorProps) => {
-
   const {
     schema: customSchema,
     htmlContent,
@@ -47,7 +46,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
   } = options;
 
   const editor = {
-    createReactElement(props) {
+    createReactElement (props) {
       const { tr, selection, schema } = editor.view.state;
 
       selection.replaceWith(tr, schema.node('react_element', { props }));
@@ -79,7 +78,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
   }
 
   if (customSchema === 'text-only') {
-    keysToMap['Enter'] = (state, dispatch) => {
+    keysToMap.Enter = (state, dispatch) => {
       const {
         $from: { pos: from },
         $to: { pos: to }
@@ -138,7 +137,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
       ...buildProsemirrorEvents(options, schema),
 
-      dispatchTransaction(transaction) {
+      dispatchTransaction (transaction) {
         const oldState = view.state;
         const newState = oldState.apply(transaction);
 

@@ -44,7 +44,7 @@ const handleBackSpace = (view, from, to, triggerRegExp, inputRuleHandler) => {
     Math.max(0, $from.parentOffset - 500),
     $from.parentOffset,
     null,
-    "\ufffc"
+    '\ufffc'
   );
 
   const match = triggerRegExp.exec(textBefore) || ['', ''];
@@ -66,7 +66,6 @@ const suggestionsPlugin = ({
   const triggerRegExp = new RegExp(`[${triggerEventKeys}]([\\w-_+=]*)$`);
 
   const inputRuleHandler = (state, match, start, end) => {
-
     const pluginState = suggestionsPluginKey.getState(state);
 
     const meta = {
@@ -108,10 +107,10 @@ const suggestionsPlugin = ({
       key: suggestionsPluginKey,
 
       state: {
-        init() {
+        init () {
           return suggestionsPluginState;
         },
-        apply(transaction, value) {
+        apply (transaction, value) {
           const meta = transaction.getMeta(suggestionsPluginKey);
           if (!meta) {
             return value;
@@ -126,7 +125,7 @@ const suggestionsPlugin = ({
 
       props: {
         handleDOMEvents: {
-          keyup(view, event) {
+          keyup (view, event) {
             const { open } = this.getState(view.state);
             const isBackspace = event.code === KEY_BACKSPACE;
 
@@ -139,7 +138,7 @@ const suggestionsPlugin = ({
           }
         },
 
-        handleKeyDown(view, event) {
+        handleKeyDown (view, event) {
           const { open } = this.getState(view.state);
           const isAction = SPECIAL_KEYS.includes(event.code);
           const isSpace = event.code === KEY_SPACE;
@@ -153,12 +152,12 @@ const suggestionsPlugin = ({
         }
       },
 
-      view(view) {
+      view (view) {
         pluginView = view;
 
         return {
-          update() { },
-          destroy() { }
+          update () { },
+          destroy () { }
         };
       }
     })

@@ -48,10 +48,10 @@ const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = 
     key: contextMenuPluginKey,
 
     state: {
-      init() {
+      init () {
         return contextMenuState;
       },
-      apply(transaction, value) {
+      apply (transaction, value) {
         const meta = transaction.getMeta(this);
         if (!meta) {
           return value;
@@ -66,12 +66,12 @@ const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = 
 
     props: {
       handleDOMEvents: {
-        contextmenu(view, event) {
+        contextmenu (view, event) {
           // Disable default context menu.
           event.preventDefault();
           return true;
         },
-        mouseup(view, event) {
+        mouseup (view, event) {
           // Right click
           if (event.button === 2) {
             event.preventDefault();
@@ -81,7 +81,7 @@ const contextMenuPlugin = ({ triggerMenuEventKeys = MENU_TRIGGER_EVENT_KEYS } = 
           return false;
         }
       },
-      handleKeyDown(view, event) {
+      handleKeyDown (view, event) {
         const { open } = this.getState(view.state);
 
         if (

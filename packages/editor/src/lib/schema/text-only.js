@@ -4,7 +4,7 @@
 
 export const nodes = {
   doc: {
-    content: 'inline*',
+    content: 'inline*'
   },
 
   text: {
@@ -16,10 +16,10 @@ export const nodes = {
     group: 'inline',
     selectable: true,
     parseDOM: [{ tag: 'br' }],
-    toDOM() {
+    toDOM () {
       return ['br'];
     }
-  },
+  }
 };
 
 export const marks = {};

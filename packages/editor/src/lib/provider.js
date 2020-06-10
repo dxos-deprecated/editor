@@ -63,7 +63,7 @@ const readMessage = (provider, buf, emitSynced) => {
 class Provider extends Observable {
   lastMessageReceived = 0;
 
-  constructor(doc) {
+  constructor (doc) {
     super();
     this.doc = doc;
     this.awareness = new awarenessProtocol.Awareness(this.doc);

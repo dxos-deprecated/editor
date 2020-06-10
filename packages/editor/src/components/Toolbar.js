@@ -47,11 +47,11 @@ class ToolbarComponent extends PureComponent {
     selectedLinkNodes: []
   };
 
-  componentDidMount() {
+  componentDidMount () {
     this._mounted = true;
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     const { view } = this.props;
 
     if (!view) return;
@@ -64,12 +64,12 @@ class ToolbarComponent extends PureComponent {
     this._mounted = false;
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate (prevProps) {
     const { view } = this.props;
     const { view: prevView = {} } = prevProps;
 
     if (view && view.id !== prevView.id) {
-      let originalDispatch = view._props.dispatchTransaction;
+      const originalDispatch = view._props.dispatchTransaction;
 
       view._props.originalDispatch = originalDispatch;
 
@@ -181,7 +181,7 @@ class ToolbarComponent extends PureComponent {
     this.dispatchCommand(toggleMark(schema.marks.link));
   };
 
-  render() {
+  render () {
     const {
       view,
       imagePopupSrcLabel,
@@ -208,13 +208,15 @@ class ToolbarComponent extends PureComponent {
         <ToolbarDivider />
         <ToolbarWrapperButtons view={view} />
         <ToolbarDivider />
-        {view.state.schema.marks.link && <ToolbarLinkButton
-          view={view}
-          onSetLink={this.handleSetLink}
-          onRemoveLink={this.handleRemoveLink}
-          disabled={!canSetLink}
-          selectedLinkNodes={selectedLinkNodes}
-        />}
+        {view.state.schema.marks.link && (
+          <ToolbarLinkButton
+            view={view}
+            onSetLink={this.handleSetLink}
+            onRemoveLink={this.handleRemoveLink}
+            disabled={!canSetLink}
+            selectedLinkNodes={selectedLinkNodes}
+          />
+        )}
         <ToolbarImageButton
           view={view}
           popupSrcLabel={imagePopupSrcLabel}
@@ -226,13 +228,13 @@ class ToolbarComponent extends PureComponent {
 
 const Toolbar = withStyles(toolbarStyles)(ToolbarComponent);
 export const ToolbarPropTypes = PropTypes.shape({
-  imagePopupSrcLabel: PropTypes.string,
+  imagePopupSrcLabel: PropTypes.string
 }).isRequired;
 
 Toolbar.propTypes = ToolbarPropTypes;
 
 const ToolbarDivider = withStyles(dividerStyles)(({ classes }) => {
-  return <MUIDivider orientation="vertical" classes={classes} />;
+  return <MUIDivider orientation='vertical' classes={classes} />;
 });
 
 export default Toolbar;

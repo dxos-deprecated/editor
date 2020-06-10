@@ -39,7 +39,7 @@ class FocusedMenuComponent extends Component {
     options: []
   }
 
-  render() {
+  render () {
     const {
       classes,
       dom,
@@ -58,11 +58,11 @@ class FocusedMenuComponent extends Component {
       <MUIMenu
         open={Boolean(open)}
         anchorEl={dom}
-        anchorReference="anchorPosition"
+        anchorReference='anchorPosition'
         anchorPosition={position}
         onContextMenu={onContextMenu}
         onClose={onClose}
-        variant="menu"
+        variant='menu'
         keepMounted
         classes={classes}
       >
@@ -80,7 +80,7 @@ class FocusedMenuComponent extends Component {
 }
 
 class UnfocusedMenuComponent extends Component {
-  render() {
+  render () {
     const {
       classes,
       emptyOptionsLabel,
@@ -97,7 +97,7 @@ class UnfocusedMenuComponent extends Component {
         <MenuList
           classes={undefined}
           onClose={onClose}
-          variant="menu"
+          variant='menu'
         >
           {
             renderMenuItems({
@@ -115,7 +115,6 @@ class UnfocusedMenuComponent extends Component {
 }
 
 const withMenuHandlers = WrappedComponent => {
-
   const renderMenuItems = ({
     emptyOptionsLabel,
     onClick,
@@ -125,7 +124,7 @@ const withMenuHandlers = WrappedComponent => {
   }) => {
     if (options.length === 0) {
       return (
-        <MenuItem key="no-options" disabled>{emptyOptionsLabel}</MenuItem>
+        <MenuItem key='no-options' disabled>{emptyOptionsLabel}</MenuItem>
       );
     }
 
@@ -150,7 +149,8 @@ const withMenuHandlers = WrappedComponent => {
             dense
             onClick={onClick(option)}
             selected={selectedIndex !== undefined ? optionIndex === selectedIndex : selectedIndex}
-          >{renderMenuItem(option)}</MenuItem>
+          >{renderMenuItem(option)}
+          </MenuItem>
         );
       }
 
