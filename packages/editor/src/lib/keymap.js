@@ -3,7 +3,7 @@
 //
 
 import { baseKeymap } from 'prosemirror-commands';
-import { wrapInList } from "prosemirror-schema-list";
+import { wrapInList } from 'prosemirror-schema-list';
 
 import { isEmptyListItem, getListType } from './prosemirror-helpers';
 

@@ -2,8 +2,8 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import { lift } from "prosemirror-commands";
-import { wrapInList } from "prosemirror-schema-list";
+import { lift } from 'prosemirror-commands';
+import { wrapInList } from 'prosemirror-schema-list';
 import { findParentNode } from 'prosemirror-utils';
 
 const isListPredicate = state => node => [
