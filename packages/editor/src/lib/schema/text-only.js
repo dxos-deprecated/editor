@@ -4,12 +4,30 @@
 
 export const nodes = {
   doc: {
-    content: 'inline*'
+    content: 'paragraph'
+  },
+
+  paragraph: {
+    attrs: { ychange: { default: null } },
+    content: 'inline*',
+    group: 'block',
+    parseDOM: [{ tag: 'p' }],
+    toDOM: () => ['p', 0]
   },
 
   text: {
     group: 'inline'
   }
+
+  // hard_break: {
+  //   inline: true,
+  //   group: 'inline',
+  //   selectable: true,
+  //   parseDOM: [{ tag: 'br' }],
+  //   toDOM () {
+  //     return ['br'];
+  //   }
+  // }
 };
 
 export const marks = {};

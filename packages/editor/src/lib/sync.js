@@ -3,8 +3,7 @@
 //
 
 import { Doc, applyUpdate } from 'yjs';
-import { keymap } from 'prosemirror-keymap';
-import { ySyncPluginKey, ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
+import { ySyncPluginKey, ySyncPlugin, yCursorPlugin } from 'y-prosemirror';
 import ColorHash from 'color-hash';
 
 import Provider from './provider';
@@ -83,23 +82,20 @@ export const createSyncPlugins = (options, plugins) => {
   const { id, doc = new Doc(), onLocalUpdate, status } = options;
 
   const { plugin: syncPlugin, handler } = createSyncTextPlugin(doc, onLocalUpdate);
-  const { plugin: statusPlugin, handler: statusHandler } = createStatusPlugin(id, doc, status);
-  const undoPlugin = yUndoPlugin({ trackedOrigins: [({}).constructor] });
+  plugins.push(syncPlugin);
 
-  plugins.push(
-    syncPlugin,
-    statusPlugin,
-    undoPlugin
-  );
+  // const undoPlugin = yUndoPlugin({ trackedOrigins: [({}).constructor] });
+  // plugins.push(undoPlugin);
 
-  plugins.unshift(keymap({
-    'Mod-z': undo,
-    'Mod-y': redo,
-    'Mod-Shift-z': redo
-  }));
+  // keysToMap['Mod-z'] = undo;
+  // keysToMap['Mod-y'] = redo;
+  // keysToMap['Mod-Shift-z'] = redo;
 
-  return {
-    ...handler,
-    status: statusHandler
-  };
+  if (options.status) {
+    const { plugin, handler } = createStatusPlugin(id, doc, status);
+    plugins.push(plugin);
+    handler.status = handler;
+  }
+
+  return handler;
 };

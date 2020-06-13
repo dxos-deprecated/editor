@@ -130,7 +130,7 @@ class EditorComponent extends Component {
     const { onCreated } = this.props;
 
     const editorConfig = {
-      schema: sync ? 'full' : schema,
+      schema,
       htmlContent,
       contextMenu,
       suggestions,
@@ -227,7 +227,11 @@ class EditorComponent extends Component {
           onContextMenu={this.handleEditorContainerContextMenu}
           className={classes.editorContainer}
         >
-          <div ref={this._editorDOM} className={classes.editor} onClick={this.handleEditorClick} />
+          <div
+            ref={this._editorDOM}
+            className={classes.editor}
+            onClick={this.handleEditorClick}
+          />
         </div>
 
         {

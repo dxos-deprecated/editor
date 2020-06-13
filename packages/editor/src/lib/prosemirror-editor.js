@@ -62,7 +62,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const serializer = DOMSerializer.fromSchema(schema);
 
-  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: customSchema === 'text-only' });
+  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: customSchema === 'textOnly' });
 
   if (sync) {
     editor.sync = createSyncPlugins(sync, plugins);
@@ -90,20 +90,6 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
   // plugins.push(historyListenerPlugin({ yjsHistory: Boolean(sync) }));
 
   const domParser = DOMParser.fromSchema(schema);
-
-  if (customSchema === 'text-only') {
-    // This preserves \n line breaks on text-only schema
-    domParser._parse = domParser.parse.bind(domParser);
-    domParser.parse = (dom, options) => {
-      options.preserveWhitespace = 'full';
-      return domParser._parse(dom, options);
-    };
-    domParser._parseSlice = domParser.parseSlice.bind(domParser);
-    domParser.parseSlice = (dom, options) => {
-      options.preserveWhitespace = 'full';
-      return domParser._parseSlice(dom, options);
-    };
-  }
 
   let doc;
   if (htmlContent) {

@@ -3,5 +3,6 @@
 //
 
 import Editor from './components/Editor';
+import MarkdownEditor from './components/MarkdownEditor';
 
-export { Editor };
+export { Editor, MarkdownEditor };

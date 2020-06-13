@@ -6,13 +6,11 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import { Editor } from '../src';
+import { Editor, MarkdownEditor } from '../src';
 
 import { styles } from './styles';
 
-import { Doc, applyUpdate } from 'yjs';
-
-class CollaborativeDoc extends Component {
+class CollaborativeMarkdownEditor extends Component {
   static count = 0;
 
   state = {
@@ -37,8 +35,6 @@ class CollaborativeDoc extends Component {
   }
 
   createPeer = peerId => {
-    const doc = new Doc();
-
     const onLocalUpdate = update => {
       const { peers } = this.state;
 
@@ -46,7 +42,7 @@ class CollaborativeDoc extends Component {
         .filter(peer => peer.id !== peerId)
         .forEach(peer => {
           // New origin: avoid loop
-          applyUpdate(peer.doc, update, { author: peerId });
+          peer.editor.sync.processRemoteUpdate(update, { author: peerId });
         });
     };
 
@@ -68,7 +64,7 @@ class CollaborativeDoc extends Component {
       newPeers[peerId].editor = editor;
 
       // Set peer name for status
-      editor.sync.status.setUserName(peers[peerId].username);
+      // editor.sync.status.setUserName(peers[peerId].username);
 
       this.setState({ peers: newPeers });
     };
@@ -76,7 +72,6 @@ class CollaborativeDoc extends Component {
     return {
       id: peerId,
       username: peerId,
-      doc,
       onEditorCreated,
       onLocalUpdate,
       onLocalStatusUpdate
@@ -91,21 +86,20 @@ class CollaborativeDoc extends Component {
       return 'Loading...';
     }
 
-    const components = Object.values(peers).map(peer => {
+    const components = Object.values(peers).map((peer, index) => {
+      const EditorComponent = index % 2 === 0 ? Editor : MarkdownEditor;
       const { onEditorCreated: handleEditorCreated } = peer;
       return (
         <div key={peer.id} className={classes.container}>
-          <Editor
+          <EditorComponent
             schema='full'
             onCreated={handleEditorCreated}
-            toolbar
             sync={{
               id: peer.id,
-              doc: peer.doc,
-              onLocalUpdate: peer.onLocalUpdate,
-              status: {
-                onLocalUpdate: peer.onLocalStatusUpdate
-              }
+              onLocalUpdate: peer.onLocalUpdate
+              // status: {
+              //   onLocalUpdate: peer.onLocalStatusUpdate
+              // }
             }}
           />
         </div>
@@ -120,4 +114,4 @@ class CollaborativeDoc extends Component {
   }
 }
 
-export default withStyles(styles)(CollaborativeDoc);
+export default withStyles(styles)(CollaborativeMarkdownEditor);
