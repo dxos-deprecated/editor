@@ -90,11 +90,11 @@ class ToolbarComponent extends PureComponent {
 
   // handleViewUpdate = debounce(newState => {
   handleViewUpdate = newState => {
-    if (!this._mounted) {
+    const { view } = this.props;
+
+    if (!this._mounted || !this.view) {
       return;
     }
-
-    const { view } = this.props;
 
     let canSetLink = false;
     let selectedLinkNodes = [];
