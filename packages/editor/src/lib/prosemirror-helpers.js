@@ -45,8 +45,6 @@ export const isListItemOfType = listNodeType => state => {
     return node.type === listNodeType;
   })(state.selection);
 
-  console.log('isListItemOfType', listNodeType.name, parents, parentListResult);
-
   return Boolean(parentListResult) && parents.length <= 3;
 };
 
