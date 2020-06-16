@@ -92,7 +92,7 @@ class ToolbarComponent extends PureComponent {
   handleViewUpdate = newState => {
     const { view } = this.props;
 
-    if (!this._mounted || !this.view) {
+    if (!this._mounted || !view) {
       return;
     }
 
@@ -108,7 +108,6 @@ class ToolbarComponent extends PureComponent {
     }
 
     this.setState({ canSetLink, selectedLinkNodes });
-    // }, 250);
   }
 
   handleHistoryUpdate = ({ canUndo, canRedo }) => {
