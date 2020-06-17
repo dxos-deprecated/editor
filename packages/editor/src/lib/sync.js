@@ -3,6 +3,7 @@
 //
 
 import { Doc, applyUpdate } from 'yjs';
+import { keymap } from 'prosemirror-keymap';
 import { ySyncPluginKey, ySyncPlugin, yCursorPlugin, yUndoPlugin, undo, redo } from 'y-prosemirror';
 import ColorHash from 'color-hash';
 
@@ -78,7 +79,7 @@ const createStatusPlugin = (id, doc, status) => {
   return { plugin, handler };
 };
 
-export const createSyncPlugins = (options, plugins, keysToMap) => {
+export const createSyncPlugins = (options, plugins) => {
   const { id, doc = new Doc(), onLocalUpdate, status } = options;
 
   const { plugin: syncPlugin, handler } = createSyncTextPlugin(doc, onLocalUpdate);
@@ -91,9 +92,11 @@ export const createSyncPlugins = (options, plugins, keysToMap) => {
     undoPlugin
   );
 
-  keysToMap['Mod-z'] = undo;
-  keysToMap['Mod-y'] = redo;
-  keysToMap['Mod-Shift-z'] = redo;
+  plugins.unshift(keymap({
+    'Mod-z': undo,
+    'Mod-y': redo,
+    'Mod-Shift-z': redo
+  }));
 
   return {
     ...handler,

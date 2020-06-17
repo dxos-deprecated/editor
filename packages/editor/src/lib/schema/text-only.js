@@ -9,16 +9,6 @@ export const nodes = {
 
   text: {
     group: 'inline'
-  },
-
-  hard_break: {
-    inline: true,
-    group: 'inline',
-    selectable: true,
-    parseDOM: [{ tag: 'br' }],
-    toDOM () {
-      return ['br'];
-    }
   }
 };
 

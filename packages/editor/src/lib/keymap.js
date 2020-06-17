@@ -2,57 +2,86 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-import { baseKeymap } from 'prosemirror-commands';
+import { baseKeymap, chainCommands, splitBlockKeepMarks, newlineInCode, createParagraphNear, liftEmptyBlock } from 'prosemirror-commands';
+import { keymap } from 'prosemirror-keymap';
 import { wrapInList } from 'prosemirror-schema-list';
+import { buildKeymap } from 'prosemirror-example-setup';
 
 import { isEmptyListItem, getListType } from './prosemirror-helpers';
 
-export const buildKeysToMap = (schema, initialFontSize) => {
-  const keysToMap = {
-    ...baseKeymap,
-    'Mod-=': (state, dispatch, view) => {
-      const current = parseInt(
-        parseFloat(view.dom.style.fontSize || initialFontSize),
-        10
-      );
+const textBreakCmd = (state, dispatch) => {
+  const {
+    $from: { pos: from },
+    $to: { pos: to }
+  } = state.selection;
 
-      view.dom.style.fontSize = `${current + 1}px`;
-      return true;
-    },
+  dispatch(
+    state.tr
+      .replaceWith(from, to, state.schema.text('\n'))
+      .scrollIntoView()
+  );
 
-    'Mod--': (state, dispatch, view) => {
-      const current = parseInt(
-        parseFloat(view.dom.style.fontSize || initialFontSize),
-        10
-      );
+  return true;
+};
 
-      view.dom.style.fontSize = `${current - 1}px`;
-      return true;
-    },
+// Maintain previous mark state. If user hits enter, will keep marks like Bold, Italic, etc
+const hardBreakCmd = chainCommands(newlineInCode, createParagraphNear, liftEmptyBlock, splitBlockKeepMarks);
 
-    Tab: (state, dispatch) => {
-      const {
-        $from: { pos: from },
-        $to: { pos: to }
-      } = state.selection;
+export const buildKeysPlugins = (schema, plugins, { initialFontSize, useTextBreak = true }) => {
+  plugins.push(
+    keymap({
+      'Mod-=': (state, dispatch, view) => {
+        const current = parseInt(
+          parseFloat(view.dom.style.fontSize || initialFontSize),
+          10
+        );
 
-      if (
-        isEmptyListItem(state)
-      ) {
-        wrapInList(getListType(state))(state, dispatch);
+        view.dom.style.fontSize = `${current + 1}px`;
+        return true;
+      },
+
+      'Mod--': (state, dispatch, view) => {
+        const current = parseInt(
+          parseFloat(view.dom.style.fontSize || initialFontSize),
+          10
+        );
+
+        view.dom.style.fontSize = `${current - 1}px`;
+        return true;
+      },
+
+      Tab: (state, dispatch) => {
+        const {
+          $from: { pos: from },
+          $to: { pos: to }
+        } = state.selection;
+
+        if (
+          isEmptyListItem(state)
+        ) {
+          wrapInList(getListType(state))(state, dispatch);
+          return true;
+        }
+
+        dispatch(
+          state.tr
+            .delete(from, to)
+            .insert(from, schema.text('  '))
+            .scrollIntoView()
+        );
+
         return true;
       }
+    }),
 
-      dispatch(
-        state.tr
-          .delete(from, to)
-          .insert(from, schema.text('  '))
-          .scrollIntoView()
-      );
+    // Example setup keymaps
+    keymap(buildKeymap(schema)),
 
-      return true;
-    }
-  };
+    keymap({
+      Enter: useTextBreak ? textBreakCmd : hardBreakCmd
+    }),
 
-  return keysToMap;
+    // Base device keymap
+    keymap(baseKeymap)
+  );
 };

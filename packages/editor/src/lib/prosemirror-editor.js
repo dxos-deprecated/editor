@@ -4,16 +4,17 @@
 
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
-import { keymap } from 'prosemirror-keymap';
 import { DOMSerializer, DOMParser } from 'prosemirror-model';
-import { history, undo, redo } from 'prosemirror-history';
-import { exampleSetup } from 'prosemirror-example-setup';
+import { history } from 'prosemirror-history';
+import { dropCursor } from 'prosemirror-dropcursor';
+import { gapCursor } from 'prosemirror-gapcursor';
+import { buildInputRules } from 'prosemirror-example-setup';
 
 import { uuidv4 } from 'lib0/random';
 
 import { createSchema } from './schema';
 import { createSyncPlugins } from './sync';
-import { buildKeysToMap } from './keymap';
+import { buildKeysPlugins } from './keymap';
 
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
@@ -61,10 +62,10 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const serializer = DOMSerializer.fromSchema(schema);
 
-  const keysToMap = buildKeysToMap(schema, initialFontSize);
+  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: customSchema === 'text-only' });
 
   if (sync) {
-    editor.sync = createSyncPlugins(sync, plugins, keysToMap);
+    editor.sync = createSyncPlugins(sync, plugins);
   }
 
   if (contextMenu) {
@@ -77,54 +78,45 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
     plugins.push(suggestionsPlugin(suggestions));
   }
 
-  if (customSchema === 'text-only') {
-    keysToMap.Enter = (state, dispatch) => {
-      const {
-        $from: { pos: from },
-        $to: { pos: to }
-      } = state.selection;
-
-      dispatch(
-        state.tr
-          .replaceWith(from, to, state.schema.node('hard_break'))
-          .scrollIntoView()
-      );
-
-      return true;
-    };
-
-    const historyPlugin = history();
-
-    plugins.push(historyPlugin);
-
-    keysToMap['Mod-z'] = undo;
-    keysToMap['Mod-y'] = redo;
-    keysToMap['Mod-Shift-z'] = redo;
-  } else {
-    plugins.push(...exampleSetup({
-      menuBar: false,
-      schema
-    }));
-  }
-
-  // Put this here
-  plugins.push(keymap(keysToMap));
-  plugins.push(historyListenerPlugin());
+  plugins.push(
+    buildInputRules(schema),
+    history(),
+    historyListenerPlugin(),
+    dropCursor(),
+    gapCursor()
+  );
 
   // Fix incompatible undo/redo operations when sync is enabled
   // plugins.push(historyListenerPlugin({ yjsHistory: Boolean(sync) }));
+
+  const domParser = DOMParser.fromSchema(schema);
+
+  if (customSchema === 'text-only') {
+    // This preserves \n line breaks on text-only schema
+    domParser._parse = domParser.parse.bind(domParser);
+    domParser.parse = (dom, options) => {
+      options.preserveWhitespace = 'full';
+      return domParser._parse(dom, options);
+    };
+    domParser._parseSlice = domParser.parseSlice.bind(domParser);
+    domParser.parseSlice = (dom, options) => {
+      options.preserveWhitespace = 'full';
+      return domParser._parseSlice(dom, options);
+    };
+  }
 
   let doc;
   if (htmlContent) {
     const html = window.document.createElement('div');
     html.innerHTML = htmlContent;
-    doc = DOMParser.fromSchema(schema).parse(html);
+    doc = domParser.parse(html);
   }
 
   const state = EditorState.create({
     doc,
     schema,
-    plugins: plugins.flat()
+    plugins: plugins.flat(),
+    domParser
   });
 
   const view = new EditorView(
