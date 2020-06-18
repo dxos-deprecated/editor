@@ -6,11 +6,11 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import { Editor, MarkdownEditor } from '../src';
+import { SourceCodeEditor } from '../src';
 
 import { styles } from './styles';
 
-class CollaborativeMarkdownEditor extends Component {
+class CollaborativeSourceCodeEditor extends Component {
   static count = 0;
 
   state = {
@@ -64,7 +64,7 @@ class CollaborativeMarkdownEditor extends Component {
       newPeers[peerId].editor = editor;
 
       // Set peer name for status
-      // editor.sync.status.setUserName(peers[peerId].username);
+      editor.sync.status.setUserName(peers[peerId].username);
 
       this.setState({ peers: newPeers });
     };
@@ -79,7 +79,7 @@ class CollaborativeMarkdownEditor extends Component {
   };
 
   render () {
-    const { classes } = this.props;
+    const { classes, language } = this.props;
     const { peers } = this.state;
 
     if (!peers) {
@@ -87,19 +87,18 @@ class CollaborativeMarkdownEditor extends Component {
     }
 
     const components = Object.values(peers).map((peer, index) => {
-      const EditorComponent = index % 2 === 0 ? Editor : MarkdownEditor;
       const { onEditorCreated: handleEditorCreated } = peer;
       return (
         <div key={peer.id} className={classes.container}>
-          <EditorComponent
-            schema='full'
+          <SourceCodeEditor
+            language={language}
             onCreated={handleEditorCreated}
             sync={{
               id: peer.id,
-              onLocalUpdate: peer.onLocalUpdate
-              // status: {
-              //   onLocalUpdate: peer.onLocalStatusUpdate
-              // }
+              onLocalUpdate: peer.onLocalUpdate,
+              status: {
+                onLocalUpdate: peer.onLocalStatusUpdate
+              }
             }}
           />
         </div>
@@ -114,4 +113,4 @@ class CollaborativeMarkdownEditor extends Component {
   }
 }
 
-export default withStyles(styles)(CollaborativeMarkdownEditor);
+export default withStyles(styles)(CollaborativeSourceCodeEditor);

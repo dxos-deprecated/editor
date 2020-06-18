@@ -7,7 +7,7 @@ import { storiesOf } from '@storybook/react';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import { Editor, MarkdownEditor } from '../src';
+import { Editor, SourceCodeEditor } from '../src';
 
 import { styles, MuiTheme } from './styles';
 
@@ -18,7 +18,7 @@ import ContextMenu from './ContextMenu';
 import ReactContent from './ReactContent';
 import Suggestions from './Suggestions';
 import Styled from './Styled';
-import CollaborativeMarkdownEditor from './CollaborativeMarkdownEditor';
+import CollaborativeSourceCodeEditor from './CollaborativeSourceCodeEditor';
 
 const RootContainer = story => {
   const RootComponent = withStyles(styles)(({ classes }) => <div className={classes.root}>{story()}</div>);
@@ -29,7 +29,7 @@ storiesOf('Editor', module)
   .addDecorator(MuiTheme)
   .addDecorator(RootContainer)
   .add('Default', () => <Editor />)
-  .add('Text only schema', () => <Editor schema='text-only' />)
+  .add('Text only schema', () => <Editor schema='textOnly' />)
   .add('Full schema', () => <Editor schema='full' />)
   .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />)
@@ -55,8 +55,10 @@ storiesOf('Editor Toolbar', module)
     />
   ));
 
-storiesOf('Markdown Editor', module)
+storiesOf('Source code editor', module)
   .addDecorator(MuiTheme)
   .addDecorator(RootContainer)
-  .add('Default', () => <MarkdownEditor />)
-  .add('With sync', () => <CollaborativeMarkdownEditor peers={2} />);
+  .add('No language', () => <SourceCodeEditor />)
+  .add('Javascript', () => <SourceCodeEditor language='javascript' />)
+  .add('Synced Markdown', () => <CollaborativeSourceCodeEditor peers={2} language='markdown' />)
+  .add('Synced Javascript', () => <CollaborativeSourceCodeEditor peers={2} language='javascript' />);

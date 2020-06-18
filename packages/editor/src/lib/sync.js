@@ -92,9 +92,9 @@ export const createSyncPlugins = (options, plugins) => {
   // keysToMap['Mod-Shift-z'] = redo;
 
   if (options.status) {
-    const { plugin, handler } = createStatusPlugin(id, doc, status);
+    const { plugin, handler: statusHandler } = createStatusPlugin(id, doc, status);
     plugins.push(plugin);
-    handler.status = handler;
+    handler.status = statusHandler;
   }
 
   return handler;

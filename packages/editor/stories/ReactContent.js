@@ -25,7 +25,7 @@ const ReactContent = () => {
 
   return (
     <Editor
-      schema="full"
+      schema='full'
       onCreated={handleCreated}
       reactElementRenderFn={handleReactElementRender}
     />

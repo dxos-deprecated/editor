@@ -88,6 +88,7 @@ class EditorComponent extends Component {
   static defaultProps = {
     toolbar: undefined,
     onCreated: undefined,
+    prosemirrorPlugins: defaultEditorProps.plugins,
     classes: {},
     ...defaultEditorProps
   };
@@ -116,33 +117,14 @@ class EditorComponent extends Component {
     this.destroy();
   }
 
-  createEditor = ({
-    schema,
-    htmlContent,
-    contextMenu,
-    suggestions,
-    sync,
-    schemaEnhancers,
-    options,
-    onContentChange,
-    onKeyDown
-  }) => {
+  createEditor = (editorConfig) => {
     const { onCreated } = this.props;
 
-    const editorConfig = {
-      schema,
-      htmlContent,
-      contextMenu,
-      suggestions,
-      sync,
-      schemaEnhancers,
-      options,
-      onContentChange,
-      onKeyDown,
-      onReactElementDomCreated: this.handleReactElementDomCreated
-    };
-
-    const editor = createProsemirrorEditor(this._editorDOM.current, editorConfig);
+    const editor = createProsemirrorEditor(this._editorDOM.current, {
+      ...editorConfig,
+      onReactElementDomCreated: this.handleReactElementDomCreated,
+      plugins: editorConfig.prosemirrorPlugins
+    });
 
     this.setState({ editor }, () => onCreated ? onCreated({
       ...editor,
@@ -231,6 +213,7 @@ class EditorComponent extends Component {
             ref={this._editorDOM}
             className={classes.editor}
             onClick={this.handleEditorClick}
+            spellCheck={false}
           />
         </div>
 

@@ -4,29 +4,27 @@
 
 import { Schema } from 'prosemirror-model';
 
-import basic from './basic';
-import full from './full';
-import textOnly from './text-only';
+import * as basic from './basic';
+import * as full from './full';
+import * as textOnly from './text-only';
+import * as sourceCode from './source-code';
 
-export const schemaConfigs = {
+const schemaConfigs = {
   basic,
   full,
-  'text-only': textOnly
+  textOnly,
+  sourceCode
 };
 
-/**
- *
- * @param {function[]} enhancers
- * @param {string|object} schemaConfig
- */
-export const createSchema = (enhancers = [], schemaConfig = basic) => {
-  let config = schemaConfig;
+const createSchema = (schemaName, options) => {
+  const { createSchema, createSchemaSpec, createInitialDoc } = schemaConfigs[schemaName];
 
-  if (typeof config === 'string') {
-    config = schemaConfigs[schemaConfig];
-  }
+  const schema = createSchema ? createSchema() : new Schema(createSchemaSpec(options));
 
-  config = enhancers.reduce((config, enhancer) => enhancer(config), config);
-
-  return new Schema(config);
+  return {
+    schema,
+    initialDoc: createInitialDoc(schema, options)
+  };
 };
+
+export default createSchema;
