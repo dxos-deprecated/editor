@@ -41,7 +41,9 @@ export const createSchema = () => {
     },
 
     marks: {
-      ...marks,
+      em: marks.em,
+      strong: marks.strong,
+      code: marks.code,
       underline: underlineMark
     }
   };

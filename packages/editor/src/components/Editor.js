@@ -19,7 +19,8 @@ const styles = theme => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    flex: 1
+    flex: 1,
+    maxHeight: '100%'
   },
 
   editorContainer: {

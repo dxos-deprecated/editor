@@ -99,6 +99,20 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const domParser = DOMParser.fromSchema(schema);
 
+  if (schemaName === 'textOnly') {
+    // This preserves \n line breaks on text-only schema
+    domParser._parse = domParser.parse.bind(domParser);
+    domParser.parse = (dom, options) => {
+      options.preserveWhitespace = 'full';
+      return domParser._parse(dom, options);
+    };
+    domParser._parseSlice = domParser.parseSlice.bind(domParser);
+    domParser.parseSlice = (dom, options) => {
+      options.preserveWhitespace = 'full';
+      return domParser._parseSlice(dom, options);
+    };
+  }
+
   if (htmlContent) {
     const html = window.document.createElement('div');
     html.innerHTML = htmlContent;
