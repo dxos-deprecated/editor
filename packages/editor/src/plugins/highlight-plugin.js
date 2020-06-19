@@ -1,3 +1,6 @@
+//
+// Copyright 2020 Wireline, Inc.
+//
 
 import { highlightPlugin } from 'prosemirror-highlightjs';
 

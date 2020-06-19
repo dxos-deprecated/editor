@@ -19,6 +19,7 @@ import ReactContent from './ReactContent';
 import Suggestions from './Suggestions';
 import Styled from './Styled';
 import CollaborativeSourceCodeEditor from './CollaborativeSourceCodeEditor';
+import MarkdownPreview from './MarkdownPreview';
 
 const RootContainer = story => {
   const RootComponent = withStyles(styles)(({ classes }) => <div className={classes.root}>{story()}</div>);
@@ -61,5 +62,7 @@ storiesOf('Source code editor', module)
   .add('Default', () => <SourceCodeEditor />)
   .add('Javascript syntax', () => <SourceCodeEditor language='javascript' />)
   .add('Theme darcula', () => <SourceCodeEditor highlightTheme='darcula' />)
+  .add('Disable highlight', () => <SourceCodeEditor highlight={false} />)
+  .add('Markdown preview', () => <MarkdownPreview />)
   .add('Synced Markdown', () => <CollaborativeSourceCodeEditor peers={2} language='markdown' />)
   .add('Synced Javascript', () => <CollaborativeSourceCodeEditor peers={2} language='javascript' />);

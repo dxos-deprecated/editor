@@ -1,4 +1,8 @@
-import React from 'react';
+//
+// Copyright 2020 Wireline, Inc.
+//
+
+import React, { useCallback } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 
@@ -26,14 +30,24 @@ const useEditorStyles = makeStyles(() => ({
   }
 }));
 
-const SourceCodeEditor = ({ language = '', highlight = true, highlightTheme = 'github', ...props }) => {
+const SourceCodeEditor = ({ language = '', highlight = true, highlightTheme = 'github', onContentChange = () => null, ...props }) => {
   const classes = useEditorStyles();
+
+  const prosemirrorPlugins = [];
+  if (highlight) {
+    prosemirrorPlugins.push(highlightPlugin(language, highlightTheme));
+  }
+
+  const handleContentChange = useCallback((html, prosemirrorDoc) => {
+    onContentChange(prosemirrorDoc.textContent);
+  }, []);
 
   return (
     <Editor
       schema='sourceCode'
       language={language}
-      prosemirrorPlugins={[highlightPlugin(language, highlightTheme)]}
+      prosemirrorPlugins={prosemirrorPlugins}
+      onContentChange={handleContentChange}
       classes={classes}
       {...props}
     />

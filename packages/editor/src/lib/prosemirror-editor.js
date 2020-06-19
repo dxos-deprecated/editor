@@ -149,7 +149,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
         if (onContentChange && transaction.docChanged) {
           const contentContainer = window.document.createElement('div');
           serializer.serializeFragment(newState.doc.content, { document: window.document }, contentContainer);
-          onContentChange(contentContainer.innerHTML);
+          onContentChange(contentContainer.innerHTML, newState.doc);
         }
 
         return { oldState, newState, transaction };

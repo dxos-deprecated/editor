@@ -1,3 +1,6 @@
+//
+// Copyright 2020 Wireline, Inc.
+//
 
 import { Doc } from 'yjs';
 import unified from 'unified';
@@ -8,6 +11,7 @@ import rehypeStringify from 'rehype-stringify';
 import remarkBreaks from 'remark-breaks';
 import remarkParse from 'remark-parse';
 import remarkStringify from 'remark-stringify';
+import remark2react from 'remark-react';
 
 import { xmlFragmentTransform } from './xml-fragment-transformer';
 import { remark2XmlFragment } from './remark-xml-fragment';
@@ -19,10 +23,10 @@ const markdownProcessor = (processor = unified()) => {
 };
 
 const htmlProcessor = (processor = unified()) => {
-  return processor.use(rehypeParse, { fragment: true, emitParseErrors: true });
+  return processor.use(rehypeParse, { fragment: true });
 };
 
-export const fromMarkdown = (markdown, doc = new Doc()) => {
+export const markdownToDoc = (markdown, doc = new Doc()) => {
   markdownProcessor()
     .use(remark2XmlFragment, doc)
     .processSync(markdown);
@@ -30,7 +34,7 @@ export const fromMarkdown = (markdown, doc = new Doc()) => {
   return doc;
 };
 
-export const toMarkdown = xmlElement => {
+export const xmlElementToMarkdown = xmlElement => {
   const html = htmlProcessor()
     .use(xmlFragmentTransform)
     .use(rehypeStringify)
@@ -42,4 +46,13 @@ export const toMarkdown = xmlElement => {
     .processSync(html);
 
   return result.toString();
+};
+
+export const markdownToReact = markdownString => {
+  const reactElement = markdownProcessor()
+    .use(remark2react)
+    .processSync(markdownString)
+    .result;
+
+  return reactElement;
 };
