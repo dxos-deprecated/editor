@@ -12,8 +12,8 @@ import * as sourceCode from './source-code';
 const schemaConfigs = {
   basic,
   full,
-  textOnly,
-  sourceCode
+  'text-only': textOnly,
+  'source-code': sourceCode
 };
 
 const createSchema = (schemaName, options) => {

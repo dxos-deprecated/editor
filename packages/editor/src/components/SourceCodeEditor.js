@@ -44,7 +44,7 @@ const SourceCodeEditor = ({ language = '', highlight = true, highlightTheme = 'g
 
   return (
     <Editor
-      schema='sourceCode'
+      schema='source-code'
       language={language}
       prosemirrorPlugins={prosemirrorPlugins}
       onContentChange={handleContentChange}

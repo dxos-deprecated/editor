@@ -97,7 +97,7 @@ Example:
 
 
 #### schema
-`'full' | 'basic' | 'text-only' | schema`
+`'full' | 'basic' | 'text-only' | 'source-code' | schema`
 
 Schema to be used. For non string option, see: [Prosemirror schema definition](https://prosemirror.net/docs/ref/#model.Schema)
 

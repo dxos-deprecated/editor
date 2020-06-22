@@ -6,14 +6,16 @@ import { highlightPlugin } from 'prosemirror-highlightjs';
 
 import hljs from 'highlight.js/lib/core';
 
-export default (language, theme) => {
+import 'highlight.js/styles/github.css';
+
+const buildPlugin = language => {
   if (language) {
     hljs.configure({
       languages: [language]
     });
   }
 
-  require(`highlight.js/styles/${theme}.css`);
-
   return highlightPlugin(hljs);
 };
+
+export default buildPlugin;

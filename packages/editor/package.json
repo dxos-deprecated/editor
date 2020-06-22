@@ -17,7 +17,7 @@
   "scripts": {
     "build": "npm run clean && babel ./src --source-maps --out-dir ./dist/es --ignore \"**/*.test.js\"",
     "clean": "rimraf dist && mkdirp ./dist/es",
-    "lint": "semistandard 'src/**/*.js'",
+    "lint": "semistandard",
     "prepublishOnly": "npm run build",
     "storybook": "start-storybook"
   },
@@ -87,6 +87,9 @@
       "jest",
       "node",
       "browser"
+    ],
+    "ignore": [
+      "dist"
     ]
   }
 }

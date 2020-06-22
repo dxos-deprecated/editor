@@ -69,7 +69,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const serializer = DOMSerializer.fromSchema(schema);
 
-  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: schemaName === 'textOnly' });
+  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: schemaName === 'text-only' });
 
   if (sync) {
     doc = undefined;
@@ -99,7 +99,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const domParser = DOMParser.fromSchema(schema);
 
-  if (schemaName === 'textOnly') {
+  if (schemaName === 'text-only') {
     // This preserves \n line breaks on text-only schema
     domParser._parse = domParser.parse.bind(domParser);
     domParser.parse = (dom, options) => {
