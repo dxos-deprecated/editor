@@ -12,9 +12,10 @@ import { buildInputRules } from 'prosemirror-example-setup';
 
 import { uuidv4 } from 'lib0/random';
 
-import { createSchema } from './schema';
 import { createSyncPlugins } from './sync';
 import { buildKeysPlugins } from './keymap';
+
+import createSchema from './schema';
 
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
@@ -23,27 +24,30 @@ import { buildNodeViews } from './node-views';
 import { buildProsemirrorEvents } from './prosemirror-events';
 
 export const defaultEditorProps = {
-  schema: 'basic',
-  htmlContent: undefined,
   contextMenu: undefined,
-  suggestions: undefined,
-  sync: undefined,
-  schemaEnhancers: [],
-  options: {},
+  highlight: true,
+  htmlContent: undefined,
+  language: undefined,
   onContentChange: undefined,
-  onKeyDown: undefined
+  onKeyDown: undefined,
+  options: {},
+  plugins: [],
+  schema: 'basic',
+  schemaEnhancers: [],
+  suggestions: undefined,
+  sync: undefined
 };
 
 export const createProsemirrorEditor = (element, options = defaultEditorProps) => {
   const {
-    schema: customSchema,
-    htmlContent,
     contextMenu,
-    suggestions,
-    sync,
-    schemaEnhancers,
+    htmlContent,
+    onContentChange,
     options: { initialFontSize },
-    onContentChange
+    plugins: userPlugins,
+    schema: schemaName,
+    suggestions,
+    sync
   } = options;
 
   const editor = {
@@ -56,15 +60,19 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
     }
   };
 
-  const plugins = [];
+  // Build schema and get schema initial PM Doc content (empty doc).
+  const { schema, initialDoc } = createSchema(schemaName, options);
 
-  const schema = createSchema(schemaEnhancers, customSchema);
+  let doc = initialDoc;
+
+  const plugins = [...userPlugins];
 
   const serializer = DOMSerializer.fromSchema(schema);
 
-  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: customSchema === 'text-only' });
+  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: schemaName === 'text-only' });
 
   if (sync) {
+    doc = undefined;
     editor.sync = createSyncPlugins(sync, plugins);
   }
 
@@ -91,7 +99,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const domParser = DOMParser.fromSchema(schema);
 
-  if (customSchema === 'text-only') {
+  if (schemaName === 'text-only') {
     // This preserves \n line breaks on text-only schema
     domParser._parse = domParser.parse.bind(domParser);
     domParser.parse = (dom, options) => {
@@ -105,7 +113,6 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
     };
   }
 
-  let doc;
   if (htmlContent) {
     const html = window.document.createElement('div');
     html.innerHTML = htmlContent;
@@ -142,7 +149,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
         if (onContentChange && transaction.docChanged) {
           const contentContainer = window.document.createElement('div');
           serializer.serializeFragment(newState.doc.content, { document: window.document }, contentContainer);
-          onContentChange(contentContainer.innerHTML);
+          onContentChange(contentContainer.innerHTML, newState.doc);
         }
 
         return { oldState, newState, transaction };

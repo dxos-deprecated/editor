@@ -6,13 +6,11 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import { Editor } from '../src';
+import { SourceCodeEditor } from '../src';
 
 import { styles } from './styles';
 
-import { Doc, applyUpdate } from 'yjs';
-
-class CollaborativeDoc extends Component {
+class CollaborativeSourceCodeEditor extends Component {
   static count = 0;
 
   state = {
@@ -37,8 +35,6 @@ class CollaborativeDoc extends Component {
   }
 
   createPeer = peerId => {
-    const doc = new Doc();
-
     const onLocalUpdate = update => {
       const { peers } = this.state;
 
@@ -46,7 +42,7 @@ class CollaborativeDoc extends Component {
         .filter(peer => peer.id !== peerId)
         .forEach(peer => {
           // New origin: avoid loop
-          applyUpdate(peer.doc, update, { author: peerId });
+          peer.editor.sync.processRemoteUpdate(update, { author: peerId });
         });
     };
 
@@ -76,7 +72,6 @@ class CollaborativeDoc extends Component {
     return {
       id: peerId,
       username: peerId,
-      doc,
       onEditorCreated,
       onLocalUpdate,
       onLocalStatusUpdate
@@ -84,24 +79,22 @@ class CollaborativeDoc extends Component {
   };
 
   render () {
-    const { classes } = this.props;
+    const { classes, language } = this.props;
     const { peers } = this.state;
 
     if (!peers) {
       return 'Loading...';
     }
 
-    const components = Object.values(peers).map(peer => {
+    const components = Object.values(peers).map((peer, index) => {
       const { onEditorCreated: handleEditorCreated } = peer;
       return (
         <div key={peer.id} className={classes.container}>
-          <Editor
-            schema='full'
+          <SourceCodeEditor
+            language={language}
             onCreated={handleEditorCreated}
-            toolbar
             sync={{
               id: peer.id,
-              doc: peer.doc,
               onLocalUpdate: peer.onLocalUpdate,
               status: {
                 onLocalUpdate: peer.onLocalStatusUpdate
@@ -120,4 +113,4 @@ class CollaborativeDoc extends Component {
   }
 }
 
-export default withStyles(styles)(CollaborativeDoc);
+export default withStyles(styles)(CollaborativeSourceCodeEditor);

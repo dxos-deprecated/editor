@@ -2,10 +2,11 @@
 // Copyright 2020 Wireline, Inc.
 //
 
+import { EventEmitter } from 'events';
+
 import { Plugin, PluginKey } from 'prosemirror-state';
 import { undo, redo } from 'prosemirror-history';
 import { undo as yUndo, redo as yRedo, yUndoPluginKey } from '../plugins/yjs-undo-plugin';
-import { EventEmitter } from 'events';
 
 class YjsHistory extends EventEmitter {
   _undoManager = undefined;

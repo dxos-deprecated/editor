@@ -1,5 +1,8 @@
+//
+// Copyright 2020 Wireline, Inc.
+//
 
-import { Plugin, PluginKey, EditorState, TextSelection } from 'prosemirror-state' // eslint-disable-line
+import { Plugin, PluginKey, EditorState } from 'prosemirror-state' // eslint-disable-line
 
 import { ySyncPluginKey, getRelativeSelection } from 'y-prosemirror';
 import { UndoManager, Item, ContentType, XmlElement, Text } from 'yjs';

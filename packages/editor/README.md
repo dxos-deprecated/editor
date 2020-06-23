@@ -4,7 +4,7 @@ React editor component based on [Prosemirror](http://prosemirror.net/).
 ## Features
 - Collaborative support. Using [Yjs](https://github.com/yjs/yjs) as CRDT engine.
 - Status indicators.
-- Multiple schemas: `basic`, `text-only` and `full`.
+- Multiple schemas: `basic`, `text-only`, `source-code` and `full`.
 - Context menu.
 - Suggestions on type.
 
@@ -45,6 +45,13 @@ export const MyEditor = () => {
   return (<Editor onCreated={handleEditorCreated} />);
 };
 ```
+
+
+## Exported components
+
+- `<Editor />`: Base editor.
+- `<SourceCodeEditor />`: Custom `<Editor />` configured for source code editing.
+
 
 ## Api
 
@@ -96,8 +103,20 @@ Example:
 ```
 
 
+#### onContentChange
+`function(html, prosemirrorDoc)`
+
+Callback for change event
+
+Example:
+
+```javascript
+  <Editor onContentChange={(html, prosemirrorDoc) => '...'} />
+```
+
+
 #### schema
-`'full' | 'basic' | 'text-only' | schema`
+`'full' | 'basic' | 'text-only' | 'source-code' | schema`
 
 Schema to be used. For non string option, see: [Prosemirror schema definition](https://prosemirror.net/docs/ref/#model.Schema)
 
@@ -124,6 +143,7 @@ Example:
   />
 ```
 
+
 ##### toolbar.imagePopupSrcLabel
 `string`
 
@@ -139,6 +159,7 @@ Example:
     }}
   />
 ```
+
 
 ##### toolbar.classes
 `object`
@@ -317,6 +338,50 @@ const StyledToolbar = () => {
   );
 };
 ```
+
+
+### `<SourceCodeEditor />` component properties
+
+#### onContentChange
+`function(sourceCodeText: string)`
+
+Callback for change event.
+
+Example:
+
+```javascript
+  <Editor onContentChange={sourceCodeText => '...'} />
+```
+
+
+#### language
+`'bash' | 'c' | 'go' | 'java' | 'javascript' | 'markdown' | 'rust' | 'xml'`
+
+Source code language (for highlight options)
+
+Example:
+
+```javascript
+  <Editor
+    language="javascript"
+  />
+```
+
+
+#### highlight
+`boolean` | Default `true`
+
+Enables highlight on source.
+
+Example:
+
+```javascript
+  <Editor
+    highlight={false}
+  />
+```
+
+### Same other props than <Editor />
 
 ## Storybook
 You can check the [stories](stories/editor.stories.js) for running examples.

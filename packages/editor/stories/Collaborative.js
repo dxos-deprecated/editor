@@ -17,7 +17,7 @@ class Collaborative extends Component {
     peers: undefined
   };
 
-  componentDidMount() {
+  componentDidMount () {
     const { peers: peersCount = 1 } = this.props;
 
     const peerId = `peer-${peersCount - 1}`;
@@ -45,7 +45,6 @@ class Collaborative extends Component {
           peer.editor.sync.processRemoteUpdate(update, { author: peerId });
         });
     };
-
 
     const onLocalStatusUpdate = (update) => {
       const { peers } = this.state;
@@ -79,7 +78,7 @@ class Collaborative extends Component {
     };
   };
 
-  render() {
+  render () {
     const { classes } = this.props;
     const { peers } = this.state;
 
@@ -87,22 +86,25 @@ class Collaborative extends Component {
       return 'Loading...';
     }
 
-    const components = Object.values(peers).map(peer => (
-      <div key={peer.id} className={classes.container}>
-        <Editor
-          schema="full"
-          onCreated={peer.onEditorCreated}
-          toolbar
-          sync={{
-            id: peer.id,
-            onLocalUpdate: peer.onLocalUpdate,
-            status: {
-              onLocalUpdate: peer.onLocalStatusUpdate
-            }
-          }}
-        />
-      </div>
-    ));
+    const components = Object.values(peers).map(peer => {
+      const { onEditorCreated: handleEditorCreated } = peer;
+      return (
+        <div key={peer.id} className={classes.container}>
+          <Editor
+            schema='full'
+            onCreated={handleEditorCreated}
+            toolbar
+            sync={{
+              id: peer.id,
+              onLocalUpdate: peer.onLocalUpdate,
+              status: {
+                onLocalUpdate: peer.onLocalStatusUpdate
+              }
+            }}
+          />
+        </div>
+      );
+    });
 
     return (
       <div className={classes.root}>

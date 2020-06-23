@@ -24,13 +24,13 @@ class Suggestions extends Component {
     return `${option.id} - ${option.label}`;
   };
 
-  render() {
+  render () {
     return (
       <Editor
         suggestions={{
           getOptions: this.handleGetOptions,
           onSelect: this.handleSelect,
-          renderMenuItem: this.handleRenderItem,
+          renderMenuItem: this.handleRenderItem
         }}
       />
     );

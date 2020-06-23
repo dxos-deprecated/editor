@@ -25,6 +25,7 @@ const ToolbarLinkButton = ({
     state: { schema }
   },
   disabled = false,
+  onSetLink,
   onRemoveLink
 }) => {
   const [state, setState] = useState({
@@ -58,8 +59,7 @@ const ToolbarLinkButton = ({
   }, []);
 
   const handleSetLink = useCallback(() => {
-    const { onSetLink } = this.props;
-    const { title, href } = this.state;
+    const { title, href } = state;
 
     if (!validURLRegex.test(href)) {
       return setState(state => ({ ...state, error: 'Invalid URL' }));
@@ -67,7 +67,7 @@ const ToolbarLinkButton = ({
 
     onSetLink(title, href);
     handleClose();
-  }, []);
+  }, [state, onSetLink, handleClose]);
 
   return (
     <div>

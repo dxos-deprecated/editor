@@ -2,16 +2,22 @@
 // Copyright 2020 Wireline, Inc.
 //
 
-export const nodes = {
-  doc: {
-    content: 'inline*'
-  },
+import { nodes as schemaBasicNodes } from 'prosemirror-schema-basic';
 
-  text: {
-    group: 'inline'
-  }
+export const createSchemaSpec = () => {
+  return {
+    nodes: {
+      doc: {
+        content: 'paragraph'
+      },
+      paragraph: schemaBasicNodes.paragraph,
+      text: schemaBasicNodes.text
+    }
+  };
 };
 
-export const marks = {};
-
-export default { nodes, marks };
+export const createInitialDoc = schema => {
+  return schema.node('doc', null, [
+    schema.node('paragraph', null)
+  ]);
+};

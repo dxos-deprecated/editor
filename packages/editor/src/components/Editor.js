@@ -13,31 +13,31 @@ import Suggestions from './Suggestions';
 
 import { createProsemirrorEditor, defaultEditorProps } from '../lib/prosemirror-editor';
 
-import 'prosemirror-view/style/prosemirror.css';
-
 const styles = theme => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
-    flex: 1
+    flex: 1,
+    maxHeight: '100%'
   },
 
   editorContainer: {
     flexGrow: 1,
     overflow: 'auto',
     backgroundColor: '#ffffff',
-    cursor: 'text',
-    wordBreak: 'break-word'
+    cursor: 'text'
   },
 
   editor: {
+    position: 'relative',
     padding: theme.spacing(1),
     backgroundColor: '#ffffff',
     fontSize: 22,
     outline: 'none',
-    '-webkit-font-variant-ligatures': 'none',
     fontVariantLigatures: 'none',
     fontFeatureSettings: '"liga" 0',
+    whiteSpace: 'break-spaces',
+    wordBreak: 'break-word',
 
     '& pre': {
       whiteSpace: 'pre-wrap',
@@ -47,12 +47,16 @@ const styles = theme => ({
       padding: theme.spacing(1)
     },
 
-    '& > p': {
+    '& li': {
+      position: 'relative'
+    },
+
+    '& p': {
       marginTop: '.5em',
       marginBottom: '.5em'
     },
 
-    '& > p a.hovered': {
+    '& p a.hovered': {
       cursor: 'pointer'
     },
 
@@ -88,6 +92,7 @@ class EditorComponent extends Component {
   static defaultProps = {
     toolbar: undefined,
     onCreated: undefined,
+    prosemirrorPlugins: defaultEditorProps.plugins,
     classes: {},
     ...defaultEditorProps
   };
@@ -116,33 +121,14 @@ class EditorComponent extends Component {
     this.destroy();
   }
 
-  createEditor = ({
-    schema,
-    htmlContent,
-    contextMenu,
-    suggestions,
-    sync,
-    schemaEnhancers,
-    options,
-    onContentChange,
-    onKeyDown
-  }) => {
+  createEditor = (editorConfig) => {
     const { onCreated } = this.props;
 
-    const editorConfig = {
-      schema: sync ? 'full' : schema,
-      htmlContent,
-      contextMenu,
-      suggestions,
-      sync,
-      schemaEnhancers,
-      options,
-      onContentChange,
-      onKeyDown,
-      onReactElementDomCreated: this.handleReactElementDomCreated
-    };
-
-    const editor = createProsemirrorEditor(this._editorDOM.current, editorConfig);
+    const editor = createProsemirrorEditor(this._editorDOM.current, {
+      ...editorConfig,
+      onReactElementDomCreated: this.handleReactElementDomCreated,
+      plugins: editorConfig.prosemirrorPlugins
+    });
 
     this.setState({ editor }, () => onCreated ? onCreated({
       ...editor,
@@ -227,7 +213,12 @@ class EditorComponent extends Component {
           onContextMenu={this.handleEditorContainerContextMenu}
           className={classes.editorContainer}
         >
-          <div ref={this._editorDOM} className={classes.editor} onClick={this.handleEditorClick} />
+          <div
+            ref={this._editorDOM}
+            className={classes.editor}
+            onClick={this.handleEditorClick}
+            spellCheck={false}
+          />
         </div>
 
         {

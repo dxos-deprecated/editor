@@ -26,7 +26,7 @@ class ContextMenu extends Component {
     view.dispatch(tr);
   };
 
-  render() {
+  render () {
     return (
       <Editor
         contextMenu={{
