@@ -350,7 +350,7 @@ Callback for change event.
 Example:
 
 ```javascript
-  <Editor onContentChange={sourceCodeText => '...'} />
+  <SourceCodeEditor onContentChange={sourceCodeText => '...'} />
 ```
 
 
@@ -362,7 +362,7 @@ Source code language (for highlight options)
 Example:
 
 ```javascript
-  <Editor
+  <SourceCodeEditor
     language="javascript"
   />
 ```
@@ -376,7 +376,7 @@ Enables highlight on source.
 Example:
 
 ```javascript
-  <Editor
+  <SourceCodeEditor
     highlight={false}
   />
 ```
