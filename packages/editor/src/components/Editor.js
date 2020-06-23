@@ -13,8 +13,6 @@ import Suggestions from './Suggestions';
 
 import { createProsemirrorEditor, defaultEditorProps } from '../lib/prosemirror-editor';
 
-import 'prosemirror-view/style/prosemirror.css';
-
 const styles = theme => ({
   root: {
     display: 'flex',
@@ -27,18 +25,19 @@ const styles = theme => ({
     flexGrow: 1,
     overflow: 'auto',
     backgroundColor: '#ffffff',
-    cursor: 'text',
-    wordBreak: 'break-word'
+    cursor: 'text'
   },
 
   editor: {
+    position: 'relative',
     padding: theme.spacing(1),
     backgroundColor: '#ffffff',
     fontSize: 22,
     outline: 'none',
-    '-webkit-font-variant-ligatures': 'none',
     fontVariantLigatures: 'none',
     fontFeatureSettings: '"liga" 0',
+    whiteSpace: 'break-spaces',
+    wordBreak: 'break-word',
 
     '& pre': {
       whiteSpace: 'pre-wrap',
@@ -48,12 +47,16 @@ const styles = theme => ({
       padding: theme.spacing(1)
     },
 
-    '& > p': {
+    '& li': {
+      position: 'relative'
+    },
+
+    '& p': {
       marginTop: '.5em',
       marginBottom: '.5em'
     },
 
-    '& > p a.hovered': {
+    '& p a.hovered': {
       cursor: 'pointer'
     },
 

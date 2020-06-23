@@ -1,7 +1,12 @@
+//
+// Copyright 2020 Wireline, Inc.
+//
+
 import React from 'react';
 
-import { Editor } from '../src';
 import { makeStyles } from '@material-ui/core/styles';
+
+import { Editor } from '../src';
 
 const useToolbarStyles = makeStyles(() => ({
   root: {
@@ -29,7 +34,6 @@ const Styled = () => {
       }}
     />
   );
-
 };
 
 export default Styled;
