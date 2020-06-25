@@ -20,7 +20,7 @@ import createSchema from './schema';
 import contextMenuPlugin from '../plugins/context-menu-plugin';
 import historyListenerPlugin from '../plugins/history-listener-plugin';
 import suggestionsPlugin from '../plugins/suggestions-plugin';
-import { buildNodeViews } from './node-views';
+import { buildProsemirrorNodeViews } from './prosemirror-nodeviews';
 import { buildProsemirrorEvents } from './prosemirror-events';
 
 export const defaultEditorProps = {
@@ -132,7 +132,7 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
       state,
 
       // Prosemirror node view customizations
-      nodeViews: buildNodeViews(options, schema),
+      nodeViews: buildProsemirrorNodeViews(options, schema),
 
       ...buildProsemirrorEvents(options, schema),
 
