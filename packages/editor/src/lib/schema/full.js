@@ -5,7 +5,7 @@
 import { nodes, marks } from 'prosemirror-schema-basic';
 import { addListNodes } from 'prosemirror-schema-list';
 
-import { underlineMark } from './common';
+import { underlineMark, fontSizeMark } from './common';
 import { Schema } from 'prosemirror-model';
 
 export const createSchema = () => {
@@ -47,7 +47,8 @@ export const createSchema = () => {
       em: marks.em,
       strong: marks.strong,
       code: marks.code,
-      underline: underlineMark
+      underline: underlineMark,
+      fontSize: fontSizeMark
     }
   };
 

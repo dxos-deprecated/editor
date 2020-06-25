@@ -21,6 +21,7 @@ import ToolbarMarkButtons from './ToolbarMarkButtons';
 import ToolbarWrapperButtons from './ToolbarWrapperButtons';
 import ToolbarImageButton from './ToolbarImageButton';
 import { historyListenerPluginKey } from '../plugins/history-listener-plugin';
+import ToolbarFontStyleButtons from './ToolbarFontStyleButtons';
 
 const toolbarStyles = theme => ({
   root: {
@@ -204,6 +205,8 @@ class ToolbarComponent extends PureComponent {
         <ToolbarNodeTypesButton view={view} />
         <ToolbarDivider />
         <ToolbarMarkButtons view={view} />
+        <ToolbarDivider />
+        <ToolbarFontStyleButtons view={view} />
         <ToolbarDivider />
         <ToolbarWrapperButtons view={view} />
         <ToolbarDivider />

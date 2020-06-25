@@ -14,3 +14,14 @@ export const underlineMark = {
     return ['u', 0];
   }
 };
+
+export const fontSizeMark = {
+  attrs: {
+    fontSize: { default: '1em' }
+  },
+  parseDOM: [{
+    style: 'font-size',
+    getAttrs: value => value.indexOf('em') !== -1 ? { fontSize: value } : ''
+  }],
+  toDOM: mark => ['span', { style: `font-size: ${mark.attrs.fontSize}px` }, 0]
+};
