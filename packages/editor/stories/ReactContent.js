@@ -10,16 +10,23 @@ const ReactContent = () => {
     editor.createReactElement({ id: '2' });
   }, []);
 
+  // Here you decide what/how to render
   const handleReactElementRender = props => {
     return (
-      <Button
-        color={props.id === '1' ? 'primary' : 'secondary'}
-        onClick={() => {
-          console.log('Button click', JSON.stringify(props, null, 2));
-        }}
-      >
-        Test
-      </Button>
+      props.id === '1'
+        ? (
+          <Button
+            color={props.id === '1' ? 'primary' : 'secondary'}
+            onClick={() => {
+              console.log('Button click', JSON.stringify(props, null, 2));
+            }}
+          >
+          Test
+          </Button>
+        )
+        : (
+          <textarea rows={5} />
+        )
     );
   };
 
