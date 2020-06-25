@@ -13,7 +13,11 @@ const reactElementNodeView = ({ onReactElementDomCreated }) => {
     onReactElementDomCreated(dom, props);
 
     return {
-      dom
+      dom,
+      stopEvent: event => {
+        // Stop any event bubbling to editor.
+        return true;
+      }
     };
   };
 };
@@ -58,7 +62,7 @@ const linkNodeView = () => {
   };
 };
 
-export const buildNodeViews = (options, schema) => {
+export const buildProsemirrorNodeViews = (options, schema) => {
   const nodeViews = {};
 
   if (schema.nodes.react_element) {

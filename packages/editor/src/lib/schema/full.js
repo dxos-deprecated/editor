@@ -17,7 +17,10 @@ export const createSchema = () => {
         group: 'inline',
         content: 'inline*',
         inline: true,
-        atom: true,
+        inlineContent: false,
+        atom: false,
+        isLeaf: true,
+        draggable: true,
         attrs: {
           props: { default: null }
         },
