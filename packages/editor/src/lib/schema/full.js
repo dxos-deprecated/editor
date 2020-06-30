@@ -15,12 +15,8 @@ export const createSchema = () => {
 
       react_element: {
         group: 'inline',
-        content: 'inline*',
         inline: true,
-        inlineContent: false,
-        atom: false,
-        isLeaf: true,
-        draggable: true,
+        selectable: true,
         attrs: {
           props: { default: null }
         },
@@ -29,6 +25,7 @@ export const createSchema = () => {
             tag: 'reactelement',
             getAttrs (dom) {
               return {
+                id: dom.getAttribute('id'),
                 props: JSON.parse(decodeURI(dom.getAttribute('props')))
               };
             }
@@ -37,8 +34,9 @@ export const createSchema = () => {
 
         toDOM: node => {
           return ['reactelement', {
+            id: node.attrs.id,
             props: encodeURI(JSON.stringify(node.attrs.props))
-          }, 0];
+          }];
         }
       }
     },

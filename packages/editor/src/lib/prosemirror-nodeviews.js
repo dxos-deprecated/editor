@@ -2,23 +2,76 @@
 // Copyright 2020 Wireline, Inc.
 //
 
+import ReactDOM from 'react-dom';
+import React from 'react';
+import { uuidv4 } from 'lib0/random';
+
+import ReactEmbededElement from '../components/ReactEmbededElement';
+import { NodeSelection } from 'prosemirror-state';
+
 const reactElementNodeView = ({ onReactElementDomCreated }) => {
-  return node => {
+  return function (node, view, getPos) {
     const { attrs: { props = {} } } = node;
 
-    const dom = window.document.createElement('reactelement');
+    const nodeView = {
+      dom: window.document.createElement('reactelement'),
 
-    dom.setAttribute('props', encodeURI(JSON.stringify(props)));
+      selected: false,
 
-    onReactElementDomCreated(dom, props);
+      locked: true,
 
-    return {
-      dom,
-      stopEvent: event => {
-        // Stop any event bubbling to editor.
+      deselectNode () {
+        this.selected = false;
+        this.updateReactElement();
+      },
+
+      selectNode () {
+        this.selected = true;
+        this.updateReactElement();
+      },
+
+      stopEvent (event) {
+        // Allow dragging (enable on view spec also)
+        // if (event.type.startsWith('drag')) return false;
+
+        if (event.type === 'mousedown' && event.ctrlKey) {
+          const { tr } = view.state;
+          const newState = view.state.apply(
+            tr.setSelection(NodeSelection.create(tr.doc, getPos()))
+          );
+          view.updateState(newState);
+
+          return false;
+        }
+
         return true;
+      },
+
+      updateReactElement () {
+        ReactDOM.render(
+          <ReactEmbededElement
+            prosemirrorNode={node}
+            selected={this.selected}
+            onCreated={onReactElementDomCreated}
+          />,
+          this.dom
+        );
       }
     };
+
+    nodeView.dom.setAttribute('props', encodeURI(JSON.stringify(props)));
+    nodeView.dom.id = uuidv4();
+    // Ctrl
+    nodeView.dom.addEventListener('click', event => {
+      if (event.ctrlKey) {
+        event.stopPropagation();
+      }
+    }, { capture: true });
+
+    // First render
+    nodeView.updateReactElement();
+
+    return nodeView;
   };
 };
 
