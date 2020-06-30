@@ -1,3 +1,7 @@
+//
+// Copyright 2020 Wireline, Inc.
+//
+
 import React, { useCallback } from 'react';
 
 import Button from '@material-ui/core/Button';
@@ -16,6 +20,7 @@ const ReactContent = () => {
       props.id === '1'
         ? (
           <Button
+            variant='contained'
             color={props.id === '1' ? 'primary' : 'secondary'}
             onClick={() => {
               console.log('Button click', JSON.stringify(props, null, 2));
@@ -25,7 +30,7 @@ const ReactContent = () => {
           </Button>
         )
         : (
-          <textarea rows={5} />
+          <textarea rows={5} defaultValue='Ctrl + click to select element' />
         )
     );
   };
