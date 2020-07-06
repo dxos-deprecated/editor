@@ -10,7 +10,7 @@ import Editor from './Editor';
 
 import highlightPlugin from '../plugins/highlight-plugin';
 
-const useEditorStyles = makeStyles(() => ({
+const useStyles = makeStyles(() => ({
   root: {
     fontFamily: 'monospace',
 
@@ -69,7 +69,7 @@ const useEditorStyles = makeStyles(() => ({
 }));
 
 const SourceCodeEditor = ({ language = '', highlight = true, onContentChange = () => null, ...props }) => {
-  const classes = useEditorStyles(highlight);
+  const classes = useStyles(highlight);
 
   const prosemirrorPlugins = [];
   if (highlight) {

@@ -15,8 +15,8 @@ import { grey } from '@material-ui/core/colors';
 const styles = theme => ({
   button: {
     minWidth: 0,
-    marginRight: theme.spacing(0.5),
-    marginLeft: theme.spacing(0.5)
+    marginLeft: theme.spacing(0.3),
+    marginRight: theme.spacing(0.3)
   },
   buttonActive: {
     backgroundColor: grey[200]
@@ -55,7 +55,7 @@ const ToolbarButton = ({
               startIcon: (
                 <IconComponent
                   className={classnames(
-                    disabled && classes.buttonIconDisabled
+                    !active && disabled && classes.buttonIconDisabled
                   )}
                 />
               )

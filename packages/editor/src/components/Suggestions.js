@@ -2,9 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Component } from 'react';
-import { EditorView } from 'prosemirror-view';
-import PropTypes from 'prop-types';
+import React, { useState, useCallback, useEffect } from 'react';
 
 import { suggestionsPluginKey } from '../plugins/suggestions-plugin';
 
@@ -18,214 +16,160 @@ import {
 } from '../lib/keys';
 
 import { UnfocusedMenu } from './Menu';
+import { useProsemirrorView, useProsemirrorTransaction } from '../lib/hook';
 
-class Suggestions extends Component {
-  state = {
-    prevViewId: undefined,
-    open: false,
-    options: undefined,
-    query: undefined,
-    position: undefined,
-    selectedIndex: 0,
-    start: undefined,
-    end: undefined
-  }
+const Suggestions = ({
+  getOptions = () => [],
+  renderMenuItem,
+  emptyOptionsLabel = 'None',
+  maxVisibleItems = 8,
+  onSelect = () => null
+}) => {
+  const [open, setOpen] = useState(false);
+  const [options, setOptions] = useState();
+  const [query, setQuery] = useState();
+  const [position, setPosition] = useState();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [start, setStart] = useState();
+  const [end, setEnd] = useState();
 
-  static defaultProps = {
-    ...UnfocusedMenu.defaultProps,
-    getOptions: () => []
-  }
+  const [prosemirrorView] = useProsemirrorView();
+  const [prosemirrorTransaction] = useProsemirrorTransaction();
 
-  static getDerivedStateFromProps (props, state) {
-    const { view } = props;
-    const { prevViewId } = state;
+  useEffect(() => {
+    if (!prosemirrorTransaction) return;
 
-    if (view && view.id !== prevViewId) {
-      return {
-        prevViewId: view.id
-      };
+    const { transaction } = prosemirrorTransaction;
+
+    const meta = transaction.getMeta(suggestionsPluginKey);
+
+    if (!meta) return;
+
+    if (meta.open !== undefined) {
+      if (!open && meta.open) {
+        return handleOpenMenu(meta);
+      }
+
+      if (open && !meta.open) {
+        return setOpen(false);
+      }
     }
 
-    return null;
-  }
+    if (meta.query !== undefined && query !== meta.query) {
+      setStart(meta.start);
+      setEnd(meta.end);
 
-  componentDidUpdate (prevProps) {
-    const { view } = this.props;
-    const { view: prevView = {} } = prevProps;
+      updateOptions(meta.query);
 
-    if (view && view.id !== prevView.id) {
-      const originalDispatch = view._props.dispatchTransaction;
-
-      view._props.originalDispatch = originalDispatch;
-
-      // Register to view changes.
-      view._props.dispatchTransaction = transaction => {
-        const { oldState, newState } = originalDispatch(transaction);
-
-        const meta = transaction.getMeta(suggestionsPluginKey);
-
-        if (meta) {
-          this.handleViewUpdate(meta);
-        }
-
-        return { oldState, newState, transaction };
-      };
+      return;
     }
-  }
 
-  updateOptions = query => {
-    const { getOptions } = this.props;
+    handleKeyPressed(meta.keyPressed);
+  }, [prosemirrorTransaction, open, query]);
 
+  const handleSelectOption = useCallback(option => {
+    onSelect(option, prosemirrorView, start, end);
+    prosemirrorView.focus();
+  }, [prosemirrorView, onSelect, start, end]);
+
+  const handleCloseMenu = useCallback(() => {
+    setOpen(false);
+
+    prosemirrorView.dispatch(
+      prosemirrorView.state.tr.setMeta(suggestionsPluginKey, {
+        open: false
+      })
+    );
+  }, [prosemirrorView]);
+
+  const handleContextMenu = useCallback(event => {
+    event.preventDefault();
+    event.persist();
+
+    setOpen(true);
+    setPosition({
+      top: event.clientY,
+      left: event.clientX
+    });
+  }, []);
+
+  const updateOptions = useCallback(query => {
     const options = getOptions(query || '');
 
     if (options.length === 0 && query !== null) {
-      this.handleCloseMenu();
+      handleCloseMenu();
       return false;
     }
 
-    this.setState({ options, query });
+    setOptions(options);
+    setQuery(query);
+    setSelectedIndex(0);
+
     return true;
-  }
+  }, [getOptions, handleCloseMenu]);
 
-  handleKeyPressed = key => {
-    const { view } = this.props;
-    const { selectedIndex, options } = this.state;
+  const handleOpenMenu = useCallback(({ position, query, start, end }) => {
+    if (!updateOptions(query)) return;
 
+    setOpen(true);
+    setPosition(position);
+    setSelectedIndex(0);
+    setStart(start);
+    setEnd(end);
+  }, [updateOptions]);
+
+  const handleKeyPressed = useCallback(key => {
     if (!key) return;
 
     switch (key) {
       case KEY_ARROW_UP:
         if (selectedIndex < 1) break;
-        this.setState({ selectedIndex: selectedIndex - 1 });
+        setSelectedIndex(selectedIndex => selectedIndex - 1);
         break;
 
       case KEY_ARROW_DOWN:
         if (selectedIndex >= options.length - 1) break;
-        this.setState({ selectedIndex: selectedIndex + 1 });
+        setSelectedIndex(selectedIndex => selectedIndex + 1);
         break;
 
       case KEY_ESCAPE:
       case KEY_SPACE:
-        this.handleCloseMenu();
+        handleCloseMenu();
         break;
 
       case KEY_ENTER:
       case KEY_TAB:
-        this.handleSelectOption(options[selectedIndex]);
-        this.handleCloseMenu();
+        handleSelectOption(options[selectedIndex]);
+        handleCloseMenu();
         break;
 
       default:
         break;
     }
 
-    view.dispatch(
-      view.state.tr.setMeta(suggestionsPluginKey, {
+    prosemirrorView.dispatch(
+      prosemirrorView.state.tr.setMeta(suggestionsPluginKey, {
         keyPressed: null
       })
     );
-  }
+  }, [selectedIndex, options]);
 
-  handleViewUpdate = data => {
-    const { open, query } = this.state;
+  if (!prosemirrorView) return null;
+  if (!open) return null;
 
-    if (data.open !== undefined) {
-      if (!open && data.open) {
-        return this.handleOpenMenu(data);
-      }
-
-      if (open && !data.open) {
-        return this.setState({ open: false });
-      }
-    }
-
-    if (data.query !== undefined && query !== data.query) {
-      this.setState({ start: data.start, end: data.end });
-      this.updateOptions(data.query);
-      return;
-    }
-
-    this.handleKeyPressed(data.keyPressed);
-  }
-
-  handleOpenMenu = ({ position, query, start, end }) => {
-    if (!this.updateOptions(query)) return;
-
-    this.setState({
-      open: true,
-      position,
-      selectedIndex: 0,
-      start,
-      end
-    });
-  }
-
-  handleCloseMenu = () => {
-    const { view } = this.props;
-
-    this.setState({ open: false });
-
-    view.dispatch(
-      view.state.tr.setMeta(suggestionsPluginKey, {
-        open: false
-      })
-    );
-  }
-
-  handleSelectOption = option => {
-    const { view, onSelect } = this.props;
-    const { start, end } = this.state;
-
-    onSelect(option, view, start, end);
-
-    view.focus();
-  }
-
-  handleContextMenu = event => {
-    event.preventDefault();
-    event.persist();
-
-    this.setState({
-      open: false
-    }, () => this.setState({
-      open: true,
-      position: {
-        top: event.clientY,
-        left: event.clientX
-      }
-    }));
-  }
-
-  render () {
-    const { view, renderMenuItem, emptyOptionsLabel, maxVisibleItems } = this.props;
-    const { open, options, position, selectedIndex } = this.state;
-
-    if (!open) return null;
-
-    return (
-      <UnfocusedMenu
-        options={options}
-        onSelect={this.handleSelectOption}
-        onClose={this.handleCloseMenu}
-        onContextMenu={this.handleContextMenu}
-        position={position}
-        renderMenuItem={renderMenuItem}
-        emptyOptionsLabel={emptyOptionsLabel}
-        maxVisibleItems={maxVisibleItems}
-        viewDom={view.dom}
-        selectedIndex={selectedIndex}
-      />
-    );
-  }
-}
-
-export const SuggestionsPropTypes = PropTypes.shape({
-  view: PropTypes.instanceOf(EditorView),
-  getOptions: PropTypes.func,
-  onSelect: PropTypes.func,
-  renderMenuItem: PropTypes.func
-}).isRequired;
-
-Suggestions.propTypes = SuggestionsPropTypes;
+  return (
+    <UnfocusedMenu
+      options={options}
+      onSelect={handleSelectOption}
+      onClose={handleCloseMenu}
+      onContextMenu={handleContextMenu}
+      position={position}
+      renderMenuItem={renderMenuItem}
+      emptyOptionsLabel={emptyOptionsLabel}
+      maxVisibleItems={maxVisibleItems}
+      selectedIndex={selectedIndex}
+    />
+  );
+};
 
 export default Suggestions;

@@ -4,7 +4,7 @@
 
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
-import { DOMSerializer, DOMParser } from 'prosemirror-model';
+import { DOMParser } from 'prosemirror-model';
 import { history } from 'prosemirror-history';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
@@ -23,28 +23,12 @@ import suggestionsPlugin from '../plugins/suggestions-plugin';
 import { buildProsemirrorNodeViews } from './prosemirror-nodeviews';
 import { buildProsemirrorEvents } from './prosemirror-events';
 
-export const defaultEditorProps = {
-  contextMenu: undefined,
-  highlight: true,
-  htmlContent: undefined,
-  language: undefined,
-  onContentChange: undefined,
-  onKeyDown: undefined,
-  options: {},
-  plugins: [],
-  schema: 'basic',
-  schemaEnhancers: [],
-  suggestions: undefined,
-  sync: undefined
-};
-
-export const createProsemirrorEditor = (element, options = defaultEditorProps) => {
+export const createProsemirrorEditor = (element, options) => {
   const {
     contextMenu,
     htmlContent,
-    onContentChange,
-    options: { initialFontSize },
-    plugins: userPlugins,
+    onTransaction,
+    plugins: userPlugins = [],
     schema: schemaName,
     suggestions,
     sync
@@ -67,23 +51,21 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
 
   const plugins = [...userPlugins];
 
-  const serializer = DOMSerializer.fromSchema(schema);
-
-  buildKeysPlugins(schema, plugins, { initialFontSize, useTextBreak: schemaName === 'text-only' });
-
-  if (sync) {
-    doc = undefined;
-    editor.sync = createSyncPlugins(sync, plugins);
-  }
-
+  // Context Menu & Suggestions Plugins have key binfings that
+  // Should be registered first in order to work properly
   if (contextMenu) {
-    plugins.push(
-      contextMenuPlugin({ triggerMenuEventKeys: contextMenu.triggerMenuEventKeys })
-    );
+    plugins.push(contextMenuPlugin(contextMenu));
   }
 
   if (suggestions) {
     plugins.push(suggestionsPlugin(suggestions));
+  }
+
+  buildKeysPlugins(schema, plugins, { useTextBreak: schemaName === 'text-only' });
+
+  if (sync) {
+    doc = undefined;
+    editor.sync = createSyncPlugins(sync, plugins);
   }
 
   plugins.push(
@@ -143,16 +125,15 @@ export const createProsemirrorEditor = (element, options = defaultEditorProps) =
         try {
           view.updateState(newState);
         } catch (err) {
-          console.error(err);
+          if (!view.docView) {
+            // View is unmounted
+            return;
+          }
+
+          throw err;
         }
 
-        if (onContentChange && transaction.docChanged) {
-          const contentContainer = window.document.createElement('div');
-          serializer.serializeFragment(newState.doc.content, { document: window.document }, contentContainer);
-          onContentChange(contentContainer.innerHTML, newState.doc);
-        }
-
-        return { oldState, newState, transaction };
+        onTransaction({ id: uuidv4(), oldState, newState, transaction });
       }
     }
   );

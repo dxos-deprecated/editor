@@ -72,3 +72,4 @@ webpack.zip
 
 # storybook
 .out
+.vscode/settings.json
