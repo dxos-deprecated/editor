@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Wireline, Inc.
+// Copyright 2020 DXOS.org
 //
 
 import { Plugin, PluginKey, EditorState } from 'prosemirror-state' // eslint-disable-line
