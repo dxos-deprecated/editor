@@ -2,18 +2,21 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
+import classnames from 'classnames';
 
-import { withStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 
 import Toolbar from './Toolbar';
 import ContextMenu from './ContextMenu';
 import Suggestions from './Suggestions';
 
-import { createProsemirrorEditor, defaultEditorProps } from '../lib/prosemirror-editor';
+import { createProsemirrorEditor } from '../lib/prosemirror-editor';
+import { useProsemirrorView, useProsemirrorTransaction } from '../lib/hook';
+import { EditorContextProvider } from '../lib/context';
 
-const styles = theme => ({
+const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
     flexDirection: 'column',
@@ -28,16 +31,17 @@ const styles = theme => ({
     cursor: 'text'
   },
 
-  editor: {
+  editor: ({ initialFontSize }) => ({
     position: 'relative',
     padding: theme.spacing(1),
     backgroundColor: '#ffffff',
-    fontSize: 22,
+    fontSize: initialFontSize,
     outline: 'none',
     fontVariantLigatures: 'none',
     fontFeatureSettings: '"liga" 0',
     whiteSpace: 'break-spaces',
     wordBreak: 'break-word',
+    textAlign: 'left',
 
     '& pre': {
       whiteSpace: 'pre-wrap',
@@ -81,160 +85,129 @@ const styles = theme => ({
         fontSize: 12
       }
     }
-  },
+  }),
 
   toolbarContainer: {
     flex: '0 1 auto'
   }
-});
+}));
 
-class EditorComponent extends Component {
-  static defaultProps = {
-    toolbar: undefined,
-    onCreated: undefined,
-    prosemirrorPlugins: defaultEditorProps.plugins,
-    classes: {},
-    ...defaultEditorProps
-  };
+const Editor = ({
+  classes: userClasses = {},
+  contextMenu,
+  initialContent,
+  initialFontSize = 22,
+  language,
+  onContentChange,
+  onCreated = () => null,
+  prosemirrorPlugins: plugins,
+  reactElementRenderFn = () => null,
+  schema = 'basic',
+  suggestions,
+  sync,
+  toolbar
+}) => {
+  const classes = useStyles({ initialFontSize });
+  const editor = useRef();
+  const editorDom = useRef();
+  const [prosemirrorView, setProsemirrorView] = useProsemirrorView();
+  const [prosemirrorTransaction, setProsemirrorTransaction] = useProsemirrorTransaction();
 
-  _editorDOM = React.createRef();
+  const [reactElements, setReactElements] = useState([]);
 
-  state = {
-    editor: undefined,
-    toolbar: undefined,
-    reactElements: []
-  };
+  useEffect(() => {
+    if (prosemirrorView) {
+      return () => {
+        prosemirrorView.destroy();
+      };
+    }
 
-  static getDerivedStateFromProps (props) {
-    const { toolbar } = props;
-
-    return {
-      toolbar
-    };
-  }
-
-  componentDidMount () {
-    this.init();
-  }
-
-  componentWillUnmount () {
-    this.destroy();
-  }
-
-  createEditor = (editorConfig) => {
-    const { onCreated } = this.props;
-
-    const editor = createProsemirrorEditor(this._editorDOM.current, {
-      ...editorConfig,
-      onReactElementDomCreated: this.handleReactElementDomCreated,
-      plugins: editorConfig.prosemirrorPlugins
+    editor.current = createProsemirrorEditor(editorDom.current, {
+      contextMenu,
+      initialContent,
+      language,
+      onReactElementDomCreated: handleReactElementDomCreated,
+      onTransaction: setProsemirrorTransaction,
+      plugins,
+      schema,
+      suggestions,
+      sync
     });
 
-    this.setState({ editor }, () => onCreated ? onCreated({
-      ...editor,
-      destroy: this.destroy,
-      init: this.init,
-      reset: this.reset
-    }) : null);
-  }
+    setProsemirrorView(editor.current.view);
+    onCreated(editor.current);
+  }, [prosemirrorView]);
 
-  reset = () => {
-    this.destroy();
-    this.init();
-  }
+  useEffect(() => {
+    if (!prosemirrorTransaction) return;
 
-  init = () => {
-    this.createEditor(this.props);
-  }
+    const { transaction, newState } = prosemirrorTransaction;
 
-  destroy = () => {
-    this.destroyEditor();
+    if (onContentChange && transaction.docChanged) {
+      onContentChange(prosemirrorView.dom.innerHTML, newState.doc);
+    }
+  }, [prosemirrorTransaction, prosemirrorView]);
 
-    this.setState({
-      editor: undefined,
-      toolbar: undefined,
-      reactElements: []
-    });
-  }
-
-  destroyEditor = () => {
-    const { editor } = this.state;
-
-    try {
-      editor.destroy();
-    } catch (err) { } // eslint-disable-line no-empty
-  }
-
-  handleReactElementDomCreated = (dom, props) => {
-    this.setState(state => ({ reactElements: [...state.reactElements, { dom, props }] }));
-  }
-
-  handleEditorContainerClick = () => {
-    const { editor } = this.state;
-
-    editor.view.focus();
-  };
-
-  handleEditorClick = event => {
-    // Avoid root click handler (handleEditorContainerClick)
-    event.stopPropagation();
-  };
-
-  handleEditorContainerContextMenu = event => {
+  const handleEditorContainerContextMenu = useCallback(event => {
     event.preventDefault();
 
-    const { editor } = this.state;
-    editor.view.focus();
+    editor.current.view.focus();
+
     const contextMenuEvent = new MouseEvent('mouseup', { button: 2 });
-    this._editorDOM.current.dispatchEvent(contextMenuEvent);
-  };
 
-  render () {
-    const { schema, sync, contextMenu, suggestions, reactElementRenderFn, classes } = this.props;
-    const { editor = {}, toolbar, reactElements } = this.state;
+    editorDom.current.dispatchEvent(contextMenuEvent);
+  }, []);
 
-    const showToolbar = toolbar && (schema === 'full' || sync);
+  const handleReactElementDomCreated = useCallback((dom, props) => {
+    setReactElements(reactElements => [...reactElements, { dom, props }]);
+  }, []);
 
-    return (
-      <div className={classes.root}>
-        {suggestions && <Suggestions view={editor.view} {...suggestions} />}
-        {contextMenu && <ContextMenu view={editor.view} {...contextMenu} />}
-        {showToolbar && (
-          <div className={classes.toolbarContainer}>
-            <Toolbar
-              view={editor && editor.view}
-              {...toolbar}
-            />
-          </div>
-        )}
+  const handleEditorContainerClick = useCallback(() => {
+    editor.current.view.focus();
+  }, [editor]);
 
-        <div
-          onClick={this.handleEditorContainerClick}
-          onContextMenu={this.handleEditorContainerContextMenu}
-          className={classes.editorContainer}
-        >
-          <div
-            ref={this._editorDOM}
-            className={classes.editor}
-            onClick={this.handleEditorClick}
-            spellCheck={false}
-          />
+  const handleEditorClick = useCallback(event => {
+    // Avoid root click handler (handleEditorContainerClick)
+    event.stopPropagation();
+  }, [editor]);
+
+  return (
+    <div className={classnames(classes.root, userClasses.root)}>
+      {toolbar && (
+        <div className={classnames(classes.toolbarContainer, userClasses.toolbarContainer)}>
+          <Toolbar {...toolbar} />
         </div>
-
-        {
-          // Placeholders of React.Portals to real components
-          reactElements.map(({ dom, props }, i) => (
-            ReactDOM.createPortal(
-              reactElementRenderFn({ key: i, ...props }),
-              dom
-            )
-          ))
-        }
+      )}
+      <div
+        onClick={handleEditorContainerClick}
+        onContextMenu={handleEditorContainerContextMenu}
+        className={classnames(classes.editorContainer, userClasses.editorContainer)}
+      >
+        {suggestions && <Suggestions {...suggestions} />}
+        {contextMenu && <ContextMenu {...contextMenu} />}
+        <div
+          ref={editorDom}
+          className={classnames(classes.editor, userClasses.editor)}
+          onClick={handleEditorClick}
+          spellCheck={false}
+        />
       </div>
-    );
-  }
-}
 
-const Editor = withStyles(styles)(EditorComponent);
+      {
+        // Placeholders of React.Portals to real components
+        reactElements.map(({ dom, props }, i) => (
+          ReactDOM.createPortal(
+            reactElementRenderFn({ key: i, ...props }),
+            dom
+          )
+        ))
+      }
+    </div>
+  );
+};
 
-export default Editor;
+export default props => (
+  <EditorContextProvider>
+    <Editor {...props} />
+  </EditorContextProvider>
+);

@@ -2,238 +2,256 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+import React, { useEffect, useCallback, useState } from 'react';
 
-import { setBlockType, toggleMark } from 'prosemirror-commands';
+import { undo, redo } from 'prosemirror-history';
+import { setBlockType, wrapIn, toggleMark } from 'prosemirror-commands';
 
-import { withStyles } from '@material-ui/core';
-import MUIDivider from '@material-ui/core/Divider';
+import { makeStyles } from '@material-ui/core';
 import MUIToolbar from '@material-ui/core/Toolbar';
-import { grey } from '@material-ui/core/colors';
+import MUIDivider from '@material-ui/core/Divider';
 
-import { getSelectedTextNodes, isLink } from '../lib/prosemirror-helpers';
+import ListBulletedIcon from '@material-ui/icons/FormatListBulleted';
+import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
 
-import ToolbarLinkButton from './ToolbarLinkButton';
-import ToolbarNodeTypesButton from './ToolbarNodeTypesButton';
-import ToolbarHistoryButtons from './ToolbarHistoryButtons';
-import ToolbarMarkButtons from './ToolbarMarkButtons';
-import ToolbarWrapperButtons from './ToolbarWrapperButtons';
+import RedoIcon from '@material-ui/icons/Redo';
+import UndoIcon from '@material-ui/icons/Undo';
+import CodeIcon from '@material-ui/icons/Code';
+import FormatQuoteIcon from '@material-ui/icons/FormatQuote';
+import FormatBoldIcon from '@material-ui/icons/FormatBold';
+import FormatItalicIcon from '@material-ui/icons/FormatItalic';
+import FormatUnderlinedIcon from '@material-ui/icons/FormatUnderlined';
+
+import grey from '@material-ui/core/colors/grey';
+
+import ToolbarButton from './ToolbarButton';
 import ToolbarImageButton from './ToolbarImageButton';
-import { historyListenerPluginKey } from '../plugins/history-listener-plugin';
+import TextAvatarIcon from './TextAvatarIcon';
 
-const toolbarStyles = theme => ({
-  root: {
+import { useProsemirrorView } from '../lib/hook';
+import { blockActive, markActive, toggleList, canToggleList, isListItemOfType } from '../lib/prosemirror-helpers';
+
+export const useStyles = makeStyles(theme => ({
+  toolbar: {
     minHeight: 'fit-content',
     paddingTop: theme.spacing(0.5),
     paddingBottom: theme.spacing(0.5),
     backgroundColor: grey[50],
     whiteSpace: 'nowrap'
-  }
-});
+  },
 
-const dividerStyles = theme => ({
-  root: {
+  divider: {
     marginRight: theme.spacing(0.5),
-    marginLeft: theme.spacing(0.5)
+    marginLeft: theme.spacing(0.5),
+    height: 'auto',
+    alignSelf: 'stretch'
   }
-});
+}));
 
-class ToolbarComponent extends PureComponent {
-  state = {
-    canUndo: false,
-    canRedo: false,
-    canSetLink: false,
-    selectedLinkNodes: []
-  };
+const buildButtons = (schema, props) => {
+  const buttons = [];
 
-  componentDidMount () {
-    this._mounted = true;
-  }
+  const historyButtons = [];
+  const nodeButtons = [];
+  const markButtons = [];
+  const wrapperButtons = [];
+  const extraButtons = [];
 
-  componentWillUnmount () {
-    const { view } = this.props;
+  historyButtons.push(
+    { name: 'undo', title: 'Undo last change', icon: UndoIcon, enabled: undo, onClick: undo },
+    { name: 'redo', title: 'Redo last change', icon: RedoIcon, enabled: redo, onClick: redo }
+  );
 
-    if (!view) return;
+  const {
+    blockquote,
+    bullet_list: bulletList,
+    code_block: codeBlock,
+    heading,
+    image,
+    ordered_list: orderedList,
+    paragraph
+  } = schema.nodes;
+  const { strong, em, underline, code } = schema.marks;
 
-    const { history } = historyListenerPluginKey.getState(view.state);
-
-    history.off('update', this.handleHistoryUpdate);
-
-    view._props.dispatchTransaction = view._props.originalDispatch;
-    this._mounted = false;
-  }
-
-  componentDidUpdate (prevProps) {
-    const { view } = this.props;
-    const { view: prevView = {} } = prevProps;
-
-    if (view && view.id !== prevView.id) {
-      const originalDispatch = view._props.dispatchTransaction;
-
-      view._props.originalDispatch = originalDispatch;
-
-      // Register to view changes.
-      view._props.dispatchTransaction = transaction => {
-        const { oldState, newState } = originalDispatch(transaction);
-        this.handleViewUpdate(newState);
-        return { oldState, newState, transaction };
-      };
-
-      const { history } = historyListenerPluginKey.getState(view.state);
-
-      if (history) {
-        history.on('update', this.handleHistoryUpdate);
-      }
-    }
+  if (paragraph) {
+    nodeButtons.push({
+      name: 'node-paragraph',
+      title: 'Paragraph',
+      icon: () => <TextAvatarIcon>P</TextAvatarIcon>,
+      onClick: setBlockType(paragraph),
+      enabled: setBlockType(paragraph),
+      active: blockActive(paragraph)
+    });
   }
 
-  // handleViewUpdate = debounce(newState => {
-  handleViewUpdate = newState => {
-    const { view } = this.props;
-
-    if (!this._mounted || !view) {
-      return;
-    }
-
-    let canSetLink = false;
-    let selectedLinkNodes = [];
-
-    if (view.state.schema.marks.link) {
-      canSetLink = !newState.selection.empty &&
-        this.dispatchCommand(toggleMark(view.state.schema.marks.link), { dryRun: true });
-
-      const selectedTextNodes = getSelectedTextNodes(view.state);
-      selectedLinkNodes = selectedTextNodes.filter(isLink(view.state.schema));
-    }
-
-    this.setState({ canSetLink, selectedLinkNodes });
+  if (heading) {
+    nodeButtons.push(...[1, 2, 3, 4, 5, 6].map((level, key) => ({
+      name: `heading-${level}`,
+      title: `Heading ${level}`,
+      icon: () => <TextAvatarIcon>H{level}</TextAvatarIcon>,
+      onClick: setBlockType(heading, { level }),
+      enabled: setBlockType(heading, { level }),
+      active: blockActive(heading, { level })
+    })));
   }
 
-  handleHistoryUpdate = ({ canUndo, canRedo }) => {
-    this.setState({ canUndo, canRedo });
-  };
+  if (codeBlock) {
+    nodeButtons.push({
+      name: 'node-code',
+      title: 'Code block',
+      icon: CodeIcon,
+      onClick: setBlockType(codeBlock),
+      enabled: setBlockType(codeBlock),
+      active: blockActive(codeBlock)
+    });
+  }
 
-  dispatchCommand = (fn, { dryRun = false, focus = true } = {}) => {
-    const { view } = this.props;
+  if (blockquote) {
+    nodeButtons.push({
+      name: 'node-blockquote',
+      title: 'Block quote',
+      icon: FormatQuoteIcon,
+      onClick: wrapIn(blockquote),
+      enabled: wrapIn(blockquote),
+      active: blockActive(blockquote)
+    });
+  }
 
-    const dispatchResult = fn(view.state, !dryRun && view.dispatch);
-    if (dryRun) {
-      return dispatchResult;
-    }
+  if (strong) {
+    markButtons.push({
+      name: 'mark-strong',
+      title: 'Strong',
+      icon: FormatBoldIcon,
+      active: markActive(strong),
+      onClick: toggleMark(strong)
+    });
+  }
 
-    focus && view.focus();
-  };
+  if (em) {
+    markButtons.push({
+      name: 'mark-emphasis',
+      title: 'Emphasis',
+      icon: FormatItalicIcon,
+      active: markActive(em),
+      onClick: toggleMark(em)
+    });
+  }
 
-  handleHistoryButtonClick = name => event => {
-    const { view } = this.props;
-    const { history } = historyListenerPluginKey.getState(view.state);
+  if (underline) {
+    markButtons.push({
+      name: 'mark-underlined',
+      title: 'Underlined',
+      icon: FormatUnderlinedIcon,
+      active: markActive(underline),
+      onClick: toggleMark(underline)
+    });
+  }
 
-    event.preventDefault();
+  if (code) {
+    markButtons.push({
+      name: 'mark-monospace',
+      title: 'Monospace font',
+      icon: CodeIcon,
+      active: markActive(code),
+      onClick: toggleMark(code)
+    });
+  }
 
-    history[name](view.state, view.dispatch);
-    view.focus();
-  };
+  if (orderedList) {
+    wrapperButtons.push({
+      name: 'wrapper-ordered-list',
+      title: 'Toggle ordered list',
+      icon: ListNumberedIcon,
+      onClick: toggleList(orderedList),
+      enabled: canToggleList(orderedList),
+      active: isListItemOfType(orderedList)
+    });
+  }
 
-  // TODO(burdon): Not used.
-  handleMarkButtonClick = mark => event => {
-    event.preventDefault();
+  if (bulletList) {
+    wrapperButtons.push({
+      name: 'wrapper-bullet-list',
+      title: 'Toggle bullet list',
+      icon: ListBulletedIcon,
+      onClick: toggleList(bulletList),
+      enabled: canToggleList(bulletList),
+      active: isListItemOfType(bulletList)
+    });
+  }
 
-    this.dispatchCommand(toggleMark(mark));
-  };
-
-  // TODO(burdon): Not used.
-  handleNodeTypeButtonClick = (name, attrs) => {
-    const { view: { state: { schema } } } = this.props;
-
-    this.dispatchCommand(setBlockType(schema.nodes[name], attrs));
-  };
-
-  // TODO(burdon): Not used.
-  handleWrapperButtonClick = command => event => {
-    event.preventDefault();
-
-    this.dispatchCommand(command);
-  };
-
-  handleSetLink = (title, linkUrl) => {
-    const { view: { state: { doc, selection, schema } } } = this.props;
-    if (selection.empty) {
-      return false;
-    }
-
-    const attrs = { title, href: linkUrl };
-
-    if (doc.rangeHasMark(selection.from, selection.to, schema.marks.link)) {
-      this.dispatchCommand(toggleMark(schema.marks.link, attrs));
-    }
-
-    return this.dispatchCommand(toggleMark(schema.marks.link, attrs));
-  };
-
-  handleRemoveLink = () => {
-    const { view: { state: { schema, selection } } } = this.props;
-    if (selection.empty) {
-      return false;
-    }
-
-    this.dispatchCommand(toggleMark(schema.marks.link));
-  };
-
-  render () {
-    const {
-      view,
-      imagePopupSrcLabel,
-      classes
-    } = this.props;
-
-    const { canUndo, canRedo, canSetLink, selectedLinkNodes } = this.state;
-
-    if (!view) {
-      return null;
-    }
-
-    return (
-      <MUIToolbar disableGutters classes={classes}>
-        <ToolbarHistoryButtons
-          canUndo={canUndo}
-          canRedo={canRedo}
-          onClick={this.handleHistoryButtonClick}
-        />
-        <ToolbarDivider />
-        <ToolbarNodeTypesButton view={view} />
-        <ToolbarDivider />
-        <ToolbarMarkButtons view={view} />
-        <ToolbarDivider />
-        <ToolbarWrapperButtons view={view} />
-        <ToolbarDivider />
-        {view.state.schema.marks.link && (
-          <ToolbarLinkButton
-            view={view}
-            onSetLink={this.handleSetLink}
-            onRemoveLink={this.handleRemoveLink}
-            disabled={!canSetLink}
-            selectedLinkNodes={selectedLinkNodes}
-          />
-        )}
+  if (image) {
+    extraButtons.push({
+      component: () => (
         <ToolbarImageButton
-          view={view}
-          popupSrcLabel={imagePopupSrcLabel}
+          popupSrcLabel={props.imagePopupSrcLabel}
         />
-      </MUIToolbar>
-    );
+      )
+    });
   }
-}
 
-const Toolbar = withStyles(toolbarStyles)(ToolbarComponent);
-export const ToolbarPropTypes = PropTypes.shape({
-  imagePopupSrcLabel: PropTypes.string
-}).isRequired;
+  buttons.push(
+    ...historyButtons,
+    { divider: true },
+    ...nodeButtons,
+    { divider: true },
+    ...markButtons,
+    { divider: true },
+    ...wrapperButtons,
+    { divider: true },
+    ...extraButtons
+  );
 
-Toolbar.propTypes = ToolbarPropTypes;
+  return buttons.filter(Boolean);
+};
 
-const ToolbarDivider = withStyles(dividerStyles)(({ classes }) => {
-  return <MUIDivider orientation='vertical' classes={classes} />;
-});
+const Toolbar = ({
+  classes,
+  imagePopupSrcLabel
+}) => {
+  const { toolbar: toolbarClass, divider: dividerClass } = useStyles();
+
+  const [buttons, setButtons] = useState([]);
+
+  const [prosemirrorView] = useProsemirrorView();
+
+  useEffect(() => {
+    if (!prosemirrorView) return;
+
+    setButtons(buildButtons(prosemirrorView.state.schema, { imagePopupSrcLabel }));
+  }, [prosemirrorView]);
+
+  const handleButtonClick = useCallback(button => event => {
+    const { state, dispatch } = prosemirrorView;
+    button.onClick(state, dispatch);
+    prosemirrorView.focus();
+  }, [prosemirrorView]);
+
+  return (
+    <MUIToolbar disableGutters classes={classes} className={toolbarClass}>
+      {buttons.map((button, index) => {
+        if (button.divider) {
+          return <MUIDivider key={`divider-${index}`} orientation='vertical' className={dividerClass} />;
+        }
+
+        if (button.component) {
+          const { component: Component } = button;
+          return <Component key={`component-button-${index}`} />;
+        }
+
+        return (
+          <ToolbarButton
+            key={button.name}
+            name={button.name}
+            icon={button.icon}
+            title={button.title}
+            onClick={handleButtonClick(button)}
+            disabled={button.enabled && !button.enabled(prosemirrorView.state)}
+            active={button.active && button.active(prosemirrorView.state)}
+          />
+        );
+      })}
+    </MUIToolbar>
+  );
+};
 
 export default Toolbar;

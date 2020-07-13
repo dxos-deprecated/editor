@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-import { baseKeymap, chainCommands, splitBlockKeepMarks, newlineInCode, createParagraphNear, liftEmptyBlock } from 'prosemirror-commands';
+import { baseKeymap, chainCommands, splitBlockKeepMarks, newlineInCode, createParagraphNear, liftEmptyBlock, toggleMark } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { wrapInList } from 'prosemirror-schema-list';
 import { buildKeymap } from 'prosemirror-example-setup';
@@ -27,24 +27,23 @@ const textBreakCmd = (state, dispatch) => {
 // Maintain previous mark state. If user hits enter, will keep marks like Bold, Italic, etc
 const hardBreakCmd = chainCommands(newlineInCode, createParagraphNear, liftEmptyBlock, splitBlockKeepMarks);
 
-export const buildKeysPlugins = (schema, plugins, { initialFontSize, useTextBreak = true }) => {
+const getCurrentFontSize = view => {
+  const fontSizeStyle = window.getComputedStyle(view.dom, null).getPropertyValue('font-size');
+  return parseInt(parseFloat(fontSizeStyle), 10);
+};
+
+export const buildKeysPlugins = (schema, plugins, { useTextBreak = true }) => {
   plugins.push(
     keymap({
       'Mod-=': (state, dispatch, view) => {
-        const current = parseInt(
-          parseFloat(view.dom.style.fontSize || initialFontSize),
-          10
-        );
+        const current = getCurrentFontSize(view);
 
         view.dom.style.fontSize = `${current + 1}px`;
         return true;
       },
 
       'Mod--': (state, dispatch, view) => {
-        const current = parseInt(
-          parseFloat(view.dom.style.fontSize || initialFontSize),
-          10
-        );
+        const current = getCurrentFontSize(view);
 
         view.dom.style.fontSize = `${current - 1}px`;
         return true;
@@ -72,8 +71,17 @@ export const buildKeysPlugins = (schema, plugins, { initialFontSize, useTextBrea
 
         return true;
       }
-    }),
 
+    })
+  );
+
+  if (schema.marks.underline) {
+    plugins.push(keymap({
+      'Mod-u': toggleMark(schema.marks.underline)
+    }));
+  }
+
+  plugins.push(
     // Example setup keymaps
     keymap(buildKeymap(schema)),
 

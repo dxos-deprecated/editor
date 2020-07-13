@@ -7,7 +7,7 @@ import classnames from 'classnames';
 
 import { makeStyles } from '@material-ui/core';
 
-const useClasses = makeStyles(theme => ({
+const useStyles = makeStyles(theme => ({
   '@global': {
     '.ProseMirror reactelement': {
       marginLeft: theme.spacing(0.5),
@@ -32,7 +32,7 @@ const useClasses = makeStyles(theme => ({
 const ReactEmbededElement = ({ prosemirrorNode, selected = false, onCreated }) => {
   const { attrs: { props = {} } } = prosemirrorNode;
 
-  const classes = useClasses({ selected });
+  const classes = useStyles({ selected });
   const reactDomContent = useRef(null);
 
   useEffect(() => {

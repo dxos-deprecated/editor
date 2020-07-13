@@ -115,6 +115,21 @@ Example:
 ```
 
 
+#### initialContent
+`string`
+
+Initial content in HTML format. Must be compatible with the chosen schema.
+
+Example:
+
+```javascript
+  <Editor
+    schema="basic"
+    initialContent="<p>Hi <strong>YOU!</strong></p>"
+  />
+```
+
+
 #### schema
 `'full' | 'basic' | 'text-only' | 'source-code' | schema`
 

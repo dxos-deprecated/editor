@@ -25,8 +25,7 @@ export const blockActive = (type, attrs = {}) => state => {
 
   return (
     to <= $from.end() &&
-    $from.parent.hasMarkup(type) &&
-    Object.keys(attrs).every(name => $from.parent.attrs[name] === attrs[name])
+    $from.parent.hasMarkup(type, attrs)
   );
 };
 

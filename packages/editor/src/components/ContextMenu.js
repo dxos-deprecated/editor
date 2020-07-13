@@ -2,143 +2,100 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Component } from 'react';
-import { EditorView } from 'prosemirror-view';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect, useCallback } from 'react';
 
-import { contextMenuPluginKey } from '../plugins/context-menu-plugin';
 import { FocusedMenu } from './Menu';
 
-class ContextMenu extends Component {
-  static defaultProps = {
-    ...FocusedMenu.defaultProps
-  }
+import { contextMenuPluginKey } from '../plugins/context-menu-plugin';
+import { useProsemirrorView, useProsemirrorTransaction } from '../lib/hook';
 
-  static getDerivedStateFromProps (props, state) {
-    const { view } = props;
-    const { prevViewId } = state;
-
-    if (view && view.id !== prevViewId) {
-      return {
-        prevViewId: view.id
-      };
-    }
-
-    return null;
-  }
-
-  state = {
-    prevViewId: undefined,
+const ContextMenu = ({
+  getOptions = () => [],
+  renderMenuItem,
+  emptyOptionsLabel = 'None',
+  maxVisibleItems = 8,
+  onSelect = () => null
+}) => {
+  const [state, setState] = useState({
     open: false,
-    options: undefined,
-    position: undefined
-  }
+    position: { top: 0, left: 0 },
+    options: []
+  });
 
-  componentDidUpdate (prevProps) {
-    const { view } = this.props;
-    const { view: prevView = {} } = prevProps;
+  const [prosemirrorView] = useProsemirrorView();
+  const [prosemirrorTransaction] = useProsemirrorTransaction();
 
-    if (view && view.id !== prevView.id) {
-      const originalDispatch = view._props.dispatchTransaction;
+  useEffect(() => {
+    if (!prosemirrorTransaction) return;
 
-      view._props.originalDispatch = originalDispatch;
+    const { transaction } = prosemirrorTransaction;
 
-      // Register to view changes.
-      view._props.dispatchTransaction = transaction => {
-        const { oldState, newState } = originalDispatch(transaction);
+    const meta = transaction.getMeta(contextMenuPluginKey);
 
-        const meta = transaction.getMeta(contextMenuPluginKey);
+    if (!meta) return;
 
-        if (meta) {
-          this.handleViewUpdate(meta);
+    if (meta.open !== undefined) {
+      setState(state => {
+        const newState = { open: meta.open };
+
+        if (meta.open) {
+          newState.options = getOptions();
+          newState.position = meta.position;
         }
 
-        return { oldState, newState, transaction };
-      };
+        return newState;
+      });
     }
-  }
+  }, [prosemirrorTransaction]);
 
-  handleViewUpdate = data => {
-    if (data.open) {
-      return this.handleOpenMenu(data);
-    }
+  const handleCloseMenu = useCallback(() => {
+    setState(state => ({ ...state, open: false }));
 
-    this.setState({ open: false });
-  }
-
-  handleOpenMenu = ({ position }) => {
-    const { getOptions } = this.props;
-
-    this.setState({
-      options: getOptions(),
-      open: true,
-      position
-    });
-  }
-
-  handleCloseMenu = () => {
-    const { view } = this.props;
-
-    this.setState({ open: false });
-
-    view.dispatch(
-      view.state.tr.setMeta(contextMenuPluginKey, {
+    prosemirrorView.dispatch(
+      prosemirrorView.state.tr.setMeta(contextMenuPluginKey, {
         open: false
       })
     );
-  }
+  }, [prosemirrorView]);
 
-  handleSelectOption = option => {
-    const { view, onSelect } = this.props;
+  const handleSelectOption = useCallback(option => {
+    onSelect(option, prosemirrorView);
+    setState(state => ({ ...state, open: false }));
 
-    onSelect(option, view);
+    prosemirrorView.focus();
+  }, [prosemirrorView, onSelect]);
 
-    view.focus();
-  }
-
-  handleContextMenu = event => {
+  const handleContextMenu = useCallback(event => {
     event.preventDefault();
     event.persist();
 
-    this.setState({
-      open: false
-    }, () => this.setState({
-      open: true,
-      position: {
-        top: event.clientY,
-        left: event.clientX
-      }
-    }));
-  }
-
-  render () {
-    const { view, renderMenuItem, emptyOptionsLabel, maxVisibleItems } = this.props;
-    const { open, options, position } = this.state;
-
-    if (!view) return null;
-
-    return (
-      <FocusedMenu
-        open={open}
-        dom={view.dom}
-        options={options}
-        onSelect={this.handleSelectOption}
-        onClose={this.handleCloseMenu}
-        onContextMenu={this.handleContextMenu}
-        position={position}
-        renderMenuItem={renderMenuItem}
-        emptyOptionsLabel={emptyOptionsLabel}
-        maxVisibleItems={maxVisibleItems}
-      />
+    prosemirrorView.dispatch(
+      prosemirrorView.state.tr.setMeta(contextMenuPluginKey, {
+        open: false,
+        position: {
+          top: event.clientY,
+          left: event.clientX
+        }
+      })
     );
-  }
-}
+  }, [prosemirrorView]);
 
-export const ContextMenuPropTypes = PropTypes.shape({
-  view: PropTypes.instanceOf(EditorView),
-  getOptions: PropTypes.func
-}).isRequired;
+  if (!prosemirrorView) return null;
 
-ContextMenu.propTypes = ContextMenuPropTypes;
+  return (
+    <FocusedMenu
+      open={state.open}
+      dom={prosemirrorView.dom}
+      options={state.options}
+      onSelect={handleSelectOption}
+      onClose={handleCloseMenu}
+      onContextMenu={handleContextMenu}
+      position={state.position}
+      renderMenuItem={renderMenuItem}
+      emptyOptionsLabel={emptyOptionsLabel}
+      maxVisibleItems={maxVisibleItems}
+    />
+  );
+};
 
 export default ContextMenu;

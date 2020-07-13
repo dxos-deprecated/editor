@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 import { Editor } from '../src';
+import { TextSelection } from 'prosemirror-state';
 
 class Suggestions extends Component {
   handleGetOptions = (query = '') => {
@@ -13,9 +14,12 @@ class Suggestions extends Component {
   };
 
   handleSelect = (option, view, start, end) => {
-    let { tr } = view.state;
+    const { tr } = view.state;
 
-    tr = tr.replaceWith(start, end, view.state.schema.text('@' + option.label));
+    const textNode = view.state.selection.$anchor.nodeBefore;
+    const textSelection = TextSelection.create(view.state.doc, view.state.selection.anchor - (textNode.nodeSize - 1), view.state.selection.head);
+
+    textSelection.replaceWith(tr, view.state.schema.text(option.label));
 
     view.dispatch(tr);
   };
