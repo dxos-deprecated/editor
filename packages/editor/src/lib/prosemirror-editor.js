@@ -26,7 +26,7 @@ import { buildProsemirrorEvents } from './prosemirror-events';
 export const createProsemirrorEditor = (element, options) => {
   const {
     contextMenu,
-    htmlContent,
+    initialContent,
     onTransaction,
     plugins: userPlugins = [],
     schema: schemaName,
@@ -95,9 +95,9 @@ export const createProsemirrorEditor = (element, options) => {
     };
   }
 
-  if (htmlContent) {
+  if (initialContent) {
     const html = window.document.createElement('div');
-    html.innerHTML = htmlContent;
+    html.innerHTML = initialContent;
     doc = domParser.parse(html);
   }
 

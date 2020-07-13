@@ -95,7 +95,7 @@ const useStyles = makeStyles(theme => ({
 const Editor = ({
   classes: userClasses = {},
   contextMenu,
-  htmlContent,
+  initialContent,
   initialFontSize = 22,
   language,
   onContentChange,
@@ -124,7 +124,7 @@ const Editor = ({
 
     editor.current = createProsemirrorEditor(editorDom.current, {
       contextMenu,
-      htmlContent,
+      initialContent,
       language,
       onReactElementDomCreated: handleReactElementDomCreated,
       onTransaction: setProsemirrorTransaction,

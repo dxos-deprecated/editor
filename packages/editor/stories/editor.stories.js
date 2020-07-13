@@ -35,6 +35,7 @@ storiesOf('Editor', module)
   .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />)
   .add('Suggestions', () => <Suggestions />)
+  .add('Initial content', () => <Editor initialContent={'<p>Hi <strong>YOU!</strong></p>'} />)
   .add('Styles', () => <Styled />);
 
 storiesOf('Collaborative', module)
