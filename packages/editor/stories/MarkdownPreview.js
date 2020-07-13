@@ -5,8 +5,8 @@
 import React, { useCallback, useState } from 'react';
 import { makeStyles } from '@material-ui/core';
 
-import { SourceCodeEditor } from '../src';
 import { markdownToReact } from '../src/lib/transform';
+import { SourceCodeEditor } from '../src';
 
 const useClasses = makeStyles(theme => ({
   root: {

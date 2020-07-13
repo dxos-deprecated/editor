@@ -2,7 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-import { baseKeymap, chainCommands, splitBlockKeepMarks, newlineInCode, createParagraphNear, liftEmptyBlock, toggleMark } from 'prosemirror-commands';
+import {
+  baseKeymap, chainCommands, splitBlockKeepMarks, newlineInCode, createParagraphNear, liftEmptyBlock, toggleMark
+} from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { wrapInList } from 'prosemirror-schema-list';
 import { buildKeymap } from 'prosemirror-example-setup';

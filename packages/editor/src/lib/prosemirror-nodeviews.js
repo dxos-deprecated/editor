@@ -5,9 +5,9 @@
 import ReactDOM from 'react-dom';
 import React from 'react';
 import { uuidv4 } from 'lib0/random';
+import { NodeSelection } from 'prosemirror-state';
 
 import ReactEmbededElement from '../components/ReactEmbededElement';
-import { NodeSelection } from 'prosemirror-state';
 
 const reactElementNodeView = ({ onReactElementDomCreated }) => {
   return function (node, view, getPos) {
@@ -59,8 +59,10 @@ const reactElementNodeView = ({ onReactElementDomCreated }) => {
       }
     };
 
+    // TODO(burdon): Use @dxos/crypto:createId?
     nodeView.dom.setAttribute('props', encodeURI(JSON.stringify(props)));
     nodeView.dom.id = uuidv4();
+
     // Ctrl
     nodeView.dom.addEventListener('click', event => {
       if (event.ctrlKey) {

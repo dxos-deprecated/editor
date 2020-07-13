@@ -7,7 +7,7 @@ import React, { useCallback, forwardRef, useRef } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 
 import Divider from '@material-ui/core/Divider';
-import MUIMenu from '@material-ui/core/Menu';
+import MuiMenu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
 import Paper from '@material-ui/core/Paper';
@@ -47,7 +47,7 @@ export const FocusedMenu = ({
   const ref = useRef();
 
   return (
-    <MUIMenu
+    <MuiMenu
       open={Boolean(open)}
       anchorEl={dom}
       anchorReference='anchorPosition'
@@ -65,7 +65,7 @@ export const FocusedMenu = ({
         onSelect={onSelect}
         ref={ref}
       />
-    </MUIMenu>
+    </MuiMenu>
   );
 };
 
