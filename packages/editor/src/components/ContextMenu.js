@@ -31,7 +31,6 @@ const ContextMenu = ({
     const { transaction } = prosemirrorTransaction;
 
     const meta = transaction.getMeta(contextMenuPluginKey);
-
     if (!meta) return;
 
     if (meta.open !== undefined) {

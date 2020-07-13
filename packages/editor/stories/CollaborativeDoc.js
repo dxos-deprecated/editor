@@ -3,14 +3,13 @@
 //
 
 import React, { Component } from 'react';
+import { Doc, applyUpdate } from 'yjs';
 
 import { withStyles } from '@material-ui/core/styles';
 
 import { Editor } from '../src';
 
 import { styles } from './styles';
-
-import { Doc, applyUpdate } from 'yjs';
 
 class CollaborativeDoc extends Component {
   static count = 0;

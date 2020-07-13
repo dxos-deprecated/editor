@@ -2,11 +2,11 @@
 // Copyright 2020 DXOS.org
 //
 
+import { Schema } from 'prosemirror-model';
 import { nodes, marks } from 'prosemirror-schema-basic';
 import { addListNodes } from 'prosemirror-schema-list';
 
 import { underlineMark } from './common';
-import { Schema } from 'prosemirror-model';
 
 export const createSchema = () => {
   const schemaSpec = {

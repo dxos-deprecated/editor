@@ -1,3 +1,7 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import React, { Component } from 'react';
 
 import { Editor } from '../src';

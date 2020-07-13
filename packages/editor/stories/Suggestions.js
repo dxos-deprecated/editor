@@ -1,7 +1,11 @@
+//
+// Copyright 2020 DXOS.org
+//
+
 import React, { Component } from 'react';
+import { TextSelection } from 'prosemirror-state';
 
 import { Editor } from '../src';
-import { TextSelection } from 'prosemirror-state';
 
 class Suggestions extends Component {
   handleGetOptions = (query = '') => {

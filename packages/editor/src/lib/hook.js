@@ -2,8 +2,9 @@
 // Copyright 2020 DXOS.org
 //
 
-const { useContext } = require('react');
-const { EditorContext } = require('./context');
+import { useContext } from 'react';
+
+import { EditorContext } from './context';
 
 export const useProsemirrorView = () => {
   const { prosemirrorView, setProsemirrorView } = useContext(EditorContext);
