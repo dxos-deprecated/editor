@@ -191,13 +191,12 @@ const buildButtons = (schema, props) => {
 
   buttons.push(
     ...historyButtons,
-    { divider: true },
-    ...nodeButtons,
-    { divider: true },
+    ...(nodeButtons.length > 1 ? [{ divider: true }, ...nodeButtons] : []),
+    markButtons.length > 0 && { divider: true },
     ...markButtons,
-    { divider: true },
+    wrapperButtons.length > 0 && { divider: true },
     ...wrapperButtons,
-    { divider: true },
+    extraButtons.length > 0 && { divider: true },
     ...extraButtons
   );
 

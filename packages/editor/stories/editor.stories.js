@@ -47,7 +47,9 @@ storiesOf('Collaborative', module)
 storiesOf('Editor Toolbar', module)
   .addDecorator(MuiTheme)
   .addDecorator(RootContainer)
-  .add('Default', () => <Editor schema='full' toolbar />)
+  .add('Default', () => <Editor toolbar />)
+  .add('Schema full', () => <Editor schema='full' toolbar />)
+  .add('Schema text-only', () => <Editor schema='text-only' toolbar />)
   .add('Custom image popup', () => (
     <Editor
       schema='full'
