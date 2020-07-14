@@ -85,7 +85,9 @@ export const buildKeysPlugins = (schema, plugins, { useTextBreak = true }) => {
 
   plugins.push(
     // Example setup keymaps
-    keymap(buildKeymap(schema)),
+    keymap(buildKeymap(schema, {
+      Escape: false
+    })),
 
     keymap({
       Enter: useTextBreak ? textBreakCmd : hardBreakCmd

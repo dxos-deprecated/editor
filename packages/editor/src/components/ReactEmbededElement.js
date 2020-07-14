@@ -3,36 +3,33 @@
 //
 
 import React, { useEffect, useRef } from 'react';
-import classnames from 'classnames';
 
 import { makeStyles } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
     '.ProseMirror reactelement': {
-      marginLeft: theme.spacing(0.5),
-      marginRight: theme.spacing(0.5),
-      display: 'inline-block',
-      position: 'relative',
-      overflow: 'hidden',
-      cursor: 'default'
+      position: 'relative'
+    },
+
+    '.ProseMirror reactelement.ProseMirror-selectednode': {
+      border: `${theme.spacing(0.2)}px solid ${theme.palette.primary.light}`
     }
   },
 
   root: {
-    padding: theme.spacing(0.5)
-  },
+    padding: theme.spacing(0.2),
 
-  selected: {
-    padding: theme.spacing(0.3),
-    border: `${theme.spacing(0.2)}px solid ${theme.palette.primary.light}`
+    '.ProseMirror reactelement.ProseMirror-selectednode > &': {
+      padding: 0
+    }
   }
 }));
 
-const ReactEmbededElement = ({ prosemirrorNode, selected = false, onCreated }) => {
+const ReactEmbededElement = ({ prosemirrorNode, onCreated }) => {
   const { attrs: { props = {} } } = prosemirrorNode;
 
-  const classes = useStyles({ selected });
+  const classes = useStyles();
   const reactDomContent = useRef(null);
 
   useEffect(() => {
@@ -40,10 +37,8 @@ const ReactEmbededElement = ({ prosemirrorNode, selected = false, onCreated }) =
   }, []);
 
   return (
-    <div
-      className={classnames(classes.root, selected && classes.selected)}
-    >
-      <div className={classes.content} ref={reactDomContent} />
+    <div className={classes.root}>
+      <div ref={reactDomContent} />
     </div>
   );
 };

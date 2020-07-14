@@ -4,24 +4,39 @@
 
 import React, { useCallback } from 'react';
 
+import { makeStyles } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 
 import { Editor } from '../src';
 
+const useStyles = makeStyles({
+  blockEmbed: {
+    backgroundColor: ' red'
+  },
+
+  inlineEmbed: {
+    backgroundColor: '#ccc',
+    marginLeft: 4,
+    marginRight: 4
+  }
+});
+
 const ReactContent = () => {
+  const classes = useStyles();
+
   const handleCreated = useCallback((editor) => {
-    editor.createReactElement({ id: '1' });
-    editor.createReactElement({ id: '2' });
+    editor.createReactElement({ id: 'button-component' }, { className: classes.blockEmbed });
+    editor.createReactElement({ id: 'textarea-component' }, { className: classes.inlineEmbed, inline: true });
   }, []);
 
   // Here you decide what/how to render
   const handleReactElementRender = props => {
     return (
-      props.id === '1'
+      props.id === 'button-component'
         ? (
           <Button
             variant='contained'
-            color={props.id === '1' ? 'primary' : 'secondary'}
+            color='primary'
             onClick={() => {
               console.log('Button click', JSON.stringify(props, null, 2));
             }}
@@ -30,7 +45,7 @@ const ReactContent = () => {
           </Button>
         )
         : (
-          <textarea rows={5} defaultValue='Ctrl + click to select element' />
+          <textarea rows={5} defaultValue='Textarea content' />
         )
     );
   };
