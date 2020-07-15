@@ -60,11 +60,28 @@ export const MyEditor = () => {
 When Editor is created it will call [`onCreated`](#onCreated) callback with an `editor` instance. This instance allows you to control current editor.
 
 #### editor.createReactElement
-`function(props: object)`
+`function(props: object, options: object)`
 
-You can insert a React element that should be placed on current selection or position. This functions creates an _slot_ for you element based on `props`. You must provide a valid [`reactElementRenderFn`](#reactElementRenderFn) that will be used to render the real React element that you need. 
+You can insert a React element that should be placed on current selection or position. This functions creates an _slot_ (a node for Prosmirror Document) for you element.
 
-`props` must be any valid JSON serializable object because it will be used to create a Prosemirror and DOM node that holds your React element. 
+If you see the DOM after react element is inserted you will see:
+```html
+...
+<p>
+  Normal text...
+  <reactelement props="{props}" class="{options.className}">
+    <YOUR_COMPONENT_HERE />
+  </reactelement>
+</p>
+...
+```
+
+`props`: React props of your embeded component. Must be any valid JSON serializable object because it will be used also to serializate Prosemirror document (for copy/paste or sharing).
+
+`options.className`: Class name string for your react element container (`<reactelement class="{options.className}" />`).
+`options.inline`: Displays `<reactelement>` inline with text. Defaults to `false`: inserted `<reactelement>` will be displayed as block element.
+
+Remember to provide [`reactElementRenderFn`](#reactElementRenderFn) to <Editor /> component that will be used to render the real React element that you need.
 
 See [react content story](stories/ReactContent.js) for a complete example.
 
@@ -322,7 +339,7 @@ Callback called on every local status update. You must share this update with yo
 #### classes: `object`
 Classes for editor.
 
-Available classes: 
+Available classes:
 - `root`: Root Editor container.
 - `toolbarContainer`: Toolbar.
 - `editorContainer`: Prosemirror editor container.

@@ -10,39 +10,15 @@ import { NodeSelection } from 'prosemirror-state';
 import ReactEmbededElement from '../components/ReactEmbededElement';
 
 const reactElementNodeView = ({ onReactElementDomCreated }) => {
-  return function (node, view, getPos) {
-    const { attrs: { props = {} } } = node;
+  return function (node) {
+    const { attrs: { props = {}, className = '', inline = false } } = node;
 
     const nodeView = {
       dom: window.document.createElement('reactelement'),
 
-      selected: false,
-
-      locked: true,
-
-      deselectNode () {
-        this.selected = false;
-        this.updateReactElement();
-      },
-
-      selectNode () {
-        this.selected = true;
-        this.updateReactElement();
-      },
-
       stopEvent (event) {
         // Allow dragging (enable on view spec also)
         // if (event.type.startsWith('drag')) return false;
-
-        if (event.type === 'mousedown' && event.ctrlKey) {
-          const { tr } = view.state;
-          const newState = view.state.apply(
-            tr.setSelection(NodeSelection.create(tr.doc, getPos()))
-          );
-          view.updateState(newState);
-
-          return false;
-        }
 
         return true;
       },
@@ -51,7 +27,6 @@ const reactElementNodeView = ({ onReactElementDomCreated }) => {
         ReactDOM.render(
           <ReactEmbededElement
             prosemirrorNode={node}
-            selected={this.selected}
             onCreated={onReactElementDomCreated}
           />,
           this.dom
@@ -59,16 +34,11 @@ const reactElementNodeView = ({ onReactElementDomCreated }) => {
       }
     };
 
-    // TODO(burdon): Use @dxos/crypto:createId?
-    nodeView.dom.setAttribute('props', encodeURI(JSON.stringify(props)));
     nodeView.dom.id = uuidv4();
-
-    // Ctrl
-    nodeView.dom.addEventListener('click', event => {
-      if (event.ctrlKey) {
-        event.stopPropagation();
-      }
-    }, { capture: true });
+    nodeView.dom.setAttribute('props', encodeURI(JSON.stringify(props)));
+    nodeView.dom.setAttribute('inline', inline);
+    nodeView.dom.style.display = inline ? 'inline-block' : 'block';
+    nodeView.dom.className = className;
 
     // First render
     nodeView.updateReactElement();

@@ -35,10 +35,10 @@ export const createProsemirrorEditor = (element, options) => {
   } = options;
 
   const editor = {
-    createReactElement (props) {
+    createReactElement (props, { className, inline } = {}) {
       const { tr, selection, schema } = editor.view.state;
 
-      selection.replaceWith(tr, schema.node('react_element', { props }));
+      selection.replaceWith(tr, schema.node('react_element', { props, className, inline }));
 
       view.dispatch(tr);
     }
