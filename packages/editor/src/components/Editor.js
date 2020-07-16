@@ -27,14 +27,15 @@ const useStyles = makeStyles(theme => ({
   editorContainer: {
     flexGrow: 1,
     overflow: 'auto',
+    padding: theme.spacing(1),
     backgroundColor: '#ffffff',
-    cursor: 'text'
+    cursor: 'text',
+    maxHeight: 'fill-available'
   },
 
   editor: ({ initialFontSize }) => ({
     position: 'relative',
-    padding: theme.spacing(1),
-    backgroundColor: '#ffffff',
+    backgroundColor: '#fffff',
     fontSize: initialFontSize,
     outline: 'none',
     fontVariantLigatures: 'none',
