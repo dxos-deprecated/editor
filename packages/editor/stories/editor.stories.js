@@ -20,6 +20,8 @@ import Suggestions from './Suggestions';
 import Styled from './Styled';
 import CollaborativeSourceCodeEditor from './CollaborativeSourceCodeEditor';
 import MarkdownPreview from './MarkdownPreview';
+import Scroll from './Scroll';
+import LongText from './LongText';
 
 const RootContainer = story => {
   const RootComponent = withStyles(styles)(({ classes }) => <div className={classes.root}>{story()}</div>);
@@ -36,7 +38,9 @@ storiesOf('Editor', module)
   .add('Context menu', () => <ContextMenu />)
   .add('Suggestions', () => <Suggestions />)
   .add('Initial content', () => <Editor initialContent={'<p>Hi <strong>YOU!</strong></p>'} />)
-  .add('Styles', () => <Styled />);
+  .add('Styles', () => <Styled />)
+  .add('Scroll', () => <Scroll />)
+  .add('Long Text', () => <LongText />);
 
 storiesOf('Collaborative', module)
   .addDecorator(MuiTheme)
