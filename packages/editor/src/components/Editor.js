@@ -46,7 +46,6 @@ const useStyles = makeStyles(theme => ({
 
     '& pre': {
       whiteSpace: 'pre-wrap',
-      backgroundColor: theme.palette.grey[200],
       marginTop: theme.spacing(1),
       marginBottom: theme.spacing(1),
       padding: theme.spacing(1)
