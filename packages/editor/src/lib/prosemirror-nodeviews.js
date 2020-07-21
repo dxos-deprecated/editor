@@ -2,46 +2,36 @@
 // Copyright 2020 DXOS.org
 //
 
-import ReactDOM from 'react-dom';
-import React from 'react';
-import { uuidv4 } from 'lib0/random';
-import { NodeSelection } from 'prosemirror-state';
-
-import ReactEmbededElement from '../components/ReactEmbededElement';
-
-const reactElementNodeView = ({ onReactElementDomCreated }) => {
+const createReactElementNodeView = (type = 'block', { onReactElementDomCreated }) => {
   return function (node) {
-    const { attrs: { props = {}, className = '', inline = false } } = node;
+    const { attrs: { props = {}, className = '' } } = node;
+
+    const dom = window.document.createElement(`${type}reactelement`);
 
     const nodeView = {
-      dom: window.document.createElement('reactelement'),
-
-      stopEvent (event) {
-        // Allow dragging (enable on view spec also)
-        // if (event.type.startsWith('drag')) return false;
-
+      dom,
+      stopEvent (event) { return true; },
+      ignoreMutation () { return true; },
+      update (updatedNode) {
+        if (!updatedNode.sameMarkup(node)) return false;
         return true;
       },
-
-      updateReactElement () {
-        ReactDOM.render(
-          <ReactEmbededElement
-            prosemirrorNode={node}
-            onCreated={onReactElementDomCreated}
-          />,
-          this.dom
-        );
+      selectNode () {
+        const content = dom.querySelector('.react-element-content');
+        if (!content) return;
+        content.classList.add('selected');
+      },
+      deselectNode () {
+        const content = dom.querySelector('.react-element-content');
+        if (!content) return;
+        content.classList.remove('selected');
       }
     };
 
-    nodeView.dom.id = uuidv4();
-    nodeView.dom.setAttribute('props', encodeURI(JSON.stringify(props)));
-    nodeView.dom.setAttribute('inline', inline);
-    nodeView.dom.style.display = inline ? 'inline-block' : 'block';
-    nodeView.dom.className = className;
+    dom.setAttribute('props', encodeURI(JSON.stringify(props)));
+    dom.className = className;
 
-    // First render
-    nodeView.updateReactElement();
+    onReactElementDomCreated(props, dom);
 
     return nodeView;
   };
@@ -90,8 +80,12 @@ const linkNodeView = () => {
 export const buildProsemirrorNodeViews = (options, schema) => {
   const nodeViews = {};
 
-  if (schema.nodes.react_element) {
-    nodeViews.react_element = reactElementNodeView(options);
+  if (schema.nodes.block_react_element) {
+    nodeViews.block_react_element = createReactElementNodeView('block', options);
+  }
+
+  if (schema.nodes.inline_react_element) {
+    nodeViews.inline_react_element = createReactElementNodeView('inline', options);
   }
 
   if (schema.marks.link) {

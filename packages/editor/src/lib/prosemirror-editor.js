@@ -35,14 +35,20 @@ export const createProsemirrorEditor = (element, options) => {
   } = options;
 
   const editor = {
-    createReactElement (props, { className, inline } = {}) {
-      const { tr, selection, schema } = editor.view.state;
+    _createReactElement (type = 'block') {
+      return (props, { className } = {}) => {
+        const { tr, selection, schema } = editor.view.state;
 
-      selection.replaceWith(tr, schema.node('react_element', { props, className, inline }));
+        selection.replaceWith(tr, schema.node(`${type}_react_element`, { props, className }));
 
-      view.dispatch(tr);
+        view.dispatch(tr);
+      };
     }
   };
+
+  editor.createInlineReactElement = editor._createReactElement('inline');
+  editor.createBlockReactElement = editor._createReactElement('block');
+  editor.createReactElement = editor.createBlockReactElement;
 
   // Build schema and get schema initial PM Doc content (empty doc).
   const { schema, initialDoc } = createSchema(schemaName, options);

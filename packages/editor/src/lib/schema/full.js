@@ -6,14 +6,15 @@ import { Schema } from 'prosemirror-model';
 import { nodes, marks } from 'prosemirror-schema-basic';
 import { addListNodes } from 'prosemirror-schema-list';
 
-import { underlineMark, reactElementNode } from './common';
+import { underlineMark, blockReactElementNode, inlineReactElementNode } from './common';
 
 export const createSchema = () => {
   const schemaSpec = {
     nodes: {
       ...nodes,
 
-      react_element: reactElementNode
+      block_react_element: blockReactElementNode,
+      inline_react_element: inlineReactElementNode
     },
 
     marks: {

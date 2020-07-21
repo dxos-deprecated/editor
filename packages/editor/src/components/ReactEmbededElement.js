@@ -2,43 +2,41 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import classnames from 'classnames';
 
 import { makeStyles } from '@material-ui/core';
 
 const useStyles = makeStyles(theme => ({
   '@global': {
-    '.ProseMirror reactelement': {
-      position: 'relative'
+    '.ProseMirror blockreactelement, .ProseMirror inlinereactelement': {
+      verticalAlign: 'bottom',
+      position: 'relative',
+      userSelect: 'none'
     },
 
-    '.ProseMirror reactelement.ProseMirror-selectednode': {
-      border: `${theme.spacing(0.2)}px solid ${theme.palette.primary.light}`
+    '.ProseMirror blockreactelement': {
+      display: 'block'
+    },
+
+    '.ProseMirror inlinereactelement': {
+      display: 'inline-block'
     }
   },
 
   root: {
-    padding: theme.spacing(0.2),
-
-    '.ProseMirror reactelement.ProseMirror-selectednode > &': {
-      padding: 0
+    '&.selected': {
+      outline: `thin solid ${theme.palette.primary.main}`
     }
   }
 }));
 
-const ReactEmbededElement = ({ prosemirrorNode, onCreated }) => {
-  const { attrs: { props = {} } } = prosemirrorNode;
-
+const ReactEmbededElement = ({ children }) => {
   const classes = useStyles();
-  const reactDomContent = useRef(null);
-
-  useEffect(() => {
-    onCreated(reactDomContent.current, props);
-  }, []);
 
   return (
-    <div className={classes.root}>
-      <div ref={reactDomContent} />
+    <div className={classnames('react-element-content', classes.root)}>
+      {children}
     </div>
   );
 };
