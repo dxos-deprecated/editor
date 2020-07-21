@@ -28,13 +28,14 @@ const RootContainer = story => {
   return <RootComponent />;
 };
 
-storiesOf('Editor', module)
+const buildStoriesOf = name => storiesOf(name, module)
   .addDecorator(MuiTheme)
-  .addDecorator(RootContainer)
+  .addDecorator(RootContainer);
+
+buildStoriesOf('Editor')
   .add('Default', () => <Editor />)
   .add('Text only schema', () => <Editor schema='text-only' />)
   .add('Full schema', () => <Editor schema='full' />)
-  .add('React content', () => <ReactContent />)
   .add('Context menu', () => <ContextMenu />)
   .add('Suggestions', () => <Suggestions />)
   .add('Initial content', () => <Editor initialContent={'<p>Hi <strong>YOU!</strong></p>'} />)
@@ -42,15 +43,14 @@ storiesOf('Editor', module)
   .add('Scroll', () => <Scroll />)
   .add('Long Text', () => <LongText />);
 
-storiesOf('Collaborative', module)
-  .addDecorator(MuiTheme)
-  .addDecorator(RootContainer)
+buildStoriesOf('React content')
+  .add('Basic', () => <ReactContent />);
+
+buildStoriesOf('Collaborative')
   .add('Default', () => (<Collaborative peers={2} />))
   .add('Using Doc', () => (<CollaborativeDoc peers={2} />));
 
-storiesOf('Editor Toolbar', module)
-  .addDecorator(MuiTheme)
-  .addDecorator(RootContainer)
+buildStoriesOf('Editor Toolbar')
   .add('Default', () => <Editor toolbar />)
   .add('Schema full', () => <Editor schema='full' toolbar />)
   .add('Schema text-only', () => <Editor schema='text-only' toolbar />)
@@ -63,9 +63,7 @@ storiesOf('Editor Toolbar', module)
     />
   ));
 
-storiesOf('Source code editor', module)
-  .addDecorator(MuiTheme)
-  .addDecorator(RootContainer)
+buildStoriesOf('Source code editor')
   .add('Default (Plain text)', () => <SourceCodeEditor />)
   .add('Javascript syntax', () => <SourceCodeEditor language='javascript' />)
   .add('Disable highlight', () => <SourceCodeEditor highlight={false} />)

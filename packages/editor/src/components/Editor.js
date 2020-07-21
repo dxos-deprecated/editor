@@ -11,6 +11,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Toolbar from './Toolbar';
 import ContextMenu from './ContextMenu';
 import Suggestions from './Suggestions';
+import ReactEmbededElement from './ReactEmbededElement';
 
 import { createProsemirrorEditor } from '../lib/prosemirror-editor';
 import { useProsemirrorView, useProsemirrorTransaction } from '../lib/hook';
@@ -159,7 +160,7 @@ const Editor = ({
     editorDom.current.dispatchEvent(contextMenuEvent);
   }, []);
 
-  const handleReactElementDomCreated = useCallback((dom, props) => {
+  const handleReactElementDomCreated = useCallback((props, dom) => {
     setReactElements(reactElements => [...reactElements, { dom, props }]);
   }, []);
 
@@ -198,7 +199,9 @@ const Editor = ({
         // Placeholders of React.Portals to real components
         reactElements.map(({ dom, props }, i) => (
           ReactDOM.createPortal(
-            reactElementRenderFn({ key: i, ...props }),
+            <ReactEmbededElement>
+              {reactElementRenderFn({ key: i, ...props })}
+            </ReactEmbededElement>,
             dom
           )
         ))

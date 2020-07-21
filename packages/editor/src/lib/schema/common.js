@@ -15,37 +15,43 @@ export const underlineMark = {
   }
 };
 
-export const reactElementNode = {
-  group: 'inline',
-  inline: true,
+const reactElementNode = (type = 'block') => ({
   selectable: true,
   attrs: {
     props: { default: null },
-    className: { default: '' },
-    inline: { default: false },
-    style: { default: null }
+    className: { default: '' }
   },
+
+  // Serialization: from DOM
   parseDOM: [
     {
-      tag: 'reactelement',
+      tag: `${type}reactelement`,
       getAttrs (dom) {
         return {
-          id: dom.getAttribute('id'),
           props: JSON.parse(decodeURI(dom.getAttribute('props'))),
-          className: dom.getAttribute('class'),
-          inline: dom.getAttribute('inline')
+          className: dom.getAttribute('class')
         };
       }
     }
   ],
 
+  // Serialization: to DOM
   toDOM: node => {
-    return ['reactelement', {
-      id: node.attrs.id,
+    return [`${type}reactelement`, {
       props: encodeURI(JSON.stringify(node.attrs.props)),
-      class: node.attrs.className,
-      inline: node.attrs.inline,
-      style: `display: ${node.attrs.inline ? 'inline-block' : 'block'};`
+      class: node.attrs.className
     }];
   }
+});
+
+export const blockReactElementNode = {
+  ...reactElementNode(),
+  group: 'block',
+  atom: 'true'
+};
+
+export const inlineReactElementNode = {
+  ...reactElementNode('inline'),
+  group: 'inline',
+  inline: true
 };

@@ -59,7 +59,7 @@ export const MyEditor = () => {
 
 When Editor is created it will call [`onCreated`](#onCreated) callback with an `editor` instance. This instance allows you to control current editor.
 
-#### editor.createReactElement
+#### editor.createInlineReactElement | editor.createBlockReactElement
 `function(props: object, options: object)`
 
 You can insert a React element that should be placed on current selection or position. This functions creates an _slot_ (a node for Prosmirror Document) for you element.
@@ -69,9 +69,9 @@ If you see the DOM after react element is inserted you will see:
 ...
 <p>
   Normal text...
-  <reactelement props="{props}" class="{options.className}">
+  <blockreactelement props="{props}" class="{options.className}">
     <YOUR_COMPONENT_HERE />
-  </reactelement>
+  </blockreactelement>
 </p>
 ...
 ```
@@ -79,9 +79,34 @@ If you see the DOM after react element is inserted you will see:
 `props`: React props of your embeded component. Must be any valid JSON serializable object because it will be used also to serializate Prosemirror document (for copy/paste or sharing).
 
 `options.className`: Class name string for your react element container (`<reactelement class="{options.className}" />`).
-`options.inline`: Displays `<reactelement>` inline with text. Defaults to `false`: inserted `<reactelement>` will be displayed as block element.
 
-Remember to provide [`reactElementRenderFn`](#reactElementRenderFn) to <Editor /> component that will be used to render the real React element that you need.
+To customize selected element styles you can use:
+```javascript
+const useStyles = makeStyles(theme => ({
+  reactElement: {
+    // Styles for <blockreactelement|inlinereactelement> outer dom element
+    marginLeft: 4,
+    marginRight: 4,
+
+    // Styles for your component wrapper content
+    '& > .react-element-content': {
+      backgroundColor: '#ccc',
+      padding: 4
+    },
+
+    // Selected state
+    '&.selected': {
+      outline: `thin solid ${theme.palette.secondary.main}`
+    }
+  }
+  ...
+  ...
+  editor.createInlineReactElement({ id: 'react-component' }, { className: classes.reactElement });
+  editor.createBlockReactElement({ id: 'block-react-component' }, { className: classes.reactElement });
+}));
+```
+
+Remember to provide [`reactElementRenderFn`](#reactElementRenderFn) to `<Editor />` component that will be used to render the real React element that you need.
 
 See [react content story](stories/ReactContent.js) for a complete example.
 
