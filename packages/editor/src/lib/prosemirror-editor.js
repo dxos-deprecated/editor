@@ -3,12 +3,13 @@
 //
 
 import { EditorView } from 'prosemirror-view';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, TextSelection } from 'prosemirror-state';
 import { DOMParser } from 'prosemirror-model';
 import { history } from 'prosemirror-history';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { buildInputRules } from 'prosemirror-example-setup';
+import { toggleMark } from 'prosemirror-commands';
 
 import { uuidv4 } from 'lib0/random';
 
@@ -35,6 +36,11 @@ export const createProsemirrorEditor = (element, options) => {
   } = options;
 
   const editor = {
+    toggleMark,
+    createTextSelection: (from, to) => {
+      const { doc } = editor.view.state;
+      return TextSelection.create(doc, from, to);
+    },
     _createReactElement (type = 'block') {
       return (props, { className } = {}) => {
         const { tr, selection, schema } = editor.view.state;

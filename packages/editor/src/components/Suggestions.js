@@ -19,65 +19,81 @@ import { UnfocusedMenu } from './Menu';
 import { useProsemirrorView, useProsemirrorTransaction } from '../lib/hook';
 
 const Suggestions = ({
-  getOptions = () => [],
-  renderMenuItem,
   emptyOptionsLabel = 'None',
+  getOptions = () => [],
   maxVisibleItems = 8,
-  onSelect = () => null
+  onSelect = () => null,
+  orientation,
+  renderMenuItem,
+  triggerEventKeys
 }) => {
-  const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState(false);
   const [options, setOptions] = useState();
   const [query, setQuery] = useState();
   const [position, setPosition] = useState();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [start, setStart] = useState();
   const [end, setEnd] = useState();
+  const [keyPressed, setKeyPressed] = useState();
+  const [disabledKeys, setDisabledKeys] = useState({});
 
   const [prosemirrorView] = useProsemirrorView();
   const [prosemirrorTransaction] = useProsemirrorTransaction();
 
-  useEffect(() => {
-    if (!prosemirrorTransaction) return;
+  const handleUpdate = useCallback(meta => {
+    switch (meta.do) {
+      case 'open':
+        setPosition(meta.position);
+        setStart(meta.start);
+        setEnd(meta.end);
+        setQuery(meta.query);
+        setOpened(meta.opened);
+        break;
 
-    const { transaction } = prosemirrorTransaction;
+      case 'query':
+        setStart(meta.start);
+        setEnd(meta.end);
+        setQuery(meta.query);
+        break;
 
-    const meta = transaction.getMeta(suggestionsPluginKey);
+      case 'keyPressed':
+        setKeyPressed(meta.code);
+        break;
 
-    if (!meta) return;
-
-    if (meta.open !== undefined) {
-      if (!open && meta.open) {
-        return handleOpenMenu(meta);
-      }
-
-      if (open && !meta.open) {
-        return setOpen(false);
-      }
+      default:
+        break;
     }
-
-    if (meta.query !== undefined && query !== meta.query) {
-      setStart(meta.start);
-      setEnd(meta.end);
-
-      updateOptions(meta.query);
-
-      return;
-    }
-
-    handleKeyPressed(meta.keyPressed);
-  }, [prosemirrorTransaction, open, query]);
+  }, []);
 
   const handleSelectOption = useCallback(option => {
-    onSelect(option, prosemirrorView, start, end);
+    const replaceWith = (text, linkAttrs = false) => {
+      const { schema } = prosemirrorView.state;
+      let { tr } = prosemirrorView.state;
+
+      tr = tr.insertText(`${text} `, start, end + 1);
+
+      if (schema.marks.link && linkAttrs) {
+        tr = tr.addMark(start, start + text.length, schema.mark(schema.marks.link, linkAttrs));
+      }
+
+      prosemirrorView.dispatch(tr);
+    };
+
+    onSelect(option, { prosemirrorView, start, end, replaceWith });
+
+    handleCloseMenu();
     prosemirrorView.focus();
   }, [prosemirrorView, onSelect, start, end]);
 
-  const handleCloseMenu = useCallback(() => {
-    setOpen(false);
+  const handleSelectOptionIndex = useCallback(() => {
+    handleSelectOption(options.filter(option => !option.subheader)[selectedIndex]);
+  }, [options, selectedIndex]);
 
+  const handleCloseMenu = useCallback(() => {
     prosemirrorView.dispatch(
       prosemirrorView.state.tr.setMeta(suggestionsPluginKey, {
-        open: false
+        do: 'open',
+        opened: false
       })
     );
   }, [prosemirrorView]);
@@ -86,50 +102,65 @@ const Suggestions = ({
     event.preventDefault();
     event.persist();
 
-    setOpen(true);
+    setOpened(true);
     setPosition({
       top: event.clientY,
       left: event.clientX
     });
   }, []);
 
-  const updateOptions = useCallback(query => {
-    const options = getOptions(query || '');
+  // SelectedIndex or options change
+  useEffect(() => {
+    if (!options) return;
 
-    if (options.length === 0 && query !== null) {
-      handleCloseMenu();
-      return false;
+    const justOptions = options.filter(option => !option.subheader);
+
+    setDisabledKeys({
+      [KEY_ARROW_DOWN]: selectedIndex === justOptions.length - 1,
+      [KEY_ARROW_UP]: selectedIndex === 0
+    });
+  }, [selectedIndex, options]);
+
+  useEffect(() => {
+    if (!prosemirrorTransaction) return;
+
+    const { transaction } = prosemirrorTransaction;
+
+    const meta = transaction.getMeta(suggestionsPluginKey);
+
+    if (meta) {
+      handleUpdate(meta);
     }
+  }, [prosemirrorTransaction, handleUpdate]);
 
-    setOptions(options);
-    setQuery(query);
-    setSelectedIndex(0);
+  // Query changes
+  useEffect(() => {
+    if (query !== undefined) {
+      setOptions(getOptions(query));
+    }
+  }, [query, getOptions]);
 
-    return true;
-  }, [getOptions, handleCloseMenu]);
+  // Options change
+  useEffect(() => {
+    if (options !== undefined) {
+      if (options.length === 0) {
+        handleCloseMenu();
+      }
 
-  const handleOpenMenu = useCallback(({ position, query, start, end }) => {
-    if (!updateOptions(query)) return;
+      setSelectedIndex(0);
+    }
+  }, [options, handleCloseMenu]);
 
-    setOpen(true);
-    setPosition(position);
-    setSelectedIndex(0);
-    setStart(start);
-    setEnd(end);
-  }, [updateOptions]);
+  // Key changes
+  useEffect(() => {
+    if (!keyPressed || disabledKeys[keyPressed]) return;
 
-  const handleKeyPressed = useCallback(key => {
-    if (!key) return;
+    console.log('effect.keyPressed', keyPressed, disabledKeys);
 
-    switch (key) {
+    switch (keyPressed) {
       case KEY_ARROW_UP:
-        if (selectedIndex < 1) break;
-        setSelectedIndex(selectedIndex => selectedIndex - 1);
-        break;
-
       case KEY_ARROW_DOWN:
-        if (selectedIndex >= options.length - 1) break;
-        setSelectedIndex(selectedIndex => selectedIndex + 1);
+        setSelectedIndex(selectedIndex => selectedIndex + (keyPressed === KEY_ARROW_UP ? -1 : 1));
         break;
 
       case KEY_ESCAPE:
@@ -139,34 +170,31 @@ const Suggestions = ({
 
       case KEY_ENTER:
       case KEY_TAB:
-        handleSelectOption(options[selectedIndex]);
-        handleCloseMenu();
+        handleSelectOptionIndex();
         break;
 
       default:
         break;
     }
 
-    prosemirrorView.dispatch(
-      prosemirrorView.state.tr.setMeta(suggestionsPluginKey, {
-        keyPressed: null
-      })
-    );
-  }, [selectedIndex, options]);
+    setKeyPressed(undefined);
+  }, [keyPressed, disabledKeys]);
 
   if (!prosemirrorView) return null;
-  if (!open) return null;
+  if (!opened) return null;
+  if (!options || options.length === 0) return null;
 
   return (
     <UnfocusedMenu
-      options={options}
-      onSelect={handleSelectOption}
-      onClose={handleCloseMenu}
-      onContextMenu={handleContextMenu}
-      position={position}
-      renderMenuItem={renderMenuItem}
       emptyOptionsLabel={emptyOptionsLabel}
       maxVisibleItems={maxVisibleItems}
+      onClose={handleCloseMenu}
+      onContextMenu={handleContextMenu}
+      onSelect={handleSelectOption}
+      options={options || []}
+      orientation={orientation}
+      position={position}
+      renderMenuItem={renderMenuItem}
       selectedIndex={selectedIndex}
     />
   );

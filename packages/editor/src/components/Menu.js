@@ -6,7 +6,9 @@ import React, { useCallback, forwardRef, useRef } from 'react';
 
 import { makeStyles } from '@material-ui/core/styles';
 
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
 import Divider from '@material-ui/core/Divider';
+import ListItemText from '@material-ui/core/ListItemText';
 import MuiMenu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import MenuList from '@material-ui/core/MenuList';
@@ -20,16 +22,20 @@ const useStyles = makeStyles(theme => ({
     maxHeight: maxVisibleItems * 32 + theme.spacing() // Last is top padding.
   }),
 
-  unfocusedMenuPaper: ({ position: { top, left }, maxVisibleItems }) => ({
+  unfocusedMenuPaper: ({ position: { top, left }, maxVisibleItems, orientation }) => ({
     width: 'fit-content',
     minWidth: 150,
     maxHeight: maxVisibleItems * 32 + theme.spacing(), // Last is top padding.
+    overflow: 'auto',
     position: 'absolute',
     top,
     left,
-    zIndex: 1
+    zIndex: 1,
+    transform: `translateY(${orientation === 'up' ? 'calc(-100% - 20px)' : '20px'})`
   })
 }));
+
+const defaultMenuRenderItem = item => <ListItemText primary={(item || {}).label} />;
 
 export const FocusedMenu = ({
   dom,
@@ -41,7 +47,7 @@ export const FocusedMenu = ({
   open,
   options = [],
   position = { top: 0, left: 0 },
-  renderMenuItem = item => (item || {}).label
+  renderMenuItem = defaultMenuRenderItem
 }) => {
   const classes = useStyles({ position, maxVisibleItems });
   const ref = useRef();
@@ -54,6 +60,7 @@ export const FocusedMenu = ({
       anchorPosition={position}
       onContextMenu={onContextMenu}
       onClose={onClose}
+      autoFocus
       variant='menu'
       keepMounted
       classes={{ paper: classes.paper }}
@@ -75,30 +82,33 @@ export const UnfocusedMenu = ({
   onClose,
   onSelect,
   options,
+  orientation = 'down',
   position = { top: 0, left: 0 },
-  renderMenuItem = item => (item || {}).label,
+  renderMenuItem = defaultMenuRenderItem,
   selectedIndex
 }) => {
-  const classes = useStyles({ position, maxVisibleItems });
+  const classes = useStyles({ position, maxVisibleItems, orientation });
   const ref = useRef();
 
   return (
-    <Paper className={classes.unfocusedMenuPaper}>
-      <MenuList
-        classes={undefined}
-        onClose={onClose}
-        variant='menu'
-      >
-        <MenuItems
-          options={options}
-          emptyOptionsLabel={emptyOptionsLabel}
-          renderMenuItem={renderMenuItem}
-          onSelect={onSelect}
-          selectedIndex={selectedIndex}
-          ref={ref}
-        />
-      </MenuList>
-    </Paper>
+    <ClickAwayListener onClickAway={onClose}>
+      <Paper className={classes.unfocusedMenuPaper} elevation={3}>
+        <MenuList
+          classes={undefined}
+          onClose={onClose}
+          variant='menu'
+        >
+          <MenuItems
+            options={options}
+            emptyOptionsLabel={emptyOptionsLabel}
+            renderMenuItem={renderMenuItem}
+            onSelect={onSelect}
+            selectedIndex={selectedIndex}
+            ref={ref}
+          />
+        </MenuList>
+      </Paper>
+    </ClickAwayListener>
   );
 };
 
@@ -123,36 +133,40 @@ const MenuItems = forwardRef(({
     );
   }
 
+  let index = 0;
   let optionIndex = 0;
 
   const optionComponents = options.map(option => {
     let item;
 
     if (option.subheader) {
-      const subheader = <MenuItem key={optionIndex} disabled dense>{option.subheader}</MenuItem>;
+      const subheader = <MenuItem key={`subheader-${index}`} disabled dense>{option.subheader}</MenuItem>;
 
       item = subheader;
 
-      if (optionIndex !== 0) {
-        optionIndex++;
-        item = [<Divider key={optionIndex} />, subheader];
+      if (index !== 0) {
+        index++;
+        item = [<Divider key={`divider-${index}`} />, subheader];
       }
     } else {
+      const selected = selectedIndex !== undefined ? optionIndex === selectedIndex : selectedIndex;
+
       item = (
         <MenuItem
           key={optionIndex}
           dense
           onClick={handleClick(option)}
-          selected={selectedIndex !== undefined ? optionIndex === selectedIndex : selectedIndex}
+          selected={selected}
         >
           {
             renderMenuItem(option)
           }
         </MenuItem>
       );
+      optionIndex++;
     }
 
-    optionIndex++;
+    index++;
     return item;
   }).flat();
 

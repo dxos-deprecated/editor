@@ -3,7 +3,6 @@
 //
 
 import React, { Component } from 'react';
-import { TextSelection } from 'prosemirror-state';
 
 import { Editor } from '../src';
 
@@ -17,24 +16,33 @@ class Suggestions extends Component {
     ].filter(option => option.label.toLowerCase().includes(query.toLowerCase()));
   };
 
-  handleSelect = (option, view, start, end) => {
-    const { tr } = view.state;
+  handleSelect = (option, { replaceWith }) => {
+    const title = `@${option.label}`;
 
-    const textNode = view.state.selection.$anchor.nodeBefore;
-    const textSelection = TextSelection.create(view.state.doc, view.state.selection.anchor - (textNode.nodeSize - 1), view.state.selection.head);
-
-    textSelection.replaceWith(tr, view.state.schema.text(option.label));
-
-    view.dispatch(tr);
+    replaceWith(title, {
+      title,
+      href: title
+    });
   };
 
   handleRenderItem = (option) => {
     return `${option.id} - ${option.label}`;
   };
 
+  handleKeyDown = ({ key }) => {
+    console.log('Handle Key Down triggered');
+    if (key === 'Enter') {
+      console.log('Enter pressed');
+      return true;
+    }
+
+    return false;
+  };
+
   render () {
     return (
       <Editor
+        onKeyDown={this.handleKeyDown}
         suggestions={{
           getOptions: this.handleGetOptions,
           onSelect: this.handleSelect,
