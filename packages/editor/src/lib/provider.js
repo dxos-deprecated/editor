@@ -70,7 +70,7 @@ class Provider extends Observable {
 
     window.addEventListener('beforeunload', this.disconnect);
 
-    this.awareness.on('change', this._awarenessUpdateHandler);
+    this.awareness.on('update', this._awarenessUpdateHandler);
   }
 
   _awarenessUpdateHandler = () => {
