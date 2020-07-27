@@ -149,14 +149,22 @@ const MenuItems = forwardRef(({
         item = [<Divider key={`divider-${index}`} />, subheader];
       }
     } else {
-      const selected = selectedIndex !== undefined ? optionIndex === selectedIndex : selectedIndex;
+      let selected;
+      let autoFocus;
+      if (selectedIndex === undefined) {
+        autoFocus = optionIndex === 0;
+      } else {
+        selected = optionIndex === selectedIndex;
+      }
 
       item = (
         <MenuItem
           key={optionIndex}
           dense
           onClick={handleClick(option)}
+          autoFocus={autoFocus}
           selected={selected}
+          tabIndex={optionIndex}
         >
           {
             renderMenuItem(option)
