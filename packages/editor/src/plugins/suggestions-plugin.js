@@ -72,11 +72,9 @@ const suggestionsPlugin = ({
     const { opened } = suggestionsPluginKey.getState(state);
     const { 2: query } = match;
 
-    // console.log('S.inputRuleHandler', { opened, match, query, start, end });
-
     let meta = {
       start: start,
-      end: end + 1,
+      end: end,
       query
     };
 
@@ -151,8 +149,6 @@ const suggestionsPlugin = ({
             const isTriggerKey = triggerEventKeys.includes(event.key);
 
             const shouldKeepOpen = isAction || isComposed || isCharKey || isBackspace;
-
-            // console.log('S.handleDOMEvents.keydown', { opened, shouldKeepOpen, isAction, isComposed, isCharKey, query }, event);
 
             const dispatchClose = () => view.dispatch(view.state.tr.setMeta(suggestionsPluginKey, { do: 'open', opened: false }));
 

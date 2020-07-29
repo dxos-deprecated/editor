@@ -20,8 +20,7 @@ const linkCtrlHoverEvent = () => {
 export const buildProsemirrorEvents = (options, schema) => {
   const events = {
     handleKeyDown: options.onKeyDown ? (view, event) => options.onKeyDown(event) : undefined,
-    handleDOMEvents: {
-    },
+    handleDOMEvents: {},
 
     // Prevent select prosemirror nodes
     handleClick: (view, pos, event) => {

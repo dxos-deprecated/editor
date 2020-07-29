@@ -66,23 +66,28 @@ const Suggestions = ({
   }, []);
 
   const handleSelectOption = useCallback(option => {
-    const replaceWith = (text, linkAttrs = false) => {
-      const { schema } = prosemirrorView.state;
-      let { tr } = prosemirrorView.state;
+    const run = async () => {
+      const replaceWith = (text, linkAttrs = false) => {
+        const { schema } = prosemirrorView.state;
+        let { tr } = prosemirrorView.state;
 
-      tr = tr.insertText(`${text} `, start, end + 1);
+        tr = tr.insertText(`${text} `, start, end + 1);
 
-      if (schema.marks.link && linkAttrs) {
-        tr = tr.addMark(start, start + text.length, schema.mark(schema.marks.link, linkAttrs));
-      }
+        if (schema.marks.link && linkAttrs) {
+          tr = tr.addMark(start, start + text.length, schema.mark(schema.marks.link, linkAttrs));
+        }
 
-      prosemirrorView.dispatch(tr);
+        prosemirrorView.dispatch(tr);
+
+        prosemirrorView.focus();
+      };
+
+      await onSelect(option, { prosemirrorView, start, end, replaceWith });
+
+      handleCloseMenu();
     };
 
-    onSelect(option, { prosemirrorView, start, end, replaceWith });
-
-    handleCloseMenu();
-    prosemirrorView.focus();
+    run();
   }, [prosemirrorView, onSelect, start, end]);
 
   const handleSelectOptionIndex = useCallback(() => {
@@ -154,8 +159,6 @@ const Suggestions = ({
   // Key changes
   useEffect(() => {
     if (!keyPressed || disabledKeys[keyPressed]) return;
-
-    console.log('effect.keyPressed', keyPressed, disabledKeys);
 
     switch (keyPressed) {
       case KEY_ARROW_UP:

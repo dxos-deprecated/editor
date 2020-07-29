@@ -111,6 +111,7 @@ const Editor = ({
   toolbar
 }) => {
   const classes = useStyles({ initialFontSize });
+  const mockInputDom = useRef();
   const editor = useRef();
   const editorDom = useRef();
   const [prosemirrorView, setProsemirrorView] = useProsemirrorView();
@@ -126,10 +127,11 @@ const Editor = ({
     }
 
     editor.current = createProsemirrorEditor(editorDom.current, {
+      mockInputDom,
       contextMenu,
       initialContent,
       language,
-      onKeyDown,
+      onKeyDown: handleKeyDown,
       onReactElementDomCreated: handleReactElementDomCreated,
       onTransaction: setProsemirrorTransaction,
       plugins,
@@ -175,8 +177,34 @@ const Editor = ({
     event.stopPropagation();
   }, [editor]);
 
+  const handleKeyDown = event => {
+    const cancelled = !mockInputDom.current.dispatchEvent(new KeyboardEvent('keydown', {
+      key: event.key,
+      code: event.code,
+      location: event.location,
+      ctrlKey: event.ctrlKey,
+      shiftKey: event.shiftKey,
+      altKey: event.altKey,
+      metaKey: event.metaKey,
+      repeat: event.repeat,
+      isComposing: event.isComposing,
+      charCode: event.charCode,
+      keyCode: event.keyCode,
+      which: event.which,
+      bubbles: true,
+      cancelable: true
+    }));
+
+    return cancelled;
+  };
+
   return (
-    <div className={classnames(classes.root, userClasses.root)}>
+    <div
+      className={classnames(classes.root, userClasses.root)}
+    >
+      {/* Mock input for events */}
+      <input ref={mockInputDom} type='text' onKeyDown={onKeyDown} style={{ display: 'none' }} />
+
       {toolbar && (
         <div className={classnames(classes.toolbarContainer, userClasses.toolbarContainer)}>
           <Toolbar {...toolbar} />
@@ -193,6 +221,7 @@ const Editor = ({
           ref={editorDom}
           className={classnames(classes.editor, userClasses.editor)}
           onClick={handleEditorClick}
+          // onKeyDown={event => console.log('ACA', event)}
           spellCheck={false}
         />
       </div>
