@@ -3,12 +3,13 @@
 //
 
 import { EditorView } from 'prosemirror-view';
-import { EditorState } from 'prosemirror-state';
-import { DOMParser } from 'prosemirror-model';
+import { EditorState, TextSelection } from 'prosemirror-state';
+import { DOMParser, Slice } from 'prosemirror-model';
 import { history } from 'prosemirror-history';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { buildInputRules } from 'prosemirror-example-setup';
+import { toggleMark } from 'prosemirror-commands';
 
 import { uuidv4 } from 'lib0/random';
 
@@ -34,6 +35,7 @@ export const createProsemirrorEditor = (element, options) => {
     sync
   } = options;
 
+  // Editor api bridge
   const editor = {
     _createReactElement (type = 'block') {
       return (props, { className } = {}) => {
@@ -43,7 +45,29 @@ export const createProsemirrorEditor = (element, options) => {
 
         view.dispatch(tr);
       };
-    }
+    },
+
+    getContentHtml () {
+      return editor.view.dom.innerHTML;
+    },
+
+    createTextSelection (from, to) {
+      const { doc } = editor.view.state;
+      return TextSelection.create(doc, from, to);
+    },
+
+    clear (focus = true) {
+      const { view } = editor;
+      const { state: { doc, tr } } = view;
+
+      const allTextSelection = editor.createTextSelection(0, doc.content.size);
+      allTextSelection.replace(tr, Slice.empty);
+      view.dispatch(tr);
+
+      focus && view.focus();
+    },
+
+    toggleMark
   };
 
   editor.createInlineReactElement = editor._createReactElement('inline');

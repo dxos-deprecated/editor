@@ -11,18 +11,18 @@ import {
   KEY_BACKSPACE,
   KEY_ENTER,
   KEY_ESCAPE,
-  KEY_SPACE,
-  KEY_TAB
+  KEY_TAB,
+  isCharKeyCode,
+  isComposedKeyCode
 } from '../lib/keys';
 
 const TRIGGER_EVENT_KEYS = ['@', '#'];
 
-const SPECIAL_KEYS = [
+const ACTION_KEYS = [
   KEY_ARROW_DOWN,
   KEY_ARROW_UP,
   KEY_ENTER,
   KEY_ESCAPE,
-  KEY_SPACE,
   KEY_TAB
 ];
 
@@ -47,15 +47,18 @@ const handleBackSpace = (view, from, to, triggerRegExp, inputRuleHandler) => {
     '\ufffc'
   );
 
-  const match = triggerRegExp.exec(textBefore) || ['', ''];
+  if (textBefore.length === 0) {
+    view.dispatch(view.state.tr.setMeta(suggestionsPluginKey, { do: 'open', opened: false }));
+    return false;
+  }
+
+  const match = triggerRegExp.exec(textBefore) || ['', '', ''];
   inputRuleHandler(state, match, from - (match[0].length), to);
 };
 
 const suggestionsPluginState = {
-  open: false,
-  query: null,
-  position: { top: 0, left: 0 },
-  keyPressed: null
+  opened: false,
+  query: ''
 };
 
 const suggestionsPlugin = ({
@@ -63,32 +66,33 @@ const suggestionsPlugin = ({
 } = suggestionsPluginDefaults) => {
   let pluginView;
 
-  const triggerRegExp = new RegExp(`[${triggerEventKeys}]([\\w-_+=]*)$`);
+  const triggerRegExp = new RegExp(`([${triggerEventKeys.join('')}])([\\w-_+=]*)$`, 'i');
 
   const inputRuleHandler = (state, match, start, end) => {
-    const pluginState = suggestionsPluginKey.getState(state);
+    const { opened } = suggestionsPluginKey.getState(state);
+    const { 2: query } = match;
 
-    const meta = {
-      ...pluginState,
-      start,
-      end: end + 1,
-      query: triggerEventKeys.includes(match[0]) ? null : match[1]
+    let meta = {
+      start: start,
+      end: end,
+      query
     };
 
-    if (!meta.open) {
+    if (!opened) {
       let { top, left } = pluginView.coordsAtPos(start);
       const dom = pluginView.domAtPos(start);
 
       const node = dom.node.nodeType === window.document.TEXT_NODE ? dom.node.parentElement : dom.node;
       top = node.clientHeight + node.getBoundingClientRect().top;
 
-      meta.open = true;
-      meta.position = {
-        top,
-        left
+      meta = {
+        ...meta,
+        do: 'open',
+        opened: true,
+        position: { top, left }
       };
-    } else if (match[0].length === 0 && match[1].length === 0) {
-      meta.open = false;
+    } else {
+      meta.do = 'query';
     }
 
     pluginView.dispatch(state.tr.setMeta(suggestionsPluginKey, meta));
@@ -112,43 +116,77 @@ const suggestionsPlugin = ({
         },
         apply (transaction, value) {
           const meta = transaction.getMeta(suggestionsPluginKey);
+
           if (!meta) {
             return value;
           }
 
-          return {
-            ...value,
-            ...meta
-          };
+          if (meta.do === 'open') {
+            value.opened = meta.opened;
+
+            if (!meta.opened) {
+              value.query = '';
+            }
+          }
+
+          if (meta.do === 'query') {
+            value.query = meta.query;
+          }
+
+          return value;
         }
       },
 
       props: {
         handleDOMEvents: {
+          keydown (view, event) {
+            const { opened, query } = suggestionsPluginKey.getState(view.state);
+            const isAction = ACTION_KEYS.includes(event.code);
+            const isComposed = isComposedKeyCode(event.keyCode);
+            const isCharKey = isCharKeyCode(event.keyCode);
+            const isBackspace = event.code === KEY_BACKSPACE;
+            const isEscape = event.code === KEY_ESCAPE;
+            const isTriggerKey = triggerEventKeys.includes(event.key);
+
+            const shouldKeepOpen = isAction || isComposed || isCharKey || isBackspace;
+
+            const dispatchClose = () => view.dispatch(view.state.tr.setMeta(suggestionsPluginKey, { do: 'open', opened: false }));
+
+            if (isEscape) {
+              dispatchClose();
+            }
+
+            if (!opened && query.length === 0 && isTriggerKey) {
+              return true;
+            }
+
+            if (opened && shouldKeepOpen) {
+              if (isBackspace) {
+                return true;
+              } else if (!isCharKey) {
+                view.dispatch(view.state.tr.setMeta(suggestionsPluginKey, { do: 'keyPressed', code: event.code }));
+                event.preventDefault();
+              }
+
+              return true;
+            } else if (!shouldKeepOpen) {
+              dispatchClose();
+            }
+
+            return false;
+          },
+
           keyup (view, event) {
-            const { open } = this.getState(view.state);
+            const { opened } = this.getState(view.state);
             const isBackspace = event.code === KEY_BACKSPACE;
 
-            if (!open || !isBackspace) return false;
+            if (!opened || !isBackspace) return false;
 
             const { $cursor } = view.state.selection;
             handleBackSpace(view, $cursor.pos, $cursor.pos, triggerRegExp, inputRuleHandler);
 
             return false;
           }
-        },
-
-        handleKeyDown (view, event) {
-          const { open } = this.getState(view.state);
-          const isAction = SPECIAL_KEYS.includes(event.code);
-          const isSpace = event.code === KEY_SPACE;
-
-          if (open && isAction) {
-            view.dispatch(view.state.tr.setMeta(suggestionsPluginKey, { keyPressed: event.code }));
-            return !isSpace;
-          }
-
-          return false;
         }
       },
 
