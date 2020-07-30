@@ -32,17 +32,7 @@ const useStyles = makeStyles(theme => ({
     overflow: 'auto',
     padding: theme.spacing(1),
     backgroundColor: '#ffffff',
-    cursor: 'text',
-
-    '&::-webkit-scrollbar': {
-      appearance: 'none',
-      width: theme.spacing()
-    },
-
-    '&::-webkit-scrollbar-thumb': {
-      borderRadius: 4,
-      backgroundColor: 'rgba(0, 0, 0, .2)'
-    }
+    cursor: 'text'
   },
 
   editor: ({ initialFontSize }) => ({
