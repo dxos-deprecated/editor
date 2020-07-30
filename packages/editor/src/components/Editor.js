@@ -27,11 +27,22 @@ const useStyles = makeStyles(theme => ({
 
   editorContainer: {
     flexGrow: 1,
+    height: 0, // Chrome not displaying scroll fix
+    maxHeight: 'fill-available',
     overflow: 'auto',
     padding: theme.spacing(1),
     backgroundColor: '#ffffff',
     cursor: 'text',
-    maxHeight: 'fill-available'
+
+    '&::-webkit-scrollbar': {
+      appearance: 'none',
+      width: theme.spacing()
+    },
+
+    '&::-webkit-scrollbar-thumb': {
+      borderRadius: 4,
+      backgroundColor: 'rgba(0, 0, 0, .2)'
+    }
   },
 
   editor: ({ initialFontSize }) => ({
@@ -221,7 +232,6 @@ const Editor = ({
           ref={editorDom}
           className={classnames(classes.editor, userClasses.editor)}
           onClick={handleEditorClick}
-          // onKeyDown={event => console.log('ACA', event)}
           spellCheck={false}
         />
       </div>
