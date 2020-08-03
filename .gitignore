@@ -75,3 +75,6 @@ webpack.zip
 
 # VS Code
 .vscode/settings.json
+
+# Wire deploy
+app.yml

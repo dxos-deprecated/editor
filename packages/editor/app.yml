@@ -1,6 +1,0 @@
-id: dxos.network/editor-storybook
-name: dxos.network/editor-storybook
-displayName: Editor Storybook
-version: 0.0.7
-build: 'yarn storybook:build'
-package: QmP3Mk3J3KV2AHhVbjkcUnqQspMY69yNcuUqA3kVHVkkG2
