@@ -1,6 +1,6 @@
 {
   "name": "@dxos/editor",
-  "version": "1.0.0-beta.23",
+  "version": "1.0.0-beta.24",
   "description": "DXOS Editor",
   "keywords": [],
   "homepage": "https://github.com/dxos/editor",
@@ -15,8 +15,7 @@
   "main": "dist/cjs/editor.js",
   "module": "dist/esm/editor.js",
   "files": [
-    "dist/esm",
-    "dist/cjs"
+    "dist"
   ],
   "scripts": {
     "build": "npm run clean && rollup -c",
