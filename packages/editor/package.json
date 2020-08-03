@@ -14,10 +14,13 @@
   "license": "GPL-3.0",
   "main": "dist/cjs/editor.js",
   "module": "dist/esm/editor.js",
+  "files": [
+    "./dist"
+  ],
   "scripts": {
-    "clean": "rimraf dist",
     "build": "npm run clean && rollup -c",
     "build:analyze": "rollup -c --environment ANALYZE",
+    "clean": "rimraf dist",
     "lint": "semistandard",
     "prepublishOnly": "npm run build",
     "storybook": "start-storybook",
