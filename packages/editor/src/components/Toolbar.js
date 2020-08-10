@@ -189,6 +189,10 @@ const buildButtons = (schema, props) => {
     });
   }
 
+  if (props.customButtons) {
+    extraButtons.push(...props.customButtons);
+  }
+
   buttons.push(
     ...historyButtons,
     ...(nodeButtons.length > 1 ? [{ divider: true }, ...nodeButtons] : []),
@@ -205,7 +209,8 @@ const buildButtons = (schema, props) => {
 
 const Toolbar = ({
   classes,
-  imagePopupSrcLabel
+  imagePopupSrcLabel,
+  customButtons
 }) => {
   const { toolbar: toolbarClass, divider: dividerClass } = useStyles();
 
@@ -216,7 +221,7 @@ const Toolbar = ({
   useEffect(() => {
     if (!prosemirrorView) return;
 
-    setButtons(buildButtons(prosemirrorView.state.schema, { imagePopupSrcLabel }));
+    setButtons(buildButtons(prosemirrorView.state.schema, { imagePopupSrcLabel, customButtons }));
   }, [prosemirrorView]);
 
   const handleButtonClick = useCallback(button => event => {
