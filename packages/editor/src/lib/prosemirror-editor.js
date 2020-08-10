@@ -4,7 +4,7 @@
 
 import { EditorView } from 'prosemirror-view';
 import { EditorState, TextSelection } from 'prosemirror-state';
-import { DOMParser, Slice } from 'prosemirror-model';
+import { DOMParser } from 'prosemirror-model';
 import { history } from 'prosemirror-history';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
@@ -38,7 +38,7 @@ export const createProsemirrorEditor = (element, options) => {
   // Editor api bridge
   const editor = {
     _createReactElement (type = 'block') {
-      return (props, { className } = {}) => {
+      return function _doCreateReactElement (props, { className } = {}) {
         const { tr, selection, schema } = editor.view.state;
 
         selection.replaceWith(tr, schema.node(`${type}_react_element`, { props, className }));
@@ -56,12 +56,28 @@ export const createProsemirrorEditor = (element, options) => {
       return TextSelection.create(doc, from, to);
     },
 
+    insertText (text, linkAttrs = false) {
+      let { schema, tr, selection } = editor.view.state;
+
+      selection.replaceWith(
+        tr,
+        schema.text(
+          text,
+          schema.marks.link && linkAttrs ? [schema.mark(schema.marks.link, linkAttrs)] : null
+        )
+      );
+
+      tr = tr.insertText(' ', tr.selection.to);
+
+      editor.view.dispatch(tr);
+    },
+
     clear (focus = true) {
       const { view } = editor;
       const { state: { doc, tr } } = view;
 
       const allTextSelection = editor.createTextSelection(0, doc.content.size);
-      allTextSelection.replace(tr, Slice.empty);
+      allTextSelection.replaceWith(tr, initialDoc);
       view.dispatch(tr);
 
       focus && view.focus();
