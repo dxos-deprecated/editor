@@ -29,7 +29,7 @@ const useStyles = makeStyles(() => ({
   menu ({ maxListHeight }) {
     return {
       maxHeight: maxListHeight,
-      overflowY: 'scroll'
+      overflowY: 'auto'
     };
   }
 }));
@@ -50,14 +50,13 @@ const Suggestions = ({
   const [triggerKey, setTriggerKey] = useState('');
 
   const [options, setOptions] = useState([]);
+  const [pureOptions, setPureOptions] = useState([]);
   const [filterValue, setFilterValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [disabledKeys, setDisabledKeys] = useState({});
 
   const [prosemirrorView] = useProsemirrorView();
   const [prosemirrorTransaction] = useProsemirrorTransaction();
-
-  const justOptions = options.filter(option => !option.subheader);
 
   const handleUpdate = meta => {
     if (meta.do !== 'open') return;
@@ -85,14 +84,22 @@ const Suggestions = ({
   }, [prosemirrorTransaction]);
 
   useEffect(() => {
+    setDisabledKeys(disabledKeys => ({
+      ...disabledKeys,
+      [KEY_TAB]: pureOptions.length === 0,
+      [KEY_ENTER]: pureOptions.length === 0
+    }));
+  }, [pureOptions]);
+
+  useEffect(() => {
+    setPureOptions(options.filter(option => !option.subheader));
+  }, [options]);
+
+  useEffect(() => {
     if (open) {
       setOptions(getOptions(filterValue));
 
-      setDisabledKeys(disabledKeys => ({
-        ...disabledKeys,
-        [KEY_TAB]: justOptions.length === 0,
-        [KEY_ENTER]: justOptions.length === 0
-      }));
+      setSelectedIndex(0);
     }
   }, [open, filterValue]);
 
@@ -106,7 +113,7 @@ const Suggestions = ({
 
     setDisabledKeys(disabledKeys => ({
       ...disabledKeys,
-      [KEY_ARROW_DOWN]: selectedIndex === justOptions.length - 1,
+      [KEY_ARROW_DOWN]: selectedIndex === pureOptions.length - 1,
       [KEY_ARROW_UP]: selectedIndex === 0
     }));
 
@@ -116,13 +123,8 @@ const Suggestions = ({
 
   function handleSelectOption (option) {
     return async function _handleSelectOption (event) {
-      await onSelect(option, { prosemirrorView });
-
-      const { tr } = prosemirrorView.state;
-
-      prosemirrorView.dispatch(tr.insertText(' ', tr.selection.to));
-
       handleClose();
+      await onSelect(option, { prosemirrorView });
     };
   }
 
@@ -149,7 +151,7 @@ const Suggestions = ({
     }
 
     if ([KEY_ENTER, KEY_TAB].includes(event.key)) {
-      handleSelectOption(justOptions[selectedIndex])();
+      handleSelectOption(pureOptions[selectedIndex])();
     }
   }
 

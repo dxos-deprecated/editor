@@ -32,7 +32,6 @@ function Suggestions () {
   }
 
   function handleKeyDown ({ key }) {
-    console.log('Handle Key Down triggered');
     if (key === 'Enter') {
       console.log('Enter pressed');
       return true;

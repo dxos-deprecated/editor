@@ -47,6 +47,21 @@ export const createProsemirrorEditor = (element, options) => {
       };
     },
 
+    _runInTransaction (fn, tr) {
+      let dispatch = true;
+      if (tr) {
+        dispatch = false;
+      } else {
+        tr = editor.view.state.tr;
+      }
+
+      fn(tr);
+
+      if (dispatch) {
+        editor.view.dispatch(tr);
+      }
+    },
+
     getContentHtml () {
       return editor.view.dom.innerHTML;
     },
@@ -56,20 +71,31 @@ export const createProsemirrorEditor = (element, options) => {
       return TextSelection.create(doc, from, to);
     },
 
-    insertText (text, linkAttrs = false) {
-      let { schema, tr, selection } = editor.view.state;
+    insertText (text, tr) {
+      editor._runInTransaction(tr => {
+        const { selection } = tr;
+        text = text.replace(/\s/g, '\u00a0');
+        tr = tr.insertText(text, selection.from, selection.to);
+      }, tr);
+    },
 
-      selection.replaceWith(
-        tr,
-        schema.text(
-          text,
-          schema.marks.link && linkAttrs ? [schema.mark(schema.marks.link, linkAttrs)] : null
-        )
-      );
+    insertLink (text, title, href, tr) {
+      const { schema } = editor.view.state;
 
-      tr = tr.insertText(' ', tr.selection.to);
+      if (!schema.marks.link) return;
 
-      editor.view.dispatch(tr);
+      editor._runInTransaction(tr => {
+        const { selection: { from, to } } = tr;
+
+        text = text.replace(/\s/g, '\u00a0');
+
+        tr = tr.insertText(text, from, to);
+        tr = tr.addMark(from, tr.selection.to, schema.mark(schema.marks.link, { title, href }));
+      }, tr);
+    },
+
+    scrollIntoView (tr) {
+      editor._runInTransaction(tr => tr.scrollIntoView(), tr);
     },
 
     clear (focus = true) {
