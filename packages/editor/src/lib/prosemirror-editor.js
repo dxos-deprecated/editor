@@ -4,7 +4,7 @@
 
 import { EditorView } from 'prosemirror-view';
 import { EditorState, TextSelection } from 'prosemirror-state';
-import { DOMParser, Slice } from 'prosemirror-model';
+import { DOMParser } from 'prosemirror-model';
 import { history } from 'prosemirror-history';
 import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
@@ -38,13 +38,28 @@ export const createProsemirrorEditor = (element, options) => {
   // Editor api bridge
   const editor = {
     _createReactElement (type = 'block') {
-      return (props, { className } = {}) => {
+      return function _doCreateReactElement (props, { className } = {}) {
         const { tr, selection, schema } = editor.view.state;
 
         selection.replaceWith(tr, schema.node(`${type}_react_element`, { props, className }));
 
         view.dispatch(tr);
       };
+    },
+
+    _runInTransaction (fn, tr) {
+      let dispatch = true;
+      if (tr) {
+        dispatch = false;
+      } else {
+        tr = editor.view.state.tr;
+      }
+
+      fn(tr);
+
+      if (dispatch) {
+        editor.view.dispatch(tr);
+      }
     },
 
     getContentHtml () {
@@ -56,12 +71,39 @@ export const createProsemirrorEditor = (element, options) => {
       return TextSelection.create(doc, from, to);
     },
 
+    insertText (text, tr) {
+      editor._runInTransaction(tr => {
+        const { selection } = tr;
+        text = text.replace(/\s/g, '\u00a0');
+        tr = tr.insertText(text, selection.from, selection.to);
+      }, tr);
+    },
+
+    insertLink (text, title, href, tr) {
+      const { schema } = editor.view.state;
+
+      if (!schema.marks.link) return;
+
+      editor._runInTransaction(tr => {
+        const { selection: { from, to } } = tr;
+
+        text = text.replace(/\s/g, '\u00a0');
+
+        tr = tr.insertText(text, from, to);
+        tr = tr.addMark(from, tr.selection.to, schema.mark(schema.marks.link, { title, href }));
+      }, tr);
+    },
+
+    scrollIntoView (tr) {
+      editor._runInTransaction(tr => tr.scrollIntoView(), tr);
+    },
+
     clear (focus = true) {
       const { view } = editor;
       const { state: { doc, tr } } = view;
 
       const allTextSelection = editor.createTextSelection(0, doc.content.size);
-      allTextSelection.replace(tr, Slice.empty);
+      allTextSelection.replaceWith(tr, initialDoc);
       view.dispatch(tr);
 
       focus && view.focus();

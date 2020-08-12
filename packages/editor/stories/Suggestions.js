@@ -2,55 +2,74 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { Component } from 'react';
+import React, { useState } from 'react';
+
+import Chip from '@material-ui/core/Chip';
 
 import { Editor } from '../src';
 
-class Suggestions extends Component {
-  handleGetOptions = (query = '') => {
+function Suggestions () {
+  const [editor, setEditor] = useState();
+
+  function handleGetOptions (query = '') {
     return [
-      { id: 1, label: 'Ana' },
-      { id: 2, label: 'María' },
-      { id: 3, label: 'Roberto' },
-      { id: 4, label: 'Juan' }
-    ].filter(option => option.label.toLowerCase().includes(query.toLowerCase()));
-  };
+      { subheader: 'First subheader' },
+      { id: 1, label: 'A' },
+      { id: 2, label: 'B' },
+      { subheader: 'Second subheader' },
+      { id: 3, label: 'AB' },
+      { id: 4, label: '---' },
+      { id: 5, label: 'Spaces allowed' }
+    ].filter(option => option.subheader || option.label.toLowerCase().includes(query.toLowerCase()));
+  }
 
-  handleSelect = (option, { replaceWith }) => {
-    const title = `@${option.label}`;
+  function handleSelect (option) {
+    editor.createInlineReactElement({ type: 'suggestion', ...option });
+  }
 
-    replaceWith(title, {
-      title,
-      href: title
-    });
-  };
-
-  handleRenderItem = (option) => {
+  function handleRenderItem (option) {
     return `${option.id} - ${option.label}`;
-  };
+  }
 
-  handleKeyDown = ({ key }) => {
-    console.log('Handle Key Down triggered');
+  function handleKeyDown ({ key }) {
     if (key === 'Enter') {
       console.log('Enter pressed');
       return true;
     }
 
     return false;
-  };
+  }
 
-  render () {
+  function handleReactElementRender (props) {
+    if (props.type !== 'suggestion') return null;
+
+    const { label } = props;
+
     return (
-      <Editor
-        onKeyDown={this.handleKeyDown}
-        suggestions={{
-          getOptions: this.handleGetOptions,
-          onSelect: this.handleSelect,
-          renderMenuItem: this.handleRenderItem
-        }}
+      <Chip
+        size='small'
+        component='a'
+        label={label}
+        clickable
+        color='primary'
+        variant='outlined'
       />
     );
   }
+
+  return (
+    <Editor
+      onCreated={setEditor}
+      onKeyDown={handleKeyDown}
+      suggestions={{
+        getOptions: handleGetOptions,
+        onSelect: handleSelect,
+        renderMenuItem: handleRenderItem,
+        maxListHeight: 200
+      }}
+      reactElementRenderFn={handleReactElementRender}
+    />
+  );
 }
 
 export default Suggestions;

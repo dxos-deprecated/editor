@@ -4,7 +4,7 @@
 
 import { nodes, marks } from 'prosemirror-schema-basic';
 
-import { underlineMark } from './common';
+import { underlineMark, inlineReactElementNode } from './common';
 
 export const createSchemaSpec = () => {
   return {
@@ -12,7 +12,8 @@ export const createSchemaSpec = () => {
       doc: nodes.doc,
       paragraph: nodes.paragraph,
       text: nodes.text,
-      hard_break: nodes.hard_break
+      hard_break: nodes.hard_break,
+      inline_react_element: inlineReactElementNode
     },
 
     marks: {

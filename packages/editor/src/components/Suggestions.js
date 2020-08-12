@@ -2,7 +2,17 @@
 // Copyright 2020 DXOS.org
 //
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+
+import { makeStyles } from '@material-ui/core';
+import ClickAwayListener from '@material-ui/core/ClickAwayListener';
+import Divider from '@material-ui/core/Divider';
+import Paper from '@material-ui/core/Paper';
+import Popper from '@material-ui/core/Popper';
+import TextField from '@material-ui/core/TextField';
+import MenuList from '@material-ui/core/MenuList';
+import MenuItem from '@material-ui/core/MenuItem';
+import ListItemText from '@material-ui/core/ListItemText';
 
 import { suggestionsPluginKey } from '../plugins/suggestions-plugin';
 
@@ -11,120 +21,55 @@ import {
   KEY_ARROW_DOWN,
   KEY_ESCAPE,
   KEY_ENTER,
-  KEY_TAB,
-  KEY_SPACE
+  KEY_TAB
 } from '../lib/keys';
-
-import { UnfocusedMenu } from './Menu';
 import { useProsemirrorView, useProsemirrorTransaction } from '../lib/hook';
 
+const useStyles = makeStyles(() => ({
+  menu ({ maxListHeight }) {
+    return {
+      maxHeight: maxListHeight,
+      overflowY: 'auto'
+    };
+  }
+}));
+
 const Suggestions = ({
-  emptyOptionsLabel = 'None',
+  emptyOptionsLabel = 'No options',
   getOptions = () => [],
-  maxVisibleItems = 8,
+  maxListHeight,
   onSelect = () => null,
-  orientation,
-  renderMenuItem,
-  triggerEventKeys
+  renderMenuItem
 }) => {
-  const [opened, setOpened] = useState(false);
-  const [options, setOptions] = useState();
-  const [query, setQuery] = useState();
-  const [position, setPosition] = useState();
+  const classes = useStyles({ maxListHeight });
+  const optionsMenuRef = useRef();
+  const selectedOptionRef = useRef();
+
+  const [open, setOpen] = useState(false);
+  const [popperAnchorEl, setPopperAnchorEl] = useState(false);
+  const [triggerKey, setTriggerKey] = useState('');
+
+  const [options, setOptions] = useState([]);
+  const [pureOptions, setPureOptions] = useState([]);
+  const [filterValue, setFilterValue] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [start, setStart] = useState();
-  const [end, setEnd] = useState();
-  const [keyPressed, setKeyPressed] = useState();
   const [disabledKeys, setDisabledKeys] = useState({});
 
   const [prosemirrorView] = useProsemirrorView();
   const [prosemirrorTransaction] = useProsemirrorTransaction();
 
-  const handleUpdate = useCallback(meta => {
-    switch (meta.do) {
-      case 'open':
-        setPosition(meta.position);
-        setStart(meta.start);
-        setEnd(meta.end);
-        setQuery(meta.query);
-        setOpened(meta.opened);
-        break;
+  const handleUpdate = meta => {
+    if (meta.do !== 'open') return;
 
-      case 'query':
-        setStart(meta.start);
-        setEnd(meta.end);
-        setQuery(meta.query);
-        break;
+    setOpen(meta.open);
+    setPopperAnchorEl(meta.anchorEl);
+    setTriggerKey(meta.triggerKey);
 
-      case 'keyPressed':
-        setKeyPressed(meta.code);
-        break;
-
-      default:
-        break;
+    if (meta.open) {
+      // Get all options
+      setOptions(getOptions(''));
     }
-  }, []);
-
-  const handleSelectOption = useCallback(option => {
-    const run = async () => {
-      const replaceWith = (text, linkAttrs = false) => {
-        const { schema } = prosemirrorView.state;
-        let { tr } = prosemirrorView.state;
-
-        tr = tr.insertText(`${text} `, start, end + 1);
-
-        if (schema.marks.link && linkAttrs) {
-          tr = tr.addMark(start, start + text.length, schema.mark(schema.marks.link, linkAttrs));
-        }
-
-        prosemirrorView.dispatch(tr);
-
-        prosemirrorView.focus();
-      };
-
-      await onSelect(option, { prosemirrorView, start, end, replaceWith });
-
-      handleCloseMenu();
-    };
-
-    run();
-  }, [prosemirrorView, onSelect, start, end]);
-
-  const handleSelectOptionIndex = useCallback(() => {
-    handleSelectOption(options.filter(option => !option.subheader)[selectedIndex]);
-  }, [options, selectedIndex]);
-
-  const handleCloseMenu = useCallback(() => {
-    prosemirrorView.dispatch(
-      prosemirrorView.state.tr.setMeta(suggestionsPluginKey, {
-        do: 'open',
-        opened: false
-      })
-    );
-  }, [prosemirrorView]);
-
-  const handleContextMenu = useCallback(event => {
-    event.preventDefault();
-    event.persist();
-
-    setOpened(true);
-    setPosition({
-      top: event.clientY,
-      left: event.clientX
-    });
-  }, []);
-
-  // SelectedIndex or options change
-  useEffect(() => {
-    if (!options) return;
-
-    const justOptions = options.filter(option => !option.subheader);
-
-    setDisabledKeys({
-      [KEY_ARROW_DOWN]: selectedIndex === justOptions.length - 1,
-      [KEY_ARROW_UP]: selectedIndex === 0
-    });
-  }, [selectedIndex, options]);
+  };
 
   useEffect(() => {
     if (!prosemirrorTransaction) return;
@@ -136,70 +81,206 @@ const Suggestions = ({
     if (meta) {
       handleUpdate(meta);
     }
-  }, [prosemirrorTransaction, handleUpdate]);
+  }, [prosemirrorTransaction]);
 
-  // Query changes
   useEffect(() => {
-    if (query !== undefined) {
-      setOptions(getOptions(query));
-    }
-  }, [query, getOptions]);
+    setDisabledKeys(disabledKeys => ({
+      ...disabledKeys,
+      [KEY_TAB]: pureOptions.length === 0,
+      [KEY_ENTER]: pureOptions.length === 0
+    }));
+  }, [pureOptions]);
 
-  // Options change
   useEffect(() => {
-    if (options !== undefined) {
-      if (options.length === 0) {
-        handleCloseMenu();
-      }
+    setPureOptions(options.filter(option => !option.subheader));
+  }, [options]);
+
+  useEffect(() => {
+    if (open) {
+      setOptions(getOptions(filterValue));
 
       setSelectedIndex(0);
     }
-  }, [options, handleCloseMenu]);
+  }, [open, filterValue]);
 
-  // Key changes
   useEffect(() => {
-    if (!keyPressed || disabledKeys[keyPressed]) return;
+    return handleClose;
+  }, []);
 
-    switch (keyPressed) {
-      case KEY_ARROW_UP:
-      case KEY_ARROW_DOWN:
-        setSelectedIndex(selectedIndex => selectedIndex + (keyPressed === KEY_ARROW_UP ? -1 : 1));
-        break;
+  // SelectedIndex or options change
+  useEffect(() => {
+    if (!options) return;
 
-      case KEY_ESCAPE:
-      case KEY_SPACE:
-        handleCloseMenu();
-        break;
+    setDisabledKeys(disabledKeys => ({
+      ...disabledKeys,
+      [KEY_ARROW_DOWN]: selectedIndex === pureOptions.length - 1,
+      [KEY_ARROW_UP]: selectedIndex === 0
+    }));
 
-      case KEY_ENTER:
-      case KEY_TAB:
-        handleSelectOptionIndex();
-        break;
+    // Scroll into option
+    selectedOptionRef.current && selectedOptionRef.current.scrollIntoViewIfNeeded();
+  }, [selectedIndex, options]);
 
-      default:
-        break;
+  function handleSelectOption (option) {
+    return async function _handleSelectOption (event) {
+      handleClose();
+      await onSelect(option, { prosemirrorView });
+    };
+  }
+
+  function handleKeyDown (event) {
+    event.persist();
+    if (event.key === KEY_ESCAPE) {
+      handleClose();
+
+      // Put trigger char back
+      const { tr } = prosemirrorView.state;
+
+      prosemirrorView.dispatch(tr.insertText(triggerKey, tr.selection.to));
+
+      prosemirrorView.focus();
+      return;
     }
 
-    setKeyPressed(undefined);
-  }, [keyPressed, disabledKeys]);
+    if (disabledKeys[event.key]) return;
 
-  if (!prosemirrorView) return null;
-  if (!opened) return null;
-  if (!options || options.length === 0) return null;
+    if ([KEY_ARROW_DOWN, KEY_ARROW_UP].includes(event.key)) {
+      event.preventDefault();
+      event.stopPropagation();
+      setSelectedIndex(selectedIndex => selectedIndex + (event.key === KEY_ARROW_UP ? -1 : 1));
+    }
+
+    if ([KEY_ENTER, KEY_TAB].includes(event.key)) {
+      handleSelectOption(pureOptions[selectedIndex])();
+    }
+  }
+
+  function handleClose () {
+    // Close before waiting on PM dispatch
+    setOpen(false);
+    setFilterValue('');
+    setOptions([]);
+    setSelectedIndex(0);
+
+    if (!prosemirrorView) return;
+
+    let { tr } = prosemirrorView.state;
+
+    tr = tr.scrollIntoView();
+    tr = tr.setMeta(suggestionsPluginKey, {
+      do: 'open',
+      open: false
+    });
+
+    prosemirrorView.dispatch(tr);
+    prosemirrorView.focus();
+  }
+
+  function handleFilterChange (event) {
+    setFilterValue(event.target.value);
+  }
+
+  function handleFilterKeyDown (event) {
+    if ([KEY_ARROW_DOWN, KEY_ARROW_UP, KEY_TAB, KEY_ENTER].includes(event.key)) {
+      event.preventDefault();
+    }
+  }
 
   return (
-    <UnfocusedMenu
-      emptyOptionsLabel={emptyOptionsLabel}
-      maxVisibleItems={maxVisibleItems}
-      onClose={handleCloseMenu}
-      onContextMenu={handleContextMenu}
-      onSelect={handleSelectOption}
-      options={options || []}
-      orientation={orientation}
-      position={position}
-      renderMenuItem={renderMenuItem}
-      selectedIndex={selectedIndex}
-    />
+    <ClickAwayListener onClickAway={handleClose}>
+      <Popper
+        onKeyDown={handleKeyDown}
+        onClick={e => e.stopPropagation()}
+        open={open}
+        anchorEl={popperAnchorEl}
+        placement='bottom-start'
+        transition
+        modifiers={{
+          flip: {
+            enabled: true
+          },
+          preventOverflow: {
+            enabled: true,
+            boundariesElement: 'scrollParent'
+          }
+        }}
+      >
+        <Paper
+          elevation={5}
+        >
+          <TextField
+            value={filterValue}
+            onChange={handleFilterChange}
+            autoFocus
+            label='Filter'
+            variant='outlined'
+            onKeyDown={handleFilterKeyDown}
+          />
+          <MenuList
+            dense
+            disablePadding
+            ref={optionsMenuRef}
+            className={classes.menu}
+          >
+            {options.length === 0 && (
+              <MenuItem disabled key='suggestions-empty' dense><ListItemText primary={emptyOptionsLabel} /></MenuItem>
+            )}
+            {(() => {
+              let optionIndex = 0;
+              let item;
+
+              return options
+                .map((option, index) => {
+                  if (option.subheader) {
+                    if ((options[index + 1] && options[index + 1].subheader) || index === options.length - 1) {
+                      // Remove this option
+                      return undefined;
+                    }
+
+                    const subheader = <MenuItem key={`subheader-${index}`} disabled dense classes={classes.subheader}>{option.subheader}</MenuItem>;
+
+                    item = subheader;
+
+                    if (index !== 0) {
+                      item = [<Divider key={`divider-${index}`} className={classes.divider} />, subheader];
+                    }
+                  } else {
+                    let listItemComponent;
+                    let primaryText = option.label;
+
+                    if (renderMenuItem) {
+                      primaryText = renderMenuItem(option);
+                      if (typeof primaryText !== 'string') {
+                        listItemComponent = primaryText;
+                      }
+                    }
+
+                    item = listItemComponent || (
+                      <MenuItem
+                        key={option.id}
+                        selected={selectedIndex === optionIndex}
+                        ref={selectedIndex === optionIndex ? selectedOptionRef : undefined}
+                        onClick={handleSelectOption(option)}
+                        dense
+                      >
+                        <ListItemText
+                          primary={primaryText}
+                        />
+                      </MenuItem>
+                    );
+
+                    optionIndex++;
+                  }
+
+                  return item;
+                })
+                .flat()
+                .filter(Boolean);
+            })()}
+          </MenuList>
+        </Paper>
+      </Popper>
+    </ClickAwayListener>
   );
 };
 
