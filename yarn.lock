@@ -8416,10 +8416,17 @@ levn@^0.3.0, levn@~0.3.0:
     prelude-ls "~1.1.2"
     type-check "~0.3.2"
 
-lib0@^0.2.15, lib0@^0.2.28, lib0@^0.2.32:
+lib0@^0.2.28, lib0@^0.2.32:
   version "0.2.32"
   resolved "https://registry.yarnpkg.com/lib0/-/lib0-0.2.32.tgz#ec4572d84c00355a8d998b83eb950cf9da9c2792"
   integrity sha512-cHHKhHTojtvFSsthTk+CKuD17jMHIxuZxYpTzXj9TeQLPNoGNDPl6ax+J6eFETVe3ZvPMh3V0nGfJgGo6QgSvA==
+  dependencies:
+    isomorphic.js "^0.1.3"
+
+lib0@^0.2.33:
+  version "0.2.33"
+  resolved "https://registry.yarnpkg.com/lib0/-/lib0-0.2.33.tgz#dd759c489d416344efe065c534bccf3ce4925d3e"
+  integrity sha512-Pnm8FzjUr+aTYkEu2A20c1EfVHla8GbVX+GXn6poxx0gcmEuCs+XszjLmtEbI9xYOoI/83xVi7VOIoyHgOO87w==
   dependencies:
     isomorphic.js "^0.1.3"
 
@@ -13451,17 +13458,17 @@ xtend@^4.0.0, xtend@^4.0.1, xtend@~4.0.1:
   resolved "https://registry.yarnpkg.com/xtend/-/xtend-4.0.2.tgz#bb72779f5fa465186b1f438f674fa347fdb5db54"
   integrity sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==
 
-y-prosemirror@^0.3.5:
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/y-prosemirror/-/y-prosemirror-0.3.5.tgz#636565d30708e7589b39a1535df5c04c215ba920"
-  integrity sha512-kVayurgGA7J2AERo96sKA9rK01bKtlSe/HQyrmr3Cae05xqkSicbf8RwM4ceuwYfa9wTqGb4f4qqCmkrpg5NOQ==
+y-prosemirror@^0.3.6:
+  version "0.3.6"
+  resolved "https://registry.yarnpkg.com/y-prosemirror/-/y-prosemirror-0.3.6.tgz#719d7c24d379a3f64e205bc32bd87198268dbfcb"
+  integrity sha512-nvWa8zJd2aFteaCT19C37EqZ/EkdXwre2+dvUjzaowSGcI0b543kh59sA8Oq4rEbKhnECcTHcCdgx7RHRSWC9A==
   dependencies:
-    lib0 "^0.2.15"
+    lib0 "^0.2.33"
 
-y-protocols@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/y-protocols/-/y-protocols-1.0.0.tgz#d06035f9c8824b1fdc652c6a06b3c9aaca9261f0"
-  integrity sha512-L/GB+ryTmrrE0ISLIsNmgXl8lmt+CF7wG9Gm6jQf1JQYKZuzX3+Tbz3b7ov/quXwguM5zcVlJ0zxG29SgQD5Ww==
+y-protocols@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/y-protocols/-/y-protocols-1.0.1.tgz#7855c900039a02b369590b8ae78bc6e1cbc13c9f"
+  integrity sha512-QP3fCM7c2gGfUi2nqf8gspyO4VW23zv3kNqPNdD3wNxMbuNQenMyoDVZYEo12jzR4RQ3aaDfPK62Sf31SVOmfg==
   dependencies:
     lib0 "^0.2.28"
 
@@ -13518,9 +13525,9 @@ yargs@^14.2.2:
     y18n "^4.0.0"
     yargs-parser "^15.0.1"
 
-yjs@^13.3.0:
-  version "13.3.0"
-  resolved "https://registry.yarnpkg.com/yjs/-/yjs-13.3.0.tgz#e43f3297b01dbafd7c21077cd1f651db93e06494"
-  integrity sha512-QdWZljN7OkAKen3VJ9P7sXwjuw+00WRXvmjZvgT28yMgxGnZ8w2LYP4GynuneLn53I6gud1PxB5zCeVODQC/dg==
+yjs@^13.3.2:
+  version "13.3.2"
+  resolved "https://registry.yarnpkg.com/yjs/-/yjs-13.3.2.tgz#80377d7a1e3af8d9611e95b7bf1a96d3203cda6c"
+  integrity sha512-f4R9wK4Pn0FDrNR++mjaW4mbC/qsFHzZaDicva1yN3IMrlUuwQ6qt3HEUc4DMiAkjETGB07LyhxbQ9YgNenk8Q==
   dependencies:
     lib0 "^0.2.32"
