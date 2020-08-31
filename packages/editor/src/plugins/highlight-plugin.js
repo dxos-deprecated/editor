@@ -7,6 +7,7 @@ import { highlightPlugin } from 'prosemirror-highlightjs';
 import hljs from 'highlight.js/lib/core';
 
 import bash from 'highlight.js/lib/languages/bash';
+import cLike from 'highlight.js/lib/languages/c-like';
 import c from 'highlight.js/lib/languages/c';
 import go from 'highlight.js/lib/languages/go';
 import java from 'highlight.js/lib/languages/java';
@@ -16,6 +17,7 @@ import rust from 'highlight.js/lib/languages/rust';
 import xml from 'highlight.js/lib/languages/xml';
 
 hljs.registerLanguage('bash', bash);
+hljs.registerLanguage('c-like', cLike);
 hljs.registerLanguage('c', c);
 hljs.registerLanguage('go', go);
 hljs.registerLanguage('java', java);
