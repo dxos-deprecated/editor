@@ -4,13 +4,14 @@
 
 import React, { useState, useCallback } from 'react';
 
+import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
+import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
-
-import { DialogTitle } from '@material-ui/core';
+import Typography from '@material-ui/core/Typography';
 
 const initialState = { src: '', title: '', alt: '' };
 
@@ -18,9 +19,23 @@ const ToolbarImagePopup = ({
   open = false,
   onClose = () => null,
   onSubmit = () => null,
-  srcLabel = 'Image URL address'
+  onUpload = () => null
 }) => {
   const [state, setState] = useState(initialState);
+
+  async function handleFileInputChange (event) {
+    event.persist();
+    const image = event.target.files[0];
+
+    if (!image) return;
+
+    try {
+      const imageSource = await onUpload(image);
+      setState(state => ({ ...state, src: imageSource }));
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   const handleImageFieldChange = field => useCallback(event => {
     event.persist();
@@ -68,16 +83,43 @@ const ToolbarImagePopup = ({
           fullWidth
           variant='outlined'
         />
-        <TextField
-          value={src}
-          onChange={handleImageFieldChange('src')}
-          required
-          margin='dense'
-          id='image-src'
-          label={srcLabel}
-          fullWidth
-          variant='outlined'
-        />
+        <Box
+          bgcolor='background.paper'
+          border={1}
+          borderRadius='borderRadius'
+          borderColor='text.primary'
+          p={1}
+          marginTop={1}
+        >
+          <TextField
+            value={src}
+            onChange={handleImageFieldChange('src')}
+            required
+            margin='dense'
+            label='Image source'
+            fullWidth
+            variant='outlined'
+          />
+          <Box m={1.5} marginTop={1}>
+            <Typography align='center'>- OR -</Typography>
+          </Box>
+          <input
+            accept='image/*'
+            id='button-file'
+            type='file'
+            onChange={handleFileInputChange}
+            style={{ display: 'none' }}
+          />
+          <label htmlFor='button-file'>
+            <Button
+              component='span'
+              variant='outlined'
+              fullWidth
+            >
+              Upload image
+            </Button>
+          </label>
+        </Box>
       </DialogContent>
       <DialogActions>
         <Button onClick={handleClose} color='primary'>

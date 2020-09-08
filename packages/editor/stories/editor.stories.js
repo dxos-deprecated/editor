@@ -55,12 +55,24 @@ buildStoriesOf('Editor Toolbar')
   .add('Default', () => <Editor toolbar />)
   .add('Schema full', () => <Editor schema='full' toolbar />)
   .add('Schema text-only', () => <Editor schema='text-only' toolbar />)
-  .add('Custom image popup', () => (
+  .add('Image upload', () => (
     <Editor
+      toolbar
       schema='full'
-      toolbar={{
-        imagePopupSrcLabel: 'Any image address'
+      onImageUpload={imageFile => {
+        console.log(imageFile);
+
+        // Upload file or process it and return an url
+
+        return 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?fit=crop&w=1350&q=80';
       }}
+    />
+  ))
+  .add('Custom image source parser', () => (
+    <Editor
+      toolbar
+      schema='full'
+      imageSourceParser={src => 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?fit=crop&w=1350&q=80'}
     />
   ));
 
