@@ -2,7 +2,7 @@
 // Copyright 2020 DXOS.org
 //
 
-const createReactElementNodeView = (type = 'block', { onReactElementDomCreated }) => {
+function createReactElementNodeView (type = 'block', { onReactElementDomCreated }) {
   return function (node) {
     const { attrs: { props = {}, className = '' } } = node;
 
@@ -35,10 +35,10 @@ const createReactElementNodeView = (type = 'block', { onReactElementDomCreated }
 
     return nodeView;
   };
-};
+}
 
-const linkNodeView = () => {
-  return node => {
+function linkNodeView () {
+  return function (node) {
     const { href, title } = node.attrs;
     const dom = window.document.createElement('a');
 
@@ -75,7 +75,29 @@ const linkNodeView = () => {
       dom
     };
   };
-};
+}
+
+function imageNodeView ({ imageSourceParser = src => src }) {
+  return function (node) {
+    const { src, alt, title } = node.attrs;
+
+    const dom = window.document.createElement('img');
+
+    dom.setAttribute('title', title);
+    dom.setAttribute('alt', alt);
+
+    async function parseSource () {
+      const parsedSrc = await imageSourceParser(src);
+      dom.setAttribute('src', parsedSrc);
+    }
+
+    parseSource();
+
+    return {
+      dom
+    };
+  };
+}
 
 export const buildProsemirrorNodeViews = (options, schema) => {
   const nodeViews = {};
@@ -90,6 +112,10 @@ export const buildProsemirrorNodeViews = (options, schema) => {
 
   if (schema.marks.link) {
     nodeViews.link = linkNodeView(options);
+  }
+
+  if (schema.nodes.image) {
+    nodeViews.image = imageNodeView(options);
   }
 
   return nodeViews;

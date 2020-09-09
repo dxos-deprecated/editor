@@ -13,7 +13,8 @@ import { canInsert } from '../lib/prosemirror-helpers';
 import { useProsemirrorView } from '../lib/hook';
 
 const ToolbarImageButton = ({
-  popupSrcLabel
+  sourceParser = src => src,
+  onUpload
 }) => {
   const [prosemirrorView] = useProsemirrorView();
 
@@ -27,8 +28,11 @@ const ToolbarImageButton = ({
     setDialogOpen(false);
   }, []);
 
-  const handleInsertImage = useCallback(({ title, src, alt }) => {
+  const handleInsertImage = useCallback(({ title, src: originalSrc, alt }) => {
     const { state, dispatch } = prosemirrorView;
+
+    // Transform user input src
+    const src = sourceParser(originalSrc);
 
     const img = state.schema.nodes.image.createAndFill({ src, alt, title });
     dispatch(state.tr.replaceSelectionWith(img));
@@ -49,10 +53,10 @@ const ToolbarImageButton = ({
         disabled={!canInsert(state.schema.nodes.image)(state)}
       />
       <ToolbarImagePopup
-        srcLabel={popupSrcLabel}
         open={dialogOpen}
         onClose={handleClose}
         onSubmit={handleInsertImage}
+        onUpload={onUpload}
       />
     </div>
   );

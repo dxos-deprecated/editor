@@ -100,9 +100,11 @@ const Editor = ({
   contextMenu,
   initialContent,
   initialFontSize = 22,
+  imageSourceParser,
   language,
   onContentChange,
   onCreated = () => null,
+  onImageUpload,
   onKeyDown,
   prosemirrorPlugins: plugins,
   reactElementRenderFn = () => null,
@@ -130,6 +132,7 @@ const Editor = ({
     editor.current = createProsemirrorEditor(editorDom.current, {
       mockInputDom,
       contextMenu,
+      imageSourceParser,
       initialContent,
       language,
       onKeyDown: handleKeyDown,
@@ -208,7 +211,11 @@ const Editor = ({
 
       {toolbar && (
         <div className={classnames(classes.toolbarContainer, userClasses.toolbarContainer)}>
-          <Toolbar {...toolbar} />
+          <Toolbar
+            {...toolbar}
+            imageSourceParser={imageSourceParser}
+            onImageUpload={onImageUpload}
+          />
         </div>
       )}
       <div

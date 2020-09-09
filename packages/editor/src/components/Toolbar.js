@@ -183,7 +183,8 @@ const buildButtons = (schema, props) => {
     extraButtons.push({
       component: () => (
         <ToolbarImageButton
-          popupSrcLabel={props.imagePopupSrcLabel}
+          sourceParser={props.imageSourceParser}
+          onUpload={props.onImageUpload}
         />
       )
     });
@@ -209,8 +210,9 @@ const buildButtons = (schema, props) => {
 
 const Toolbar = ({
   classes,
-  imagePopupSrcLabel,
-  customButtons
+  customButtons,
+  imageSourceParser,
+  onImageUpload
 }) => {
   const { toolbar: toolbarClass, divider: dividerClass } = useStyles();
 
@@ -221,7 +223,7 @@ const Toolbar = ({
   useEffect(() => {
     if (!prosemirrorView) return;
 
-    setButtons(buildButtons(prosemirrorView.state.schema, { imagePopupSrcLabel, customButtons }));
+    setButtons(buildButtons(prosemirrorView.state.schema, { imageSourceParser, onImageUpload, customButtons }));
   }, [prosemirrorView]);
 
   const handleButtonClick = useCallback(button => event => {
