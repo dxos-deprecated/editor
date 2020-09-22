@@ -39,13 +39,15 @@ const createSyncTextPlugin = (doc, onLocalUpdate = () => null) => {
 };
 
 const cursorBuilder = user => {
+  const color = colorHash.hex(user.user.id);
   const cursor = window.document.createElement('span');
   cursor.className = 'cursor';
-  cursor.style.borderColor = colorHash.hex(user.user.id);
+  cursor.style.borderColor = color;
+  cursor.style.backgroundColor = color;
 
   const cursorName = window.document.createElement('span');
   cursorName.className = 'name';
-  cursorName.style.backgroundColor = colorHash.hex(user.user.id);
+  cursorName.style.backgroundColor = color;
   cursorName.innerText = user.name;
 
   cursor.appendChild(cursorName);
