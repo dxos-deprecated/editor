@@ -5,7 +5,7 @@
 import React, { useEffect, useCallback, useState } from 'react';
 
 import { undo, redo } from 'prosemirror-history';
-import { setBlockType, wrapIn, toggleMark } from 'prosemirror-commands';
+import { toggleMark } from 'prosemirror-commands';
 
 import { makeStyles } from '@material-ui/core';
 import MUIToolbar from '@material-ui/core/Toolbar';
@@ -17,7 +17,6 @@ import ListNumberedIcon from '@material-ui/icons/FormatListNumbered';
 import RedoIcon from '@material-ui/icons/Redo';
 import UndoIcon from '@material-ui/icons/Undo';
 import CodeIcon from '@material-ui/icons/Code';
-import FormatQuoteIcon from '@material-ui/icons/FormatQuote';
 import FormatBoldIcon from '@material-ui/icons/FormatBold';
 import FormatItalicIcon from '@material-ui/icons/FormatItalic';
 import FormatUnderlinedIcon from '@material-ui/icons/FormatUnderlined';
@@ -26,10 +25,10 @@ import grey from '@material-ui/core/colors/grey';
 
 import ToolbarButton from './ToolbarButton';
 import ToolbarImageButton from './ToolbarImageButton';
-import TextAvatarIcon from './TextAvatarIcon';
 
 import { useProsemirrorView } from '../lib/hook';
-import { blockActive, markActive, toggleList, canToggleList, isListItemOfType } from '../lib/prosemirror-helpers';
+import { markActive, toggleList, canToggleList, isListItemOfType } from '../lib/prosemirror-helpers';
+import NodeTypeButton from './NodeTypeButton';
 
 export const useStyles = makeStyles(theme => ({
   toolbar: {
@@ -52,7 +51,6 @@ const buildButtons = (schema, props) => {
   const buttons = [];
 
   const historyButtons = [];
-  const nodeButtons = [];
   const markButtons = [];
   const wrapperButtons = [];
   const extraButtons = [];
@@ -63,59 +61,15 @@ const buildButtons = (schema, props) => {
   );
 
   const {
-    blockquote,
     bullet_list: bulletList,
-    code_block: codeBlock,
-    heading,
     image,
-    ordered_list: orderedList,
-    paragraph
+    ordered_list: orderedList
   } = schema.nodes;
   const { strong, em, underline, code } = schema.marks;
 
-  if (paragraph) {
-    nodeButtons.push({
-      name: 'node-paragraph',
-      title: 'Paragraph',
-      icon: () => <TextAvatarIcon>P</TextAvatarIcon>,
-      onClick: setBlockType(paragraph),
-      enabled: setBlockType(paragraph),
-      active: blockActive(paragraph)
-    });
-  }
-
-  if (heading) {
-    nodeButtons.push(...[1, 2, 3, 4, 5, 6].map((level, key) => ({
-      name: `heading-${level}`,
-      title: `Heading ${level}`,
-      icon: () => <TextAvatarIcon>H{level}</TextAvatarIcon>,
-      onClick: setBlockType(heading, { level }),
-      enabled: setBlockType(heading, { level }),
-      active: blockActive(heading, { level })
-    })));
-  }
-
-  if (codeBlock) {
-    nodeButtons.push({
-      name: 'node-code',
-      title: 'Code block',
-      icon: CodeIcon,
-      onClick: setBlockType(codeBlock),
-      enabled: setBlockType(codeBlock),
-      active: blockActive(codeBlock)
-    });
-  }
-
-  if (blockquote) {
-    nodeButtons.push({
-      name: 'node-blockquote',
-      title: 'Block quote',
-      icon: FormatQuoteIcon,
-      onClick: wrapIn(blockquote),
-      enabled: wrapIn(blockquote),
-      active: blockActive(blockquote)
-    });
-  }
+  const nodeButton = {
+    component: () => <NodeTypeButton schema={schema} onButtonClick={props.handleButtonClick} />
+  };
 
   if (strong) {
     markButtons.push({
@@ -196,7 +150,8 @@ const buildButtons = (schema, props) => {
 
   buttons.push(
     ...historyButtons,
-    ...(nodeButtons.length > 1 ? [{ divider: true }, ...nodeButtons] : []),
+    { divider: true },
+    nodeButton,
     markButtons.length > 0 && { divider: true },
     ...markButtons,
     wrapperButtons.length > 0 && { divider: true },
@@ -220,16 +175,26 @@ const Toolbar = ({
 
   const [prosemirrorView] = useProsemirrorView();
 
-  useEffect(() => {
-    if (!prosemirrorView) return;
-
-    setButtons(buildButtons(prosemirrorView.state.schema, { imageSourceParser, onImageUpload, customButtons }));
-  }, [prosemirrorView]);
-
-  const handleButtonClick = useCallback(button => event => {
+  const handleButtonClick = useCallback(button => () => {
     const { state, dispatch } = prosemirrorView;
     button.onClick(state, dispatch);
     prosemirrorView.focus();
+  }, [prosemirrorView]);
+
+  useEffect(() => {
+    if (!prosemirrorView) return;
+
+    setButtons(
+      buildButtons(
+        prosemirrorView.state.schema,
+        {
+          customButtons,
+          handleButtonClick,
+          imageSourceParser,
+          onImageUpload
+        }
+      )
+    );
   }, [prosemirrorView]);
 
   return (
