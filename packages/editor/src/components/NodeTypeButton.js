@@ -95,7 +95,7 @@ function NodeTypeButton ({ schema, onButtonClick }) {
 
   const oneButton = nodeButtons.length === 1;
 
-  const activeButtonTitle = nodeButtons.find(button => button.active(prosemirrorView.state)).title;
+  const activeButtonTitle = (nodeButtons.find(button => button.active(prosemirrorView.state)) || { title: '' }).title;
 
   return (
     <Box
