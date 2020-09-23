@@ -2,11 +2,44 @@
 // Copyright 2020 DXOS.org
 //
 
+import { XmlElement, XmlFragment } from 'yjs';
+import toHtml from 'hast-util-to-html';
+import rehype2remark from 'rehype-remark';
+import rehypeStringify from 'rehype-stringify';
+import remarkStringify from 'remark-stringify';
+
+import { htmlProcessor } from './common';
+
+XmlElement.prototype.toString = function () {
+  const attrs = this.getAttributes();
+
+  const stringBuilder = [];
+  const keys = [];
+
+  for (const key in attrs) {
+    keys.push(key);
+  }
+
+  keys.sort();
+
+  const keysLen = keys.length;
+  for (let i = 0; i < keysLen; i++) {
+    const key = keys[i];
+    const isObjectValue = typeof attrs[key] === 'object' && attrs[key] !== null;
+    const value = isObjectValue ? encodeURI(JSON.stringify(attrs[key])) : attrs[key];
+    stringBuilder.push(`${key}="${value}"`);
+  }
+
+  const nodeName = this.nodeName.toLocaleLowerCase();
+  const attrsString = stringBuilder.length > 0 ? ' ' + stringBuilder.join(' ') : '';
+  return `<${nodeName}${attrsString}>${XmlFragment.prototype.toString.call(this)}</${nodeName}>`;
+};
+
 /**
  *
  * @param {Node} node
  */
-const modifyTagName = (node, originalNode) => {
+function modifyTagName (node, originalNode) {
   let { tagName } = originalNode;
 
   switch (originalNode.tagName) {
@@ -47,9 +80,9 @@ const modifyTagName = (node, originalNode) => {
   }
 
   node.tagName = tagName;
-};
+}
 
-const modifyAttributes = (node, originalNode) => {
+function modifyAttributes (node, originalNode) {
   const attrsToAdd = [];
   const attrsToRemove = [];
 
@@ -85,9 +118,9 @@ const modifyAttributes = (node, originalNode) => {
     }
     return props;
   }, {});
-};
+}
 
-const modifyStructure = (node, originalNode) => {
+function modifyStructure (node, originalNode) {
   if (originalNode.tagName === 'code_block') {
     if (!node.children[0].value.endsWith('\n')) {
       node.children[0].value += '\n';
@@ -102,7 +135,7 @@ const modifyStructure = (node, originalNode) => {
       }
     ];
   }
-};
+}
 
 function transform (tree) {
   const node = { ...tree };
@@ -116,10 +149,35 @@ function transform (tree) {
   return node;
 }
 
-export function xmlFragmentTransform () {
+function xmlFragmentTransform () {
   function transformer (tree) {
     return transform(tree);
   }
 
   return transformer;
+}
+
+function reactElement (h, node) {
+  return h(node, 'html', toHtml(node));
+}
+
+export function docToMarkdown (doc) {
+  const fragment = doc.getXmlFragment('content');
+
+  const html = htmlProcessor()
+    .use(xmlFragmentTransform)
+    .use(rehypeStringify)
+    .processSync(fragment.toString());
+
+  const result = htmlProcessor()
+    .use(rehype2remark, {
+      handlers: {
+        block_react_element: reactElement,
+        inline_react_element: reactElement
+      }
+    })
+    .use(remarkStringify, { listItemIndent: 1, tightDefinitions: true })
+    .processSync(html);
+
+  return result.toString();
 }

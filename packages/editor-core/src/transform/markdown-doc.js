@@ -2,9 +2,13 @@
 // Copyright 2020 DXOS.org
 //
 
-import { Text, XmlElement } from 'yjs';
+import { XmlText, XmlElement, Doc } from 'yjs';
+import rehypeParse from 'rehype-parse';
+import unified from 'unified';
 
-const tagName = node => {
+import { markdownProcessor } from './common';
+
+function tagName (node) {
   switch (node.type) {
     case 'break':
       return 'hard_break';
@@ -24,13 +28,17 @@ const tagName = node => {
     case 'thematicBreak':
       return 'horizontal_rule';
 
+    case 'block_react_element':
+    case 'inline_react_element':
+      return node.type;
+
     default:
       // Snake case
       return node.type.replace(/(?:^|\.?)([A-Z])/g, (x, y) => `_${y.toLowerCase()}`).replace(/^_/, '');
   }
-};
+}
 
-const copyDefinition = (node, xmlElement) => {
+function copyDefinition (node, xmlElement) {
   const attrs = [];
   switch (node.type) {
     case 'heading':
@@ -44,16 +52,21 @@ const copyDefinition = (node, xmlElement) => {
       break;
 
     case 'inlineCode':
-      xmlElement.insert(0, [new Text(node.value)]);
+      xmlElement.insert(0, [new XmlText(node.value)]);
       break;
 
     case 'code':
       attrs.push(['lang', node.lang]);
-      xmlElement.insert(0, [new Text(node.value)]);
+      xmlElement.insert(0, [new XmlText(node.value)]);
       break;
 
     case 'image':
       attrs.push(['alt', node.alt], ['title', node.title], ['src', node.url]);
+      break;
+
+    case 'block_react_element':
+    case 'inline_react_element':
+      attrs.push(['props', JSON.parse(decodeURI(node.properties.props))], ['className', node.properties.className]);
       break;
 
     default:
@@ -63,9 +76,9 @@ const copyDefinition = (node, xmlElement) => {
   attrs.forEach(([name, value]) => xmlElement.setAttribute(name, value));
 
   return xmlElement;
-};
+}
 
-export function remark2XmlFragment (doc) {
+function remark2XmlFragment (doc) {
   const compiler = node => {
     const children = (node.children || []).map(compiler);
 
@@ -77,7 +90,18 @@ export function remark2XmlFragment (doc) {
     }
 
     if (node.type === 'text') {
-      return new Text(node.value);
+      return new XmlText(node.value);
+    }
+
+    if (node.type === 'html') {
+      const hast = unified()
+        .use(rehypeParse, { fragment: true })
+        .parse(node.value);
+
+      const childNode = hast.children[0];
+      childNode.type = childNode.tagName;
+
+      return compiler(childNode);
     }
 
     let xmlElement = new XmlElement(tagName(node));
@@ -90,4 +114,12 @@ export function remark2XmlFragment (doc) {
   };
 
   this.Compiler = compiler;
+}
+
+export function markdownToDoc (markdown, doc = new Doc()) {
+  markdownProcessor()
+    .use(remark2XmlFragment, doc)
+    .processSync(markdown);
+
+  return doc;
 }
