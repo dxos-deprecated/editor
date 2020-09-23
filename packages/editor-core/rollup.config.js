@@ -20,7 +20,9 @@ const plugins = [
     babelHelpers: 'bundled'
   }),
   commonjs(),
-  terser()
+  terser({
+    compress: false
+  })
 ];
 
 if (useAnalyze) {
