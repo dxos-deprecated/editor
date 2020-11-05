@@ -2,7 +2,7 @@
   "name": "@dxos/editor-kit",
   "version": "0.0.1",
   "description": "DxOS Editor Kit.",
-  "license": "UNLICENSED",
+  "license": "AGPLv3",
   "repository": "https://github.com/dxos/editor-kit",
   "private": true,
   "workspaces": {
