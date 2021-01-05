@@ -118,7 +118,7 @@ const Suggestions = ({
     }));
 
     // Scroll into option
-    selectedOptionRef.current && selectedOptionRef.current.scrollIntoViewIfNeeded();
+    selectedOptionRef.current && selectedOptionRef.current.scrollIntoView();
   }, [selectedIndex, options]);
 
   function handleSelectOption (option) {
